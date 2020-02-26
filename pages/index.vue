@@ -1,7 +1,7 @@
 <template>
   <b-container>
     Test
-</b-container>
+  </b-container>
 </template>
 
 <script>
