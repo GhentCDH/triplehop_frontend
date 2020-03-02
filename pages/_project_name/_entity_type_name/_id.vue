@@ -1,11 +1,12 @@
 <template>
   <b-container>
-    {{ JSON.stringify(config) }}
+    {{ JSON.stringify(entity_types_config) }}
+    {{ JSON.stringify(entity_data) }}
   </b-container>
 </template>
 
 <script>
-import { capitalizeFirstLetter, isNumber } from '~/assets/js/utils'
+import { isNumber } from '~/assets/js/utils'
 
 export default {
   validate ({ params }) {
@@ -16,29 +17,30 @@ export default {
     }
     return true
   },
-  async asyncData ({ $axios, params, store }) {
-    // TODO: get project config (from cache), get fields from project config
+  async fetch ({ $axios, params, store, error }) {
     // TODO (backend): allow fields to be ordered
+    // TODO (backend): allow display widget configuration
+    // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
-    await store.dispatch('config/load', params.project_name)
-    const response = await $axios.post(
-      params.project_name,
+    await store.dispatch('config/load_entity_types', params.project_name)
+    if (!(params.entity_type_name in store.state.config.entity_types)) {
+      return error({ statusCode: 404, message: `Entity type "${params.entity_type_name}" not found.` })
+    }
+
+    await store.dispatch(
+      'data/load',
       {
-        query: `
-          {
-            ${capitalizeFirstLetter(params.entity_type_name)}(id: ${params.id}) {
-              title
-              year
-            }
-          }
-        `
+        entityConfig: store.state.config.entity_types[params.entity_type_name],
+        params
       }
     )
-    return response.data.data
   },
   computed: {
-    config () {
-      return this.$store.state.config.config
+    entity_types_config () {
+      return this.$store.state.config.entity_types
+    },
+    entity_data () {
+      return this.$store.state.data.data
     }
   },
   head () {
