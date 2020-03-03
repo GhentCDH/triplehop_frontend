@@ -39,15 +39,17 @@ export const actions = {
     const rawConfig = response.data.data.Entity_config_s
     const config = {}
     for (const raw of rawConfig) {
-      const fieldConfig = {}
+      config[raw.system_name] = {
+        display_name: raw.display_name,
+        data: {}
+      }
       for (const rawField of raw.data) {
-        fieldConfig[rawField.system_name] = {
+        config[raw.system_name].data[rawField.system_name] = {
           display_name: rawField.display_name
         }
       }
-      config[raw.system_name] = {
-        display_name: raw.display_name,
-        fields: fieldConfig
+      if ('display' in raw) {
+        config[raw.system_name].display = raw.display
       }
     }
     commit('SET_ENTITY_TYPES', config)
