@@ -12,6 +12,7 @@
         v-for="(panel, panelIndex) in entity_type_config.display.layout"
         :key="`panel-${panelIndex}`"
         :title="panel.label"
+        class="border-0 bg-light"
       >
         <dl
           v-if="'fields' in panel"
