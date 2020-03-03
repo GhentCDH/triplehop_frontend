@@ -20,6 +20,7 @@ export const actions = {
             data {
               system_name
               display_name
+              type
             }
             display {
               title
@@ -45,7 +46,8 @@ export const actions = {
       }
       for (const rawField of raw.data) {
         config[raw.system_name].data[rawField.system_name] = {
-          display_name: rawField.display_name
+          display_name: rawField.display_name,
+          type: rawField.type
         }
       }
       if ('display' in raw) {
