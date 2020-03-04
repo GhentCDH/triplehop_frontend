@@ -2,10 +2,17 @@
   <dd>
     <client-only>
       <div class="map-wrapper">
-        <l-map ref="map">
+        <l-map
+          ref="map"
+          @ready="onMapReady"
+        >
           <!-- TODO: use actual base layer (entity_data[field.base_layer]) -->
           <!-- TODO: provide a way to configure a default base layer (project / entity based) -->
-          <l-tile-layer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{x}/{y}.png" attribution="Tiles &copy; <a href='http://esri.com'>Esri</a>" />
+          <l-tile-layer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{x}/{y}.png"
+            attribution="Tiles &copy; <a href='http://esri.com'>Esri</a>"
+            :options="{ maxZoom: 17 }"
+          />
           <l-feature-group ref="feature-group">
             <!-- TODO: display other geometry types -->
             <l-marker v-if="geometry.type === 'Point'" :lat-lng="[...geometry.coordinates].reverse()" />
@@ -25,10 +32,15 @@ export default {
       required: true
     }
   },
-  mounted () {
-    this.$refs.map.mapObject.flyToBounds(
-      this.$refs['feature-group'].getBounds()
-    )
+  methods: {
+    onMapReady () {
+      this.$refs.map.mapObject.fitBounds(
+        this.$refs['feature-group'].mapObject.getBounds(),
+        {
+          maxZoom: 15
+        }
+      )
+    }
   }
 }
 </script>
