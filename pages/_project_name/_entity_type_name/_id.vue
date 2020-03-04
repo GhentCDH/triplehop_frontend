@@ -7,7 +7,7 @@
       {{ entity_type_display_name }} {{ $root.params.id }}
     </h1>
 
-    <template v-if="'display' in entity_type_config && 'layout' in entity_type_config.display">
+    <template v-if="'layout' in entity_type_config.display">
       <b-card
         v-for="(panel, panelIndex) in entity_type_config.display.layout"
         :key="`panel-${panelIndex}`"
@@ -27,7 +27,14 @@
             >
               {{ field.label ? field.label : entity_type_config.data[field.field].display_name }}
             </dt>
+            <GeometryField
+              v-if="field.type === 'geometry'"
+              :key="`field-value-${field.field}`"
+              :geometry="entity_data[field.field]"
+              class="col-sm-9 col-lg-10"
+            />
             <dd
+              v-else
               :key="`field-value-${field.field}`"
               class="col-sm-9 col-lg-10"
             >
@@ -42,8 +49,12 @@
 
 <script>
 import { capitalizeFirstLetter, isNumber } from '~/assets/js/utils'
+import GeometryField from '~/components/GeometryField.vue'
 
 export default {
+  components: {
+    GeometryField
+  },
   validate ({ params }) {
     // TODO: validate project_name based on cached config
     // Make sure id is a number

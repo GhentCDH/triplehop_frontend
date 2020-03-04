@@ -24,6 +24,7 @@ export default {
   ** Global CSS
   */
   css: [
+    '@/assets/scss/crdb.scss'
   ],
   /*
   ** Plugins to load before mounting the App
@@ -44,7 +45,9 @@ export default {
     // Doc: https://bootstrap-vue.js.org
     'bootstrap-vue/nuxt',
     // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    // Doc: https://github.com/schlunsen/nuxt-leaflet
+    'nuxt-leaflet'
   ],
   /*
   ** Axios module configuration
@@ -52,6 +55,11 @@ export default {
   */
   axios: {
     baseURL: 'http://localhost:8000/v1/'
+  },
+  // See https://medium.com/javascript-in-plain-english/customize-bootstrap-in-nuxt-3da863703b35
+  bootstrapVue: {
+    bootstrapCSS: false,
+    bootstrapVueCSS: false
   },
   /*
   ** Build configuration

@@ -29,6 +29,8 @@ export const actions = {
                 fields {
                   label
                   field
+                  type
+                  base_layer
                 }
               }
             }
