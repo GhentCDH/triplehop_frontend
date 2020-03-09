@@ -1,10 +1,14 @@
 export const state = () => ({
-  entity_types: {}
+  entity_types: {},
+  relation_types: {}
 })
 
 export const mutations = {
   SET_ENTITY_TYPES (state, payload) {
     state.entity_types = payload
+  },
+  SET_RELATION_TYPES (state, payload) {
+    state.relation_types = payload
   }
 }
 
@@ -44,7 +48,8 @@ export const actions = {
     for (const raw of rawConfig) {
       config[raw.system_name] = {
         display_name: raw.display_name,
-        data: {}
+        data: {},
+        display: raw.display
       }
       for (const rawField of raw.data) {
         config[raw.system_name].data[rawField.system_name] = {
@@ -52,10 +57,57 @@ export const actions = {
           type: rawField.type
         }
       }
-      if ('display' in raw) {
-        config[raw.system_name].display = raw.display
-      }
     }
     commit('SET_ENTITY_TYPES', config)
+  },
+  async load_relation_types ({ commit }, projectName) {
+    const response = await this.$axios.post(
+      projectName,
+      {
+        query: `
+        {
+          Relation_config_s {
+            system_name
+            data {
+              system_name
+              display_name
+              type
+            }
+            display {
+              layout {
+                label
+                fields {
+                  label
+                  field
+                  type
+                  base_layer
+                }
+              }
+            }
+            domain_names
+            range_names
+          }
+        }
+        `
+      }
+    )
+    const rawConfig = response.data.data.Relation_config_s
+    const config = {}
+    for (const raw of rawConfig) {
+      config[raw.system_name] = {
+        display_name: raw.display_name,
+        data: {},
+        display: raw.display,
+        domain_names: raw.domain_names,
+        range_names: raw.range_names
+      }
+      for (const rawField of raw.data) {
+        config[raw.system_name].data[rawField.system_name] = {
+          display_name: rawField.display_name,
+          type: rawField.type
+        }
+      }
+    }
+    commit('SET_RELATION_TYPES', config)
   }
 }

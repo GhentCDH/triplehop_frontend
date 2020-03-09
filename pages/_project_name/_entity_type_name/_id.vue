@@ -72,11 +72,14 @@ export default {
     if (!(params.entity_type_name in store.state.config.entity_types)) {
       return error({ statusCode: 404, message: `Entity type "${params.entity_type_name}" not found.` })
     }
+    await store.dispatch('config/load_relation_types', params.project_name)
 
     await store.dispatch(
       'data/load',
       {
-        entityTypeConfig: store.state.config.entity_types[params.entity_type_name],
+        entityTypeName: params.entity_type_name,
+        entityTypesConfig: store.state.config.entity_types,
+        relationTypesConfig: store.state.config.relation_types,
         params
       }
     )
@@ -84,6 +87,9 @@ export default {
   computed: {
     entity_type_config () {
       return this.$store.state.config.entity_types[this.$route.params.entity_type_name]
+    },
+    relation_types_config () {
+      return this.$store.state.config.relation_types
     },
     entity_type_display_name () {
       return capitalizeFirstLetter(this.$root.params.entity_type_name)
