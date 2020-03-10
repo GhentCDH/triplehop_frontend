@@ -5,3 +5,9 @@ export function capitalizeFirstLetter (string) {
 export function isNumber (string) {
   return /^\d+$/.test(string)
 }
+
+export function filterObject (obj, predicate) {
+  return Object.keys(obj)
+    .filter(key => predicate(obj[key]))
+    .reduce((result, key) => ({ ...result, [key]: obj[key] }), {})
+}

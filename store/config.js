@@ -14,51 +14,55 @@ export const mutations = {
 
 export const actions = {
   async load_entity_types ({ commit }, projectName) {
-    const response = await this.$axios.post(
-      projectName,
-      {
-        query: `
+    try {
+      const response = await this.$axios.post(
+        projectName,
         {
-          Entity_config_s {
-            system_name
-            data {
+          query: `
+          {
+            Entity_config_s {
               system_name
-              display_name
-              type
-            }
-            display {
-              title
-              layout {
-                label
-                fields {
+              data {
+                system_name
+                display_name
+                type
+              }
+              display {
+                title
+                layout {
                   label
-                  field
-                  type
-                  base_layer
+                  fields {
+                    label
+                    field
+                    type
+                    base_layer
+                  }
                 }
               }
             }
           }
+          `
         }
-        `
-      }
-    )
-    const rawConfig = response.data.data.Entity_config_s
-    const config = {}
-    for (const raw of rawConfig) {
-      config[raw.system_name] = {
-        display_name: raw.display_name,
-        data: {},
-        display: raw.display
-      }
-      for (const rawField of raw.data) {
-        config[raw.system_name].data[rawField.system_name] = {
-          display_name: rawField.display_name,
-          type: rawField.type
+      )
+      const rawConfig = response.data.data.Entity_config_s
+      const config = {}
+      for (const raw of rawConfig) {
+        config[raw.system_name] = {
+          display_name: raw.display_name,
+          data: {},
+          display: raw.display
+        }
+        for (const rawField of raw.data) {
+          config[raw.system_name].data[rawField.system_name] = {
+            display_name: rawField.display_name,
+            type: rawField.type
+          }
         }
       }
+      commit('SET_ENTITY_TYPES', config)
+    } catch (error) {
+      console.log(error)
     }
-    commit('SET_ENTITY_TYPES', config)
   },
   async load_relation_types ({ commit }, projectName) {
     const response = await this.$axios.post(
@@ -68,12 +72,15 @@ export const actions = {
         {
           Relation_config_s {
             system_name
+            display_name
             data {
               system_name
               display_name
               type
             }
             display {
+              domain_title
+              range_title
               layout {
                 label
                 fields {

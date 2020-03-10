@@ -39,7 +39,7 @@ function extractFieldNames (displayFields) {
 function constructQueryParts (fieldNames, typeConfig) {
   const queryParts = []
   for (const fieldName of fieldNames) {
-    if (fieldName === 'id') {
+    if (['id', '__typename'].includes(fieldName)) {
       queryParts.push(fieldName)
       continue
     }
@@ -103,11 +103,11 @@ export const actions = {
     for (const relation in relationFieldNames.domain) {
       if (relationFieldNames.domain[relation].fields.length || Object.keys(relationFieldNames.domain[relation].titles).length) {
         queryParts.push(`r_${relation}_s {`)
-        queryParts.push(...constructQueryParts([...new Set(relationFieldNames.domain[relation].fields)], relationTypesConfig[relation]))
+        queryParts.push(...constructQueryParts([...new Set(['id', ...relationFieldNames.domain[relation].fields])], relationTypesConfig[relation]))
         for (const linkedEntityTypeName in relationFieldNames.domain[relation].titles) {
           queryParts.push('entity {')
           queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
-          queryParts.push(...constructQueryParts(relationFieldNames.domain[relation].titles[linkedEntityTypeName], entityTypesConfig[linkedEntityTypeName]))
+          queryParts.push(...constructQueryParts([...new Set(['id', '__typename', ...relationFieldNames.domain[relation].titles[linkedEntityTypeName]])], entityTypesConfig[linkedEntityTypeName]))
           queryParts.push('}')
           queryParts.push('}')
         }

@@ -1,10 +1,7 @@
 <template>
   <b-container>
-    <h1 v-if="title">
-      {{ title }}
-    </h1>
-    <h1 v-else>
-      {{ entity_type_display_name }} {{ $root.params.id }}
+    <h1>
+      {{ constructTitle(entity_type_config.display.title, entity_data) }}
     </h1>
 
     <template v-if="'layout' in entity_type_config.display">
@@ -12,7 +9,7 @@
         v-for="(panel, panelIndex) in entity_type_config.display.layout"
         :key="`panel-${panelIndex}`"
         :title="panel.label"
-        class="border-0 bg-light"
+        class="border-0 bg-light mb-3"
       >
         <dl
           v-if="'fields' in panel"
@@ -43,12 +40,37 @@
           </template>
         </dl>
       </b-card>
+      <b-card
+        v-for="(relationTypeConfig, relationTypeName) in domain_relation_types_config"
+        :key="relationTypeName"
+        :title="relationTypeConfig.display.domain_title"
+        class="border-0 bg-light mb-3"
+      >
+        <b-card
+          v-for="relation in entity_data[`r_${relationTypeName}_s`]"
+          :key="relation.id"
+          class="border-0 bg-white mb-1"
+        >
+          <nuxt-link
+            :to="{
+              name: 'project_name-entity_type_name-id',
+              params: {
+                project_name: project_name,
+                entity_type_name: relation.entity.__typename.toLowerCase(),
+                id: relation.entity.id
+              }
+            }"
+          >
+            {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+          </nuxt-link>
+        </b-card>
+      </b-card>
     </template>
   </b-container>
 </template>
 
 <script>
-import { capitalizeFirstLetter, isNumber } from '~/assets/js/utils'
+import { capitalizeFirstLetter, filterObject, isNumber } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
 
 export default {
@@ -85,25 +107,35 @@ export default {
     )
   },
   computed: {
-    entity_type_config () {
-      return this.$store.state.config.entity_types[this.$route.params.entity_type_name]
+    domain_relation_types_config () {
+      return filterObject(
+        this.$store.state.config.relation_types,
+        relationConfig => relationConfig.domain_names.includes(this.entity_type_name)
+      )
     },
-    relation_types_config () {
-      return this.$store.state.config.relation_types
-    },
-    entity_type_display_name () {
-      return capitalizeFirstLetter(this.$root.params.entity_type_name)
-    },
+    // TODO: range
     entity_data () {
       return this.$store.state.data.data
     },
-    title () {
-      if (!('display' in this.entity_type_config)) {
-        return null
-      }
-
-      // Replace all fields
-      return this.entity_type_config.display.title.replace(/(?<![$])[$]([a-z_]+)/g, m => this.entity_data[m.slice(1)])
+    entity_type_config () {
+      return this.$store.state.config.entity_types[this.entity_type_name]
+    },
+    entity_types_config () {
+      return this.$store.state.config.entity_types
+    },
+    entity_type_display_name () {
+      return capitalizeFirstLetter(this.entity_type_name)
+    },
+    entity_type_name () {
+      return this.$route.params.entity_type_name
+    },
+    project_name () {
+      return this.$route.params.project_name
+    }
+  },
+  methods: {
+    constructTitle (title, data) {
+      return title.replace(/(?<![$])[$]([a-z_]+)/g, m => data[m.slice(1)])
     }
   },
   head () {
