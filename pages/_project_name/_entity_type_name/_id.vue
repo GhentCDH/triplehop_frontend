@@ -40,31 +40,64 @@
           </template>
         </dl>
       </b-card>
-      <b-card
+      <template
         v-for="(relationTypeConfig, relationTypeName) in domain_relation_types_config"
-        :key="relationTypeName"
-        :title="relationTypeConfig.display.domain_title"
-        class="border-0 bg-light mb-3"
       >
         <b-card
-          v-for="relation in entity_data[`r_${relationTypeName}_s`]"
-          :key="relation.id"
-          class="border-0 bg-white mb-1"
+          v-if="entity_data[`r_${relationTypeName}_s`]"
+          :key="relationTypeName"
+          :title="relationTypeConfig.display.domain_title"
+          class="border-0 bg-light mb-3"
         >
-          <nuxt-link
-            :to="{
-              name: 'project_name-entity_type_name-id',
-              params: {
-                project_name: project_name,
-                entity_type_name: relation.entity.__typename.toLowerCase(),
-                id: relation.entity.id
-              }
-            }"
+          <b-card
+            v-for="relation in entity_data[`r_${relationTypeName}_s`]"
+            :key="relation.id"
+            class="border-0 bg-white mb-1"
           >
-            {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
-          </nuxt-link>
+            <nuxt-link
+              :to="{
+                name: 'project_name-entity_type_name-id',
+                params: {
+                  project_name: project_name,
+                  entity_type_name: relation.entity.__typename.toLowerCase(),
+                  id: relation.entity.id
+                }
+              }"
+            >
+              {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+            </nuxt-link>
+          </b-card>
         </b-card>
-      </b-card>
+      </template>
+      <template
+        v-for="(relationTypeConfig, relationTypeName) in range_relation_types_config"
+      >
+        <b-card
+          v-if="entity_data[`ri_${relationTypeName}_s`]"
+          :key="relationTypeName"
+          :title="relationTypeConfig.display.range_title"
+          class="border-0 bg-light mb-3"
+        >
+          <b-card
+            v-for="relation in entity_data[`ri_${relationTypeName}_s`]"
+            :key="relation.id"
+            class="border-0 bg-white mb-1"
+          >
+            <nuxt-link
+              :to="{
+                name: 'project_name-entity_type_name-id',
+                params: {
+                  project_name: project_name,
+                  entity_type_name: relation.entity.__typename.toLowerCase(),
+                  id: relation.entity.id
+                }
+              }"
+            >
+              {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+            </nuxt-link>
+          </b-card>
+        </b-card>
+      </template>
     </template>
   </b-container>
 </template>
@@ -113,7 +146,6 @@ export default {
         relationConfig => relationConfig.domain_names.includes(this.entity_type_name)
       )
     },
-    // TODO: range
     entity_data () {
       return this.$store.state.data.data
     },
@@ -131,6 +163,12 @@ export default {
     },
     project_name () {
       return this.$route.params.project_name
+    },
+    range_relation_types_config () {
+      return filterObject(
+        this.$store.state.config.relation_types,
+        relationConfig => relationConfig.range_names.includes(this.entity_type_name)
+      )
     }
   },
   methods: {
