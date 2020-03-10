@@ -61,6 +61,16 @@ function constructQueryParts (fieldNames, typeConfig) {
 export const actions = {
   async load ({ commit, displatch }, { entityTypeName, entityTypesConfig, relationTypesConfig, params }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
+    const relationSides = {
+      domain: {
+        inverse: 'range',
+        graphqlPrefix: 'r'
+      },
+      range: {
+        inverse: 'domain',
+        graphqlPrefix: 'ri'
+      }
+    }
 
     // Get all fieldNames used in the title
     const fieldNames = extractTitleFieldNames(entityTypeConfig.display.title)
@@ -78,32 +88,20 @@ export const actions = {
       range: []
     }
     for (const relation in relationTypesConfig) {
-      if (relationTypesConfig[relation].domain_names.includes(entityTypeName)) {
-        relationFieldNames.domain[relation] = {
-          fields: [],
-          titles: {}
-        }
-        for (const panel of relationTypesConfig[relation].display.layout) {
-          relationFieldNames.domain[relation].fields.push(...extractFieldNames(panel.fields))
-        }
-        for (const linkedEntityTypeName of relationTypesConfig[relation].range_names) {
-          relationFieldNames.domain[relation].titles[linkedEntityTypeName] = [
-            ...new Set(['id', ...extractTitleFieldNames(entityTypesConfig[linkedEntityTypeName].display.title)])
-          ]
-        }
-      }
-      if (relationTypesConfig[relation].range_names.includes(entityTypeName)) {
-        relationFieldNames.range[relation] = {
-          fields: [],
-          titles: {}
-        }
-        for (const panel of relationTypesConfig[relation].display.layout) {
-          relationFieldNames.range[relation].fields.push(...extractFieldNames(panel.fields))
-        }
-        for (const linkedEntityTypeName of relationTypesConfig[relation].domain_names) {
-          relationFieldNames.range[relation].titles[linkedEntityTypeName] = [
-            ...new Set(['id', ...extractTitleFieldNames(entityTypesConfig[linkedEntityTypeName].display.title)])
-          ]
+      for (const side in relationSides) {
+        if (relationTypesConfig[relation][`${side}_names`].includes(entityTypeName)) {
+          relationFieldNames[side][relation] = {
+            fields: [],
+            titles: {}
+          }
+          for (const panel of relationTypesConfig[relation].display.layout) {
+            relationFieldNames[side][relation].fields.push(...extractFieldNames(panel.fields))
+          }
+          for (const linkedEntityTypeName of relationTypesConfig[relation][`${relationSides[side].inverse}_names`]) {
+            relationFieldNames[side][relation].titles[linkedEntityTypeName] = [
+              ...new Set(['id', ...extractTitleFieldNames(entityTypesConfig[linkedEntityTypeName].display.title)])
+            ]
+          }
         }
       }
     }
@@ -113,32 +111,20 @@ export const actions = {
       `${capitalizeFirstLetter(params.entity_type_name)}(id: ${params.id}){`
     ]
     queryParts.push(...constructQueryParts([...new Set(fieldNames)], entityTypeConfig))
-    for (const relation in relationFieldNames.domain) {
-      if (relationFieldNames.domain[relation].fields.length || Object.keys(relationFieldNames.domain[relation].titles).length) {
-        queryParts.push(`r_${relation}_s {`)
-        queryParts.push(...constructQueryParts([...new Set(['id', ...relationFieldNames.domain[relation].fields])], relationTypesConfig[relation]))
-        for (const linkedEntityTypeName in relationFieldNames.domain[relation].titles) {
-          queryParts.push('entity {')
-          queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
-          queryParts.push(...constructQueryParts([...new Set(['id', '__typename', ...relationFieldNames.domain[relation].titles[linkedEntityTypeName]])], entityTypesConfig[linkedEntityTypeName]))
-          queryParts.push('}')
-          queryParts.push('}')
-        }
-        queryParts.push('}')
-      }
-    }
-    for (const relation in relationFieldNames.range) {
-      if (relationFieldNames.range[relation].fields.length || Object.keys(relationFieldNames.range[relation].titles).length) {
-        queryParts.push(`ri_${relation}_s {`)
-        queryParts.push(...constructQueryParts([...new Set(['id', ...relationFieldNames.range[relation].fields])], relationTypesConfig[relation]))
-        for (const linkedEntityTypeName in relationFieldNames.range[relation].titles) {
-          queryParts.push('entity {')
-          queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
-          queryParts.push(...constructQueryParts([...new Set(['id', '__typename', ...relationFieldNames.range[relation].titles[linkedEntityTypeName]])], entityTypesConfig[linkedEntityTypeName]))
-          queryParts.push('}')
+    for (const side in relationSides) {
+      for (const relation in relationFieldNames[side]) {
+        if (relationFieldNames[side][relation].fields.length || Object.keys(relationFieldNames[side][relation].titles).length) {
+          queryParts.push(`${relationSides[side].graphqlPrefix}_${relation}_s {`)
+          queryParts.push(...constructQueryParts([...new Set(['id', ...relationFieldNames[side][relation].fields])], relationTypesConfig[relation]))
+          for (const linkedEntityTypeName in relationFieldNames[side][relation].titles) {
+            queryParts.push('entity {')
+            queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
+            queryParts.push(...constructQueryParts([...new Set(['id', '__typename', ...relationFieldNames[side][relation].titles[linkedEntityTypeName]])], entityTypesConfig[linkedEntityTypeName]))
+            queryParts.push('}')
+            queryParts.push('}')
+          }
           queryParts.push('}')
         }
-        queryParts.push('}')
       }
     }
     queryParts.push(
