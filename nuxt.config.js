@@ -54,7 +54,7 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    baseURL: 'http://localhost:8000/v1/'
+    baseURL: 'http://local.crdb:8000/v1/'
   },
   // See https://medium.com/javascript-in-plain-english/customize-bootstrap-in-nuxt-3da863703b35
   bootstrapVue: {
