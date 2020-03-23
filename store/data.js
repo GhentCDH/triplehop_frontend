@@ -133,7 +133,7 @@ export const actions = {
     )
 
     const response = await this.$axios.post(
-      params.project_name,
+      `/api/${params.project_name}`,
       {
         query: queryParts.join('\n')
       }

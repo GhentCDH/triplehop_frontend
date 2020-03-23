@@ -1,9 +1,10 @@
 <template>
   <b-container>
-    Test
+    Secret page.
   </b-container>
 </template>
 
 <script>
-export default {}
+export default {
+}
 </script>

@@ -15,7 +15,7 @@ export const mutations = {
 export const actions = {
   async load_entity_types ({ commit }, projectName) {
     const response = await this.$axios.post(
-      projectName,
+      `/api/${projectName}`,
       {
         query: `
         {
@@ -62,7 +62,7 @@ export const actions = {
   },
   async load_relation_types ({ commit }, projectName) {
     const response = await this.$axios.post(
-      projectName,
+      `/api/${projectName}`,
       {
         query: `
         {

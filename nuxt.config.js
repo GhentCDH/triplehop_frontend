@@ -46,6 +46,8 @@ export default {
     'bootstrap-vue/nuxt',
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
+    // Doc: https://auth.nuxtjs.org/
+    '@nuxtjs/auth',
     // Doc: https://github.com/schlunsen/nuxt-leaflet
     'nuxt-leaflet'
   ],
@@ -54,7 +56,28 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    baseURL: 'http://local.crdb:8000/v1/'
+    baseURL: 'http://local.crdb:8000/'
+  },
+  auth: {
+    strategies: {
+      local: {
+        // _scheme: 'oauth2',
+        endpoints: {
+          login: {
+            url: '/auth/token',
+            method: 'post',
+            propertyName: 'access_token'
+          },
+          user: {
+            url: '/auth/user',
+            method: 'get',
+            propertyName: false
+          }
+        }
+        // scope: ['openid', 'profile', 'email'],
+        // client_id: 'CRDB'
+      }
+    }
   },
   // See https://medium.com/javascript-in-plain-english/customize-bootstrap-in-nuxt-3da863703b35
   bootstrapVue: {
@@ -70,6 +93,9 @@ export default {
     */
     extend (config, ctx) {
     }
+  },
+  router: {
+    middleware: ['auth']
   },
   server: {
     host: '0.0.0.0'
