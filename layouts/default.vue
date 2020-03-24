@@ -2,7 +2,7 @@
   <b-container fluid="lg">
     <header>
       <b-navbar toggleable="lg" type="light" variant="light" class="mb-4">
-        <b-navbar-brand href="/">
+        <b-navbar-brand to="/">
           CRDB
         </b-navbar-brand>
 
