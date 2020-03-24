@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <div>
     <h1>
       {{ constructTitle(entity_type_config.display.title, entity_data) }}
     </h1>
@@ -8,7 +8,7 @@
       v-for="(panel, panelIndex) in entity_type_config.display.layout"
       :key="`panel-${panelIndex}`"
       :title="panel.label"
-      class="border-0 bg-light mb-3"
+      class="bg-light border-0 mb-3"
     >
       <dl
         v-if="'fields' in panel"
@@ -98,7 +98,7 @@
         </b-card>
       </b-card>
     </template>
-  </b-container>
+  </div>
 </template>
 
 <script>

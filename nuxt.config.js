@@ -68,21 +68,21 @@ export default {
             method: 'post',
             propertyName: 'access_token'
           },
+          logout: false,
           user: {
             url: '/auth/user',
             method: 'get',
             propertyName: false
           }
         }
-        // scope: ['openid', 'profile', 'email'],
-        // client_id: 'CRDB'
       }
     }
   },
   // See https://medium.com/javascript-in-plain-english/customize-bootstrap-in-nuxt-3da863703b35
   bootstrapVue: {
     bootstrapCSS: false,
-    bootstrapVueCSS: false
+    bootstrapVueCSS: false,
+    icons: true
   },
   /*
   ** Build configuration
