@@ -15,7 +15,7 @@
                 <b-icon icon="person-fill" />
                 {{ $auth.user.display_name }}
               </template>
-              <b-dropdown-item @click="$auth.logout()">
+              <b-dropdown-item @click="logout">
                 <b-icon
                   icon="upload"
                   rotate="90"
@@ -49,6 +49,18 @@ import Notifications from '@/components/Notifications'
 export default {
   components: {
     Notifications
+  },
+  methods: {
+    logout () {
+      this.$auth.logout()
+      this.$store.dispatch(
+        'notifications/create',
+        {
+          title: 'Logout successfull',
+          variant: 'success'
+        }
+      )
+    }
   }
 }
 </script>
