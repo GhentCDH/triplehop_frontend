@@ -1,5 +1,8 @@
 <template>
-  <LoginForm @login="login" />
+  <LoginForm
+    :busy="busy"
+    @login="login"
+  />
 </template>
 <script>
 import LoginForm from '@/components/LoginForm'
@@ -10,9 +13,7 @@ export default {
   },
   data () {
     return {
-      username: '',
-      password: '123',
-      error: null
+      busy: false
     }
   },
   computed: {
@@ -28,9 +29,12 @@ export default {
   },
   methods: {
     async login (userInfo) {
+      this.busy = true
+
       const formData = new FormData()
       formData.append('username', userInfo.username)
       formData.append('password', userInfo.password)
+
       try {
         await this.$auth.loginWith('local', {
           data: formData
@@ -53,6 +57,8 @@ export default {
           }
         )
       }
+
+      this.busy = false
     }
   }
 }
