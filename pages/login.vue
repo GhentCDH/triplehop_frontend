@@ -31,12 +31,28 @@ export default {
       const formData = new FormData()
       formData.append('username', userInfo.username)
       formData.append('password', userInfo.password)
-      await this.$auth.loginWith('local', {
-        data: formData
-      })
-        .catch((e) => {
-          // TODO: set error in message system
+      try {
+        await this.$auth.loginWith('local', {
+          data: formData
         })
+        this.$store.dispatch(
+          'notifications/create',
+          {
+            message: `Logged in as ${this.$auth.user.display_name}`,
+            title: 'Login successfull',
+            variant: 'success'
+          }
+        )
+      } catch (error) {
+        this.$store.dispatch(
+          'notifications/create',
+          {
+            message: 'There was an issue logging in.  Please try again.',
+            title: 'Login unsuccessfull',
+            variant: 'danger'
+          }
+        )
+      }
     }
   }
 }

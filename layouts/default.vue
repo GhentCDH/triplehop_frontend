@@ -38,7 +38,17 @@
       </b-navbar>
     </header>
     <main>
+      <notifications />
       <nuxt />
     </main>
   </b-container>
 </template>
+<script>
+import Notifications from '@/components/Notifications'
+
+export default {
+  components: {
+    Notifications
+  }
+}
+</script>
