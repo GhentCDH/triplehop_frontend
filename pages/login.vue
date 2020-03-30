@@ -5,6 +5,7 @@
   />
 </template>
 <script>
+// TODO redirect to originating page if user clicks 'login' from a non-auth page
 import LoginForm from '@/components/LoginForm'
 
 export default {
