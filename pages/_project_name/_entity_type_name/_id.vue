@@ -1,11 +1,11 @@
 <template>
   <div>
     <h1>
-      {{ constructTitle(entity_type_config.display.title, entity_data) }}
+      {{ constructTitle(entityTypeConfig.display.title, entityData) }}
     </h1>
 
     <b-card
-      v-for="(panel, panelIndex) in entity_type_config.display.layout"
+      v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
       :key="`panel-${panelIndex}`"
       :title="panel.label"
       class="bg-light border-0 mb-3"
@@ -21,12 +21,12 @@
             :key="`field-label-${field.field}`"
             class="col-sm-3 col-lg-2"
           >
-            {{ field.label ? field.label : entity_type_config.data[field.field].display_name }}
+            {{ field.label ? field.label : entityTypeConfig.data[field.field].display_name }}
           </dt>
           <GeometryField
             v-if="field.type === 'geometry'"
             :key="`field-value-${field.field}`"
-            :geometry="entity_data[field.field]"
+            :geometry="entityData[field.field]"
             class="col-sm-9 col-lg-10"
           />
           <dd
@@ -34,23 +34,23 @@
             :key="`field-value-${field.field}`"
             class="col-sm-9 col-lg-10"
           >
-            {{ entity_data[field.field] }}
+            {{ entityData[field.field] }}
           </dd>
         </template>
       </dl>
     </b-card>
 
     <template
-      v-for="(relationTypeConfig, relationTypeName) in domain_relation_types_config"
+      v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
     >
       <b-card
-        v-if="entity_data[`r_${relationTypeName}_s`]"
+        v-if="entityData[`r_${relationTypeName}_s`]"
         :key="relationTypeName"
         :title="relationTypeConfig.display.domain_title"
         class="border-0 bg-light mb-3"
       >
         <b-card
-          v-for="relation in entity_data[`r_${relationTypeName}_s`]"
+          v-for="relation in entityData[`r_${relationTypeName}_s`]"
           :key="relation.id"
           class="border-0 bg-white mb-1"
         >
@@ -58,28 +58,28 @@
             :to="{
               name: 'project_name-entity_type_name-id',
               params: {
-                project_name: project_name,
+                project_name: projectName,
                 entity_type_name: relation.entity.__typename.toLowerCase(),
                 id: relation.entity.id
               }
             }"
           >
-            {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+            {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
           </nuxt-link>
         </b-card>
       </b-card>
     </template>
     <template
-      v-for="(relationTypeConfig, relationTypeName) in range_relation_types_config"
+      v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
     >
       <b-card
-        v-if="entity_data[`ri_${relationTypeName}_s`]"
+        v-if="entityData[`ri_${relationTypeName}_s`]"
         :key="relationTypeName"
         :title="relationTypeConfig.display.range_title"
         class="border-0 bg-light mb-3"
       >
         <b-card
-          v-for="relation in entity_data[`ri_${relationTypeName}_s`]"
+          v-for="relation in entityData[`ri_${relationTypeName}_s`]"
           :key="relation.id"
           class="border-0 bg-white mb-1"
         >
@@ -87,13 +87,13 @@
             :to="{
               name: 'project_name-entity_type_name-id',
               params: {
-                project_name: project_name,
+                project_name: projectName,
                 entity_type_name: relation.entity.__typename.toLowerCase(),
                 id: relation.entity.id
               }
             }"
           >
-            {{ constructTitle(entity_types_config[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+            {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
           </nuxt-link>
         </b-card>
       </b-card>
@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { capitalizeFirstLetter, filterObject, isNumber } from '~/assets/js/utils'
+import { filterObject, isNumber } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
 
 export default {
@@ -140,34 +140,32 @@ export default {
     )
   },
   computed: {
-    domain_relation_types_config () {
+    // TODO: camelCase
+    domainRelationTypesConfig () {
       return filterObject(
         this.$store.state.config.relation_types,
-        relationConfig => relationConfig.domain_names.includes(this.entity_type_name)
+        relationConfig => relationConfig.domain_names.includes(this.entityTypeName)
       )
     },
-    entity_data () {
+    entityData () {
       return this.$store.state.data.data
     },
-    entity_type_config () {
-      return this.$store.state.config.entity_types[this.entity_type_name]
+    entityTypeConfig () {
+      return this.$store.state.config.entity_types[this.entityTypeName]
     },
-    entity_types_config () {
+    entityTypesConfig () {
       return this.$store.state.config.entity_types
     },
-    entity_type_display_name () {
-      return capitalizeFirstLetter(this.entity_type_name)
-    },
-    entity_type_name () {
+    entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    project_name () {
+    projectName () {
       return this.$route.params.project_name
     },
-    range_relation_types_config () {
+    rangeRelationTypesConfig () {
       return filterObject(
         this.$store.state.config.relation_types,
-        relationConfig => relationConfig.range_names.includes(this.entity_type_name)
+        relationConfig => relationConfig.range_names.includes(this.entityTypeName)
       )
     }
   },
