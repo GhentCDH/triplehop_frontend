@@ -15,6 +15,24 @@
                 <b-icon icon="person-fill" />
                 {{ $auth.user.display_name }}
               </template>
+              <b-dropdown-item
+                v-if="displayGlobalAdminLink($auth.user)"
+                to="/admin"
+              >
+                <b-icon
+                  icon="gear-fill"
+                />
+                Admin dashboard
+              </b-dropdown-item>
+              <b-dropdown-item
+                v-if="displayProjectAdminLink($auth.user, $route.params.project_name)"
+                :to="'/' + $route.params.project_name + '/admin'"
+              >
+                <b-icon
+                  icon="gear-fill"
+                />
+                Admin dashboard
+              </b-dropdown-item>
               <b-dropdown-item @click="logout">
                 <b-icon
                   icon="upload"
@@ -45,12 +63,15 @@
 </template>
 <script>
 import Notifications from '@/components/Notifications'
+import { displayGlobalAdminLink, displayProjectAdminLink } from '@/assets/js/auth'
 
 export default {
   components: {
     Notifications
   },
   methods: {
+    displayGlobalAdminLink,
+    displayProjectAdminLink,
     logout () {
       this.$auth.logout()
       this.$store.dispatch(
