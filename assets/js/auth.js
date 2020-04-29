@@ -54,3 +54,24 @@ export function hasOneOfProjectPermissions (user, projectName, permissions) {
 export function displayProjectAdminLink (user, projectName) {
   return hasOneOfProjectPermissions(user, projectName, ['es_index'])
 }
+
+export function hasEntityPermission (user, projectName, entityName, permission) {
+  if (!hasProjectPermission(user, projectName, permission)) {
+    return false
+  }
+
+  if (entityName == null) {
+    return false
+  }
+
+  if (
+    '__all__' in user.permissions[permission].__all__ ||
+    entityName in user.permissions[permission].__all__ ||
+    '__all__' in user.permissions[permission][projectName] ||
+    entityName in user.permissions[permission][projectName]
+  ) {
+    return true
+  }
+
+  return false
+}

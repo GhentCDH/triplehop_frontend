@@ -21,6 +21,7 @@ export const actions = {
         {
           Entity_config_s {
             system_name
+            display_name
             data {
               system_name
               display_name

@@ -9,7 +9,7 @@
         block
         variant="secondary"
         class="text-center"
-        :to="'/' + $route.params.project_name + '/admin/es_index'"
+        :to="`/${$route.params.project_name}/admin/es_index`"
       >
         <b-icon
           icon="search"
