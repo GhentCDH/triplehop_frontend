@@ -65,10 +65,19 @@ export function hasEntityPermission (user, projectName, entityName, permission) 
   }
 
   if (
-    '__all__' in user.permissions[permission].__all__ ||
-    entityName in user.permissions[permission].__all__ ||
-    '__all__' in user.permissions[permission][projectName] ||
-    entityName in user.permissions[permission][projectName]
+    '__all__' in user.permissions[permission] && (
+      '__all__' in user.permissions[permission].__all__ ||
+      entityName in user.permissions[permission].__all__
+    )
+  ) {
+    return true
+  }
+
+  if (
+    projectName in user.permissions[permission] && (
+      '__all__' in user.permissions[permission][projectName] ||
+      entityName in user.permissions[permission][projectName]
+    )
   ) {
     return true
   }
