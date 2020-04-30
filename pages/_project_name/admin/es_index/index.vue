@@ -25,6 +25,7 @@
   </b-row>
 </template>
 <script>
+// TODO: check for es_index jobs with status 'started'
 export default {
   async fetch ({ $axios, params, store, error }) {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
@@ -33,6 +34,7 @@ export default {
   },
   computed: {
     entityTypesConfig () {
+      // TODO: filter on hasEntityPermission
       return this.$store.state.config.entity_types
     },
     projectName () {
