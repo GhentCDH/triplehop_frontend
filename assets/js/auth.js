@@ -64,6 +64,9 @@ export function hasEntityPermission (user, projectName, entityName, permission) 
     return false
   }
 
+  //TODO: check (entity, relation)
+  // console.log(user.permissions)
+
   if (
     '__all__' in user.permissions[permission] && (
       '__all__' in user.permissions[permission].__all__ ||
