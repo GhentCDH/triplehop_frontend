@@ -25,8 +25,17 @@
   </b-row>
 </template>
 <script>
+import { hasProjectPermission } from '@/assets/js/auth'
+
 // TODO: check for es_index jobs with status 'started'
 export default {
+  validate ({ $auth, params, error }) {
+    // TODO: validate project_name based on cached config
+    if (!hasProjectPermission($auth.user, params.project_name, 'es_index')) {
+      return error({ statusCode: 403, message: 'Unauthorized.' })
+    }
+    return true
+  },
   async fetch ({ params, store }) {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 

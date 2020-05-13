@@ -24,9 +24,16 @@
   </b-row>
 </template>
 <script>
-import { hasProjectPermission } from '@/assets/js/auth'
+import { hasProjectAdminAccess, hasProjectPermission } from '@/assets/js/auth'
 
 export default {
+  validate ({ $auth, params, error }) {
+    // TODO: validate project_name based on cached config
+    if (!hasProjectAdminAccess($auth.user, params.project_name)) {
+      return error({ statusCode: 403, message: 'Unauthorized.' })
+    }
+    return true
+  },
   methods: {
     hasProjectPermission (permission) {
       return hasProjectPermission(this.$auth.user, this.$route.params.project_name, permission)
