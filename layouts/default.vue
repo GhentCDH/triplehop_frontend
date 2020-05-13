@@ -16,22 +16,22 @@
                 {{ $auth.user.display_name }}
               </template>
               <b-dropdown-item
-                v-if="displayGlobalAdminLink($auth.user)"
+                v-if="hasGlobalAdminAccess($auth.user)"
                 to="/admin"
               >
                 <b-icon
                   icon="gear-fill"
                 />
-                Admin dashboard
+                Global admin dashboard
               </b-dropdown-item>
               <b-dropdown-item
-                v-if="displayProjectAdminLink($auth.user, $route.params.project_name)"
+                v-if="hasProjectAdminAccess($auth.user, $route.params.project_name)"
                 :to="'/' + $route.params.project_name + '/admin'"
               >
                 <b-icon
                   icon="gear-fill"
                 />
-                Admin dashboard
+                Project admin dashboard
               </b-dropdown-item>
               <b-dropdown-item @click="logout">
                 <b-icon
@@ -63,15 +63,15 @@
 </template>
 <script>
 import Notifications from '@/components/Notifications'
-import { displayGlobalAdminLink, displayProjectAdminLink } from '@/assets/js/auth'
+import { hasGlobalAdminAccess, hasProjectAdminAccess } from '@/assets/js/auth'
 
 export default {
   components: {
     Notifications
   },
   methods: {
-    displayGlobalAdminLink,
-    displayProjectAdminLink,
+    hasGlobalAdminAccess,
+    hasProjectAdminAccess,
     logout () {
       this.$auth.logout()
       this.$store.dispatch(

@@ -16,7 +16,7 @@ export function hasOneOfGlobalPermissions (user, permissions) {
   return false
 }
 
-export function displayGlobalAdminLink (user) {
+export function hasGlobalAdminAccess (user) {
   return hasOneOfGlobalPermissions(user, [])
 }
 
@@ -51,7 +51,7 @@ export function hasOneOfProjectPermissions (user, projectName, permissions) {
   return false
 }
 
-export function displayProjectAdminLink (user, projectName) {
+export function hasProjectAdminAccess (user, projectName) {
   return hasOneOfProjectPermissions(user, projectName, ['es_index'])
 }
 
@@ -64,7 +64,7 @@ export function hasEntityPermission (user, projectName, entityName, permission) 
     return false
   }
 
-  //TODO: check (entity, relation)
+  // TODO: check (entity, relation)
   // console.log(user.permissions)
 
   if (
