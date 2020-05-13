@@ -118,7 +118,7 @@ export default {
     }
     return true
   },
-  async fetch ({ $axios, params, store, error }) {
+  async fetch ({ params, store, error }) {
     // TODO (backend): allow fields to be ordered
     // TODO (backend): allow display widget configuration
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?

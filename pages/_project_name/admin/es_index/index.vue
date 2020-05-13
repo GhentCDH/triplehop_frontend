@@ -27,7 +27,7 @@
 <script>
 // TODO: check for es_index jobs with status 'started'
 export default {
-  async fetch ({ $axios, params, store, error }) {
+  async fetch ({ params, store }) {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
     await store.dispatch('config/load_entity_types', params.project_name)
