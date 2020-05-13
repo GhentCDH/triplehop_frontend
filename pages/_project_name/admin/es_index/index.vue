@@ -2,7 +2,7 @@
   <b-row>
     <b-col
       v-for="(entityTypeConfig, entityTypeName) in entityTypesConfig"
-      :key=entityTypeName
+      :key="entityTypeName"
       sm="6"
       md="4"
     >
