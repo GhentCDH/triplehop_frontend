@@ -61,7 +61,6 @@ export default {
   auth: {
     strategies: {
       local: {
-        // _scheme: 'oauth2',
         endpoints: {
           login: {
             url: '/auth/token',
