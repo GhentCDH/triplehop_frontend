@@ -125,7 +125,10 @@ export default {
 
     await store.dispatch('config/load_entity_types', params.project_name)
     if (!(params.entity_type_name in store.state.config.entity_types)) {
-      return error({ statusCode: 404, message: `Entity type "${params.entity_type_name}" not found.` })
+      return error({
+        statusCode: 404,
+        message: `Entity type "${params.entity_type_name}" cannot be found.`
+      })
     }
     await store.dispatch('config/load_relation_types', params.project_name)
 
@@ -138,6 +141,12 @@ export default {
         params
       }
     )
+    if (store.state.data.data == null) {
+      return error({
+        statusCode: 404,
+        message: `Entity of type "${params.entity_type_name}" with id "${params.id}" cannot be found.`
+      })
+    }
   },
   computed: {
     // TODO: camelCase
