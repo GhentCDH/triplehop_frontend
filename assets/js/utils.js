@@ -3,6 +3,9 @@ export function capitalizeFirstLetter (string) {
 }
 
 export function formatDateTime (string) {
+  if (string == null) {
+    return null
+  }
   const date = new Date(string)
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`
 }
