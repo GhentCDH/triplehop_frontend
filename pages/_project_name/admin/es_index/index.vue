@@ -58,16 +58,12 @@ export default {
     }
   },
   methods: {
-    async reindex (entitytypeName) {
+    async reindex (entityTypeName) {
       this.busy = true
 
       try {
-        const response = await this.$axios.post(
-          '/es/reindex',
-          {
-            project_name: this.projectName,
-            entity_type_name: entitytypeName
-          }
+        const response = await this.$axios.get(
+          `/es/${this.projectName}/${entityTypeName}/reindex`
         )
         this.$router.push(`/${this.projectName}/admin/job/${response.data.id}`)
       } catch (error) {
@@ -79,9 +75,8 @@ export default {
             variant: 'danger'
           }
         )
+        this.busy = false
       }
-
-      this.busy = false
     }
   }
 }
