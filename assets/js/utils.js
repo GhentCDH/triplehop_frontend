@@ -4,7 +4,6 @@ export function capitalizeFirstLetter (string) {
 
 export function formatDateTime (string) {
   const date = new Date(string)
-  console.log(date.getHours())
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`
 }
 
