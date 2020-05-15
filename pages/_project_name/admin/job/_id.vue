@@ -61,6 +61,14 @@
     </dl>
     <dl class="row">
       <dt class="col-sm-3">
+        Started
+      </dt>
+      <dd class="col-sm-9">
+        {{ formatDateTime(jobData.started) }}
+      </dd>
+    </dl>
+    <dl class="row">
+      <dt class="col-sm-3">
         Ended
       </dt>
       <dd class="col-sm-9">
