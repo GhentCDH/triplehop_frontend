@@ -137,8 +137,9 @@ export default {
       {
         entityTypeName: params.entity_type_name,
         entityTypesConfig: store.state.config.entity_types,
-        relationTypesConfig: store.state.config.relation_types,
-        params
+        id: params.id,
+        projectName: params.project_name,
+        relationTypesConfig: store.state.config.relation_types
       }
     )
     if (store.state.data.data == null) {

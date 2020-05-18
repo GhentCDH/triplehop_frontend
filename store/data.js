@@ -59,7 +59,7 @@ function constructQueryParts (fieldNames, typeConfig) {
 }
 
 export const actions = {
-  async load ({ commit, displatch }, { entityTypeName, entityTypesConfig, relationTypesConfig, params }) {
+  async load ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
     const relationSides = {
       domain: {
@@ -108,7 +108,7 @@ export const actions = {
 
     const queryParts = [
       '{',
-      `${capitalizeFirstLetter(params.entity_type_name)}(id: ${params.id}){`
+      `${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
     ]
     queryParts.push(...constructQueryParts([...new Set(fieldNames)], entityTypeConfig))
     for (const side in relationSides) {
@@ -133,7 +133,7 @@ export const actions = {
     )
 
     const response = await this.$axios.post(
-      `/data/${params.project_name}`,
+      `/data/${projectName}`,
       {
         query: queryParts.join('\n')
       }
@@ -141,7 +141,7 @@ export const actions = {
 
     commit(
       'SET_DATA',
-      response.data.data[capitalizeFirstLetter(params.entity_type_name)]
+      response.data.data[capitalizeFirstLetter(entityTypeName)]
     )
   }
 }
