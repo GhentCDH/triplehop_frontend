@@ -39,6 +39,11 @@ export const actions = {
                 }
               }
             }
+            es_columns {
+              system_name
+              display_name
+              type
+            }
           }
         }
         `
@@ -56,6 +61,16 @@ export const actions = {
         config[raw.system_name].data[rawField.system_name] = {
           display_name: rawField.display_name,
           type: rawField.type
+        }
+      }
+      if (raw.es_columns != null) {
+        config[raw.system_name].es_columns = []
+        for (const rawColumn of raw.es_columns) {
+          config[raw.system_name].es_columns.push({
+            systemName: rawColumn.system_name,
+            displayName: rawColumn.display_name,
+            type: rawColumn.type
+          })
         }
       }
     }
