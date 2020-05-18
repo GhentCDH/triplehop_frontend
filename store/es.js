@@ -15,13 +15,13 @@ export const mutations = {
 }
 
 export const actions = {
-  async search ({ commit }, { body, entityTypeName, projectName }) {
+  async search ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
-      constructQuery(body)
+      constructQuery(body, entityTypeConfig)
     )
     if (response.data != null) {
-      commit('SET_ITEMS', extractItems(body.keys, response.data))
+      commit('SET_ITEMS', extractItems(body.keys, response.data, entityTypeName))
       commit('SET_TOTAL', extractTotal(response.data))
     }
   }
