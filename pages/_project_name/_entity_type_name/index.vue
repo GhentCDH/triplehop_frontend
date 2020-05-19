@@ -3,37 +3,38 @@
     Search {{ entityTypeDisplayName }}s
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell()="data">
-        <ul v-if="Array.isArray(data.value) && data.value.length > 1">
-          <li
-            v-for="(item, index) in data.value"
-            :key="index"
-          >
-            <nuxt-link
-              v-if="item instanceof Object && 'id' in item && 'name' in item && 'entity_type_name' in item"
-              :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+        <template v-if="isArray(data.value)">
+          <ul v-if="data.value.length > 1">
+            <li
+              v-for="(item, index) in data.value"
+              :key="index"
             >
-              {{ item.name }}
+              <nuxt-link
+                v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
+                :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+              >
+                {{ item.name }}
+              </nuxt-link>
+              <template v-else>
+                {{ item.value }}
+              </template>
+            </li>
+          </ul>
+          <template v-else-if="data.value.length == 1">
+            <nuxt-link
+              v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
+              :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+            >
+              {{ data.value[0].name }}
             </nuxt-link>
             <template v-else>
-              {{ item.value }}
+              {{ data.value[0] }}
             </template>
-          </li>
-        </ul>
-        <template v-else-if="Array.isArray(data.value) && data.value.length == 1">
-          <nuxt-link
-            v-if="data.value[0] instanceof Object && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
-            :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
-          >
-            {{ data.value[0].name }}
-          </nuxt-link>
-          <template v-else>
-            {{ data.value[0] }}
           </template>
         </template>
-        <template v-else-if="Array.isArray(data.value) && data.value.length == 0" />
         <template v-else>
           <nuxt-link
-            v-if="data.value instanceof Object && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
+            v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
             :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
           >
             {{ data.value.name }}
@@ -49,6 +50,7 @@
 
 <script>
 import { extractFields, extractSystemNames } from '~/assets/js/es'
+import { isArray, isObject } from '~/assets/js/utils'
 
 export default {
   auth: false,
@@ -103,6 +105,10 @@ export default {
     total () {
       return this.$store.state.es.total
     }
+  },
+  methods: {
+    isArray,
+    isObject
   }
 }
 </script>

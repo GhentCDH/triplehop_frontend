@@ -10,8 +10,16 @@ export function formatDateTime (string) {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`
 }
 
+export function isArray (variable) {
+  return Array.isArray(variable)
+}
+
 export function isNumber (string) {
   return /^\d+$/.test(string)
+}
+
+export function isObject (variable) {
+  return variable != null && typeof variable === 'object'
 }
 
 export function isUUID (string) {
