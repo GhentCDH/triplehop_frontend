@@ -9,14 +9,23 @@
       Error while fetching data...
     </p>
     <div v-else>
-      Displaying {{ showing_start }} to {{ showing_end }} of {{ total }} results.
+      Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
       <b-pagination
         :value="currentPage"
         :total-rows="total"
         :per-page="body.size"
-        @input="changePage"
+        @input="pageChanged"
       />
-      <b-table striped hover :items="items" :fields="fields">
+      <b-table
+        striped
+        hover
+        :items="items"
+        :fields="fields"
+        :sort-by="sortBy"
+        :sort-desc="sortDesc"
+        :no-local-sorting="true"
+        @sort-changed="sortingChanged"
+      >
         <template v-slot:cell()="data">
           <template v-if="isArray(data.value)">
             <ul v-if="data.value.length > 1">
@@ -64,7 +73,7 @@
         :value="currentPage"
         :total-rows="total"
         :per-page="body.size"
-        @input="changePage"
+        @input="pageChanged"
       />
     </div>
   </div>
@@ -78,6 +87,9 @@ export default {
   auth: false,
   validate ({ query }) {
     if ((query.page != null && !isNumber(query.page)) || query.page === '0') {
+      return false
+    }
+    if (query.sortOrder != null && query.sortOrder !== 'asc' && query.sortOrder !== 'desc') {
       return false
     }
     return true
@@ -99,12 +111,16 @@ export default {
     const keys = extractSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
     // TODO: make size configurable
     const size = 25
+    // TODO: make default sorting configurable
+    this.sortBy = this.$route.query.sortBy == null ? keys[0] : this.$route.query.sortBy
+    this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
     this.body = {
       keys,
-      // TODO: make default sorting configurable
-      sort: [keys[0]],
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
-      size
+      size,
+      sort: {
+        [this.sortBy]: this.sortOrder
+      }
     }
     await this.$store.dispatch(
       'es/search',
@@ -121,7 +137,9 @@ export default {
       body: {
         from: 0,
         size: 25
-      }
+      },
+      sortBy: null,
+      sortOrder: null
     }
   },
   computed: {
@@ -143,14 +161,17 @@ export default {
     projectName () {
       return this.$route.params.project_name
     },
-    showing_start () {
+    showingStart () {
       return this.body.from + 1
     },
-    showing_end () {
+    showingEnd () {
       if (this.total < this.body.from + this.body.size) {
         return this.total
       }
       return this.body.from + this.body.size
+    },
+    sortDesc () {
+      return this.sortOrder === 'desc'
     },
     total () {
       return this.$store.state.es.total
@@ -162,7 +183,7 @@ export default {
   methods: {
     isArray,
     isObject,
-    changePage (page) {
+    pageChanged (page) {
       if (page == null && this.body.from === 0) {
         return
       }
@@ -171,6 +192,9 @@ export default {
       }
       this.body.from = (page - 1) * this.body.size
       this.$router.push({ query: { page } })
+    },
+    sortingChanged ({ sortBy, sortDesc }) {
+      this.$router.push({ query: { sortBy, sortOrder: sortDesc ? 'desc' : 'asc' } })
     }
   }
 }

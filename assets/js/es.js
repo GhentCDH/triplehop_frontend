@@ -1,10 +1,10 @@
 export function constructQuery (body, entityTypeConfig) {
-  const sort = []
-  for (const key of body.sort) {
+  const sort = {}
+  for (const key in body.sort) {
     if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'text') {
-      sort.push(`${key}.keyword`)
+      sort[`${key}.keyword`] = body.sort[key]
     } else {
-      sort.push(key)
+      sort[key] = body.sort[key]
     }
   }
   return {
@@ -19,7 +19,8 @@ export function extractFields (entityTypeConfig) {
   for (const fieldConfig of entityTypeConfig.es_columns) {
     fields.push({
       key: fieldConfig.systemName,
-      label: fieldConfig.displayName
+      label: fieldConfig.displayName,
+      sortable: fieldConfig.sortable
     })
   }
   return fields

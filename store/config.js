@@ -43,6 +43,7 @@ export const actions = {
               system_name
               display_name
               type
+              sortable
             }
           }
         }
@@ -69,7 +70,8 @@ export const actions = {
           config[raw.system_name].es_columns.push({
             systemName: rawColumn.system_name,
             displayName: rawColumn.display_name,
-            type: rawColumn.type
+            type: rawColumn.type,
+            sortable: rawColumn.sortable
           })
         }
       }
