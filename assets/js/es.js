@@ -1,11 +1,22 @@
 export function constructQuery (body, entityTypeConfig) {
-  const sort = {}
-  for (const key in body.sort) {
-    if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'text') {
-      sort[`${key}.keyword`] = body.sort[key]
+  const sort = []
+  for (const sortPart of body.sort) {
+    const key = Object.keys(sortPart)[0]
+    const newSortPart = {}
+    if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'nested') {
+      newSortPart[`${key}.name.keyword`] = {
+        mode: sortPart[key] === 'desc' ? 'max' : 'min',
+        order: sortPart[key],
+        nested: {
+          path: key
+        }
+      }
+    } else if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'text') {
+      newSortPart[`${key}.keyword`] = sortPart[key]
     } else {
-      sort[key] = body.sort[key]
+      newSortPart[key] = sortPart[key]
     }
+    sort.push(newSortPart)
   }
   return {
     sort,

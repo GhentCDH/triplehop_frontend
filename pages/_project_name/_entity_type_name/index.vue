@@ -19,7 +19,7 @@
       <b-table
         striped
         hover
-        :items="items"
+        :items="sortedItems"
         :fields="fields"
         :sort-by="sortBy"
         :sort-desc="sortDesc"
@@ -81,7 +81,7 @@
 
 <script>
 import { extractFields, extractSystemNames } from '~/assets/js/es'
-import { isArray, isNumber, isObject } from '~/assets/js/utils'
+import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 
 export default {
   auth: false,
@@ -118,9 +118,11 @@ export default {
       keys,
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
       size,
-      sort: {
-        [this.sortBy]: this.sortOrder
-      }
+      sort: [
+        {
+          [this.sortBy]: this.sortOrder
+        }
+      ]
     }
     await this.$store.dispatch(
       'es/search',
@@ -146,14 +148,17 @@ export default {
     currentPage () {
       return this.$route.query.page ?? 1
     },
+    entityTypeConfig () {
+      return this.$store.state.config.entity_types[this.entityTypeName]
+    },
+    entityTypeDisplayName () {
+      return this.entityTypeConfig.display_name
+    },
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    entityTypeDisplayName () {
-      return this.$store.state.config.entity_types[this.entityTypeName].display_name
-    },
     fields () {
-      return extractFields(this.$store.state.config.entity_types[this.entityTypeName])
+      return extractFields(this.entityTypeConfig)
     },
     items () {
       return this.$store.state.es.items
@@ -172,6 +177,21 @@ export default {
     },
     sortDesc () {
       return this.sortOrder === 'desc'
+    },
+    sortedItems () {
+      if (
+        this.sortBy != null &&
+        this.entityTypeConfig.es_columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
+      ) {
+        const items = this.items
+        for (const item of items) {
+          if (this.sortBy in item) {
+            item[this.sortBy].sort(compareNameUnicode)
+          }
+        }
+        return items
+      }
+      return this.items
     },
     total () {
       return this.$store.state.es.total

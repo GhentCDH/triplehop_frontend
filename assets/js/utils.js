@@ -2,6 +2,18 @@ export function capitalizeFirstLetter (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
+export function compareNameUnicode (a, b) {
+  const normA = normalizeUnicode(a.name).toLowerCase()
+  const normB = normalizeUnicode(b.name).toLowerCase()
+  if (normA < normB) {
+    return -1
+  }
+  if (normA > normB) {
+    return 1
+  }
+  return 0
+}
+
 export function formatDateTime (string) {
   if (string == null) {
     return null
@@ -30,4 +42,8 @@ export function filterObject (obj, predicate) {
   return Object.keys(obj)
     .filter(key => predicate(obj[key]))
     .reduce((result, key) => ({ ...result, [key]: obj[key] }), {})
+}
+
+export function normalizeUnicode (string) {
+  return string.normalize('NFKD').replace(/[^\w]/g, '')
 }
