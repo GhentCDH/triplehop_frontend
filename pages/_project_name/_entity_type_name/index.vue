@@ -183,10 +183,12 @@ export default {
         this.sortBy != null &&
         this.entityTypeConfig.es_columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
       ) {
-        const items = this.items
-        for (const item of items) {
-          if (this.sortBy in item) {
-            item[this.sortBy].sort(compareNameUnicode)
+        const items = []
+        for (const item of this.items) {
+          if (this.sortBy in item && isArray(item[this.sortBy]) && item[this.sortBy].length > 1) {
+            items.push(this.sortItem(item))
+          } else {
+            items.push(item)
           }
         }
         return items
@@ -215,6 +217,19 @@ export default {
     },
     sortingChanged ({ sortBy, sortDesc }) {
       this.$router.push({ query: { sortBy, sortOrder: sortDesc ? 'desc' : 'asc' } })
+    },
+    sortItem (item) {
+      const result = {}
+      for (const field in item) {
+        if (field !== this.sortBy) {
+          result[field] = item[field]
+        } else if (this.sortOrder === 'desc') {
+          result[field] = [...item[field]].sort(compareNameUnicode).reverse()
+        } else {
+          result[field] = [...item[field]].sort(compareNameUnicode)
+        }
+      }
+      return result
     }
   }
 }
