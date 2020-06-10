@@ -205,6 +205,29 @@ export default {
   methods: {
     isArray,
     isObject,
+    constructQuery (queryPart) {
+      const query = {}
+
+      if ('page' in queryPart) {
+        query.page = queryPart.page
+      } else {
+        query.page = Math.floor(this.body.from / this.body.size) + 1
+      }
+
+      if ('sortBy' in queryPart) {
+        query.sortBy = queryPart.sortBy
+      } else {
+        query.sortBy = this.sortBy
+      }
+
+      if ('sortOrder' in queryPart) {
+        query.sortOrder = queryPart.sortOrder
+      } else {
+        query.sortOrder = this.sortOrder
+      }
+
+      return query
+    },
     pageChanged (page) {
       if (page == null && this.body.from === 0) {
         return
@@ -212,11 +235,10 @@ export default {
       if (page === Math.floor(this.body.from / this.body.size) + 1) {
         return
       }
-      this.body.from = (page - 1) * this.body.size
-      this.$router.push({ query: { page } })
+      this.$router.push({ query: this.constructQuery({ page }) })
     },
     sortingChanged ({ sortBy, sortDesc }) {
-      this.$router.push({ query: { sortBy, sortOrder: sortDesc ? 'desc' : 'asc' } })
+      this.$router.push({ query: this.constructQuery({ sortBy, sortOrder: sortDesc ? 'desc' : 'asc' }) })
     },
     sortItem (item) {
       const result = {}
