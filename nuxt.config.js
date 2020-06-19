@@ -91,7 +91,10 @@ export default {
     ** You can extend webpack config here
     */
     extend (config, ctx) {
-    }
+    },
+    transpile: [
+      ({ isServer }) => 'vue-typeahead-bootstrap'
+    ]
   },
   router: {
     middleware: ['auth']

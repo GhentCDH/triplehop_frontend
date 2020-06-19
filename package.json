@@ -21,6 +21,7 @@
     "leaflet": "^1.6.0",
     "nuxt": "^2.12.2",
     "nuxt-leaflet": "0.0.19",
+    "vue-typeahead-bootstrap": "^2.1.2",
     "vuelidate": "^0.7.5"
   },
   "devDependencies": {

@@ -45,6 +45,13 @@ export const actions = {
               type
               sortable
             }
+            es_filters {
+              filters {
+                system_name
+                display_name
+                type
+              }
+            }
           }
         }
         `
@@ -73,6 +80,22 @@ export const actions = {
             type: rawColumn.type,
             sortable: rawColumn.sortable
           })
+        }
+      }
+      if (raw.es_filters != null) {
+        config[raw.system_name].es_filters = []
+        for (const rawSection of raw.es_filters) {
+          const section = {
+            filters: []
+          }
+          for (const rawFilter of rawSection.filters) {
+            section.filters.push({
+              systemName: rawFilter.system_name,
+              displayName: rawFilter.display_name,
+              type: rawFilter.type
+            })
+          }
+          config[raw.system_name].es_filters.push(section)
         }
       }
     }

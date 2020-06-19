@@ -8,83 +8,122 @@
     <p v-else-if="$fetchState.error">
       Error while fetching data...
     </p>
-    <div v-else>
-      Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
-      <b-pagination
-        :value="currentPage"
-        :total-rows="total"
-        :per-page="body.size"
-        @input="pageChanged"
-      />
-      <b-table
-        striped
-        hover
-        :items="sortedItems"
-        :fields="fields"
-        :sort-by="sortBy"
-        :sort-desc="sortDesc"
-        :no-local-sorting="true"
-        @sort-changed="sortingChanged"
+    <b-row
+      v-else
+    >
+      <b-col
+        v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
+        cols="3"
       >
-        <template v-slot:cell()="data">
-          <template v-if="isArray(data.value)">
-            <ul v-if="data.value.length > 1">
-              <li
-                v-for="(item, index) in data.value"
-                :key="index"
-              >
-                <nuxt-link
-                  v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
-                  :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+        <b-form>
+          <div
+            v-for="(group, index) in filterGroups"
+            :key="index"
+            class="bg-light p-3"
+          >
+            <b-form-group
+              v-for="filter in group.filters"
+              :id="`ig_${filter.systemName}`"
+              :key="filter.systemName"
+              :label="filter.displayName"
+              :label-for="`i_${filter.systemName}`"
+            >
+              <vue-typeahead-bootstrap
+                v-if="filter.type === 'autocomplete'"
+                :id="`i_${filter.systemName}`"
+                v-model="form[filter.systemName]"
+                :data="autocompleteData[filter.systemName]"
+                :disable-sort="true"
+                :show-all-results="true"
+                @input="autocompleteLookup(filter.systemName)"
+              />
+            </b-form-group>
+          </div>
+        </b-form>
+      </b-col>
+      <b-col cols="9">
+        Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
+        <b-pagination
+          :value="currentPage"
+          :total-rows="total"
+          :per-page="body.size"
+          @input="pageChanged"
+        />
+        <b-table
+          striped
+          hover
+          :items="sortedItems"
+          :fields="fields"
+          :sort-by="sortBy"
+          :sort-desc="sortDesc"
+          :no-local-sorting="true"
+          @sort-changed="sortingChanged"
+        >
+          <template v-slot:cell()="data">
+            <template v-if="isArray(data.value)">
+              <ul v-if="data.value.length > 1">
+                <li
+                  v-for="(item, index) in data.value"
+                  :key="index"
                 >
-                  {{ item.name }}
+                  <nuxt-link
+                    v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
+                    :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+                  >
+                    {{ item.name }}
+                  </nuxt-link>
+                  <template v-else>
+                    {{ item.value }}
+                  </template>
+                </li>
+              </ul>
+              <template v-else-if="data.value.length == 1">
+                <nuxt-link
+                  v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
+                  :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+                >
+                  {{ data.value[0].name }}
                 </nuxt-link>
                 <template v-else>
-                  {{ item.value }}
+                  {{ data.value[0] }}
                 </template>
-              </li>
-            </ul>
-            <template v-else-if="data.value.length == 1">
+              </template>
+            </template>
+            <template v-else>
               <nuxt-link
-                v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
-                :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+                v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
+                :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
               >
-                {{ data.value[0].name }}
+                {{ data.value.name }}
               </nuxt-link>
               <template v-else>
-                {{ data.value[0] }}
+                {{ data.value }}
               </template>
             </template>
           </template>
-          <template v-else>
-            <nuxt-link
-              v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
-              :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
-            >
-              {{ data.value.name }}
-            </nuxt-link>
-            <template v-else>
-              {{ data.value }}
-            </template>
-          </template>
-        </template>
-      </b-table>
-      <b-pagination
-        :value="currentPage"
-        :total-rows="total"
-        :per-page="body.size"
-        @input="pageChanged"
-      />
-    </div>
+        </b-table>
+        <b-pagination
+          :value="currentPage"
+          :total-rows="total"
+          :per-page="body.size"
+          @input="pageChanged"
+        />
+      </b-col>
+    </b-row>
   </div>
 </template>
 
 <script>
+import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
+
 import { extractFields, extractSystemNames } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 
 export default {
   auth: false,
+  components: {
+    'vue-typeahead-bootstrap': VueTypeaheadBootstrap
+  },
   validate ({ query }) {
     if ((query.page != null && !isNumber(query.page)) || query.page === '0') {
       return false
@@ -107,6 +146,16 @@ export default {
         statusCode: 404,
         message: `No search page configured for entity type "${this.$route.params.entity_type_name}".`
       })
+    }
+    if ('es_filters' in this.$store.state.config.entity_types[this.$route.params.entity_type_name]) {
+      this.form = {}
+      for (const section of this.$store.state.config.entity_types[this.$route.params.entity_type_name].es_filters) {
+        for (const filter of section.filters) {
+          this.form[filter.systemName] = this.$route.query[`f_${filter.systemName}`] ?? null
+          this.autocompleteData[filter.systemName] = []
+        }
+      }
+      this.oldForm = JSON.parse(JSON.stringify(this.form))
     }
     const keys = extractSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
     // TODO: make size configurable
@@ -136,10 +185,13 @@ export default {
   },
   data () {
     return {
+      autocompleteData: {},
       body: {
         from: 0,
         size: 25
       },
+      form: {},
+      oldForm: {},
       sortBy: null,
       sortOrder: null
     }
@@ -159,6 +211,9 @@ export default {
     },
     fields () {
       return extractFields(this.entityTypeConfig)
+    },
+    filterGroups () {
+      return this.entityTypeConfig.es_filters
     },
     items () {
       return this.$store.state.es.items
@@ -205,6 +260,37 @@ export default {
   methods: {
     isArray,
     isObject,
+    async autocompleteLookup (systemName) {
+      // First search for 10 exact matches. If there are less results, use fuzzy matching
+      const response = await this.$axios.post(
+        `/es/${this.projectName}/${this.entityTypeName}/search`,
+        {
+          suggest: {
+            autocomplete: {
+              prefix: this.form[systemName],
+              completion: {
+                field: `${systemName}.completion`,
+                skip_duplicates: true,
+                size: 10
+              }
+            }
+          }
+        }
+      )
+      if (
+        response.status === 200 &&
+        'suggest' in response.data &&
+        'autocomplete' in response.data.suggest &&
+        isArray(response.data.suggest.autocomplete) &&
+        isObject(response.data.suggest.autocomplete[0]) &&
+        'options' in response.data.suggest.autocomplete[0] &&
+        isArray(response.data.suggest.autocomplete[0].options)
+      ) {
+        this.autocompleteData[systemName] = response.data.suggest.autocomplete[0].options.map(o => o.text)
+      } else {
+        this.autocompleteData[systemName] = []
+      }
+    },
     constructQuery (queryPart) {
       const query = {}
 
@@ -227,6 +313,14 @@ export default {
       }
 
       return query
+    },
+    formChanged () {
+      const form = {}
+      for (const field in this.form) {
+        if (this.form[field] != null) {
+          form[field] = this.form[field]
+        }
+      }
     },
     pageChanged (page) {
       if (page == null && this.body.from === 0) {
