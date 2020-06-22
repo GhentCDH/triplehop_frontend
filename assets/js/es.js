@@ -1,4 +1,19 @@
 export function constructQuery (body, entityTypeConfig) {
+  const query = {
+    bool: {
+      must: []
+    }
+  }
+  for (const filter in body.filters) {
+    if (body.filters[filter] != null) {
+      const match = {
+        match: {}
+      }
+      match.match[filter] = body.filters[filter]
+      query.bool.must.push(match)
+    }
+  }
+
   const sort = []
   for (const sortPart of body.sort) {
     const key = Object.keys(sortPart)[0]
@@ -18,10 +33,12 @@ export function constructQuery (body, entityTypeConfig) {
     }
     sort.push(newSortPart)
   }
+
   return {
     sort,
     from: body.from,
-    size: body.size
+    size: body.size,
+    query
   }
 }
 

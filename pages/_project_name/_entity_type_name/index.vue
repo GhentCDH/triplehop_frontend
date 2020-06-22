@@ -15,7 +15,7 @@
         v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
         cols="3"
       >
-        <b-form>
+        <b-form @submit.prevent="searchQueryChanged">
           <div
             v-for="(group, index) in filterGroups"
             :key="index"
@@ -36,6 +36,8 @@
                 :disable-sort="true"
                 :show-all-results="true"
                 @input="autocompleteLookup(filter.systemName)"
+                @hit="searchQueryChanged"
+                @keyup.enter.prevent="searchQueryChanged"
               />
             </b-form-group>
           </div>
@@ -151,7 +153,7 @@ export default {
       this.form = {}
       for (const section of this.$store.state.config.entity_types[this.$route.params.entity_type_name].es_filters) {
         for (const filter of section.filters) {
-          this.form[filter.systemName] = this.$route.query[`f_${filter.systemName}`] ?? null
+          this.form[filter.systemName] = this.$route.query[`filter[${filter.systemName}]`] ?? null
           this.autocompleteData[filter.systemName] = []
         }
       }
@@ -163,8 +165,10 @@ export default {
     // TODO: make default sorting configurable
     this.sortBy = this.$route.query.sortBy == null ? keys[0] : this.$route.query.sortBy
     this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
+
     this.body = {
       keys,
+      filters: this.form,
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
       size,
       sort: [
@@ -291,8 +295,14 @@ export default {
         this.autocompleteData[systemName] = []
       }
     },
-    constructQuery (queryPart) {
+    constructRouterQuery (queryPart) {
       const query = {}
+
+      for (const systemName in this.form) {
+        if (this.form[systemName] != null && this.form[systemName] !== '') {
+          query[`filter[${systemName}]`] = this.form[systemName]
+        }
+      }
 
       if ('page' in queryPart) {
         query.page = queryPart.page
@@ -329,10 +339,15 @@ export default {
       if (page === Math.floor(this.body.from / this.body.size) + 1) {
         return
       }
-      this.$router.push({ query: this.constructQuery({ page }) })
+      this.$router.push({ query: this.constructRouterQuery({ page }) })
+    },
+    searchQueryChanged () {
+      if (JSON.stringify(this.form) !== JSON.stringify(this.oldForm)) {
+        this.$router.push({ query: this.constructRouterQuery({}) })
+      }
     },
     sortingChanged ({ sortBy, sortDesc }) {
-      this.$router.push({ query: this.constructQuery({ sortBy, sortOrder: sortDesc ? 'desc' : 'asc' }) })
+      this.$router.push({ query: this.constructRouterQuery({ sortBy, sortOrder: sortDesc ? 'desc' : 'asc' }) })
     },
     sortItem (item) {
       const result = {}
