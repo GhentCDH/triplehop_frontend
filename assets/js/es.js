@@ -1,17 +1,24 @@
 export function constructQuery (body, entityTypeConfig) {
-  const query = {
-    bool: {
-      must: []
+  const result = {
+    from: body.from,
+    size: body.size
+  }
+
+  const aggs = {}
+  for (const section of entityTypeConfig.es_filters) {
+    for (const filter of section.filters) {
+      if (filter.type === 'histogram_slider') {
+        aggs[filter.systemName] = {
+          histogram: {
+            field: filter.systemName,
+            interval: filter.interval
+          }
+        }
+      }
     }
   }
-  for (const filter in body.filters) {
-    if (body.filters[filter] != null) {
-      const match = {
-        match: {}
-      }
-      match.match[filter] = body.filters[filter]
-      query.bool.must.push(match)
-    }
+  if (Object.keys(aggs).length > 0) {
+    result.aggs = aggs
   }
 
   const sort = []
@@ -33,13 +40,29 @@ export function constructQuery (body, entityTypeConfig) {
     }
     sort.push(newSortPart)
   }
-
-  return {
-    sort,
-    from: body.from,
-    size: body.size,
-    query
+  if (sort.length > 0) {
+    result.sort = sort
   }
+
+  const query = {
+    bool: {
+      must: []
+    }
+  }
+  for (const filter in body.filters) {
+    if (body.filters[filter] != null) {
+      const match = {
+        match: {}
+      }
+      match.match[filter] = body.filters[filter]
+      query.bool.must.push(match)
+    }
+  }
+  if (query.bool.must.length > 0) {
+    result.query = query
+  }
+
+  return result
 }
 
 export function extractFields (entityTypeConfig) {
@@ -52,6 +75,13 @@ export function extractFields (entityTypeConfig) {
     })
   }
   return fields
+}
+
+export function extractAggs (data) {
+  if (data.aggregations != null) {
+    return JSON.parse(JSON.stringify(data.aggregations))
+  }
+  return null
 }
 
 export function extractItems (keys, data, entityTypeName) {

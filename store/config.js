@@ -50,6 +50,7 @@ export const actions = {
                 system_name
                 display_name
                 type
+                interval
               }
             }
           }
@@ -89,11 +90,15 @@ export const actions = {
             filters: []
           }
           for (const rawFilter of rawSection.filters) {
-            section.filters.push({
+            const filter = {
               systemName: rawFilter.system_name,
               displayName: rawFilter.display_name,
               type: rawFilter.type
-            })
+            }
+            if ('interval' in rawFilter) {
+              filter.interval = rawFilter.interval
+            }
+            section.filters.push(filter)
           }
           config[raw.system_name].es_filters.push(section)
         }

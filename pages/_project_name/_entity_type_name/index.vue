@@ -40,6 +40,11 @@
                 @hit="searchQueryChanged"
                 @keyup.enter.prevent="searchQueryChanged"
               />
+              <histogram
+                v-if="filter.type === 'histogram_slider' && aggs != null"
+                :chart-data="aggs[filter.systemName]"
+                :interval=filter.interval
+              />
             </b-form-group>
           </div>
         </b-form>
@@ -118,6 +123,7 @@
 
 <script>
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
+import Histogram from '~/components/Histogram'
 
 import { extractFields, extractSystemNames } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
@@ -125,7 +131,8 @@ import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/uti
 export default {
   auth: false,
   components: {
-    'vue-typeahead-bootstrap': VueTypeaheadBootstrap
+    'vue-typeahead-bootstrap': VueTypeaheadBootstrap,
+    histogram: Histogram
   },
   validate ({ query }) {
     if ((query.page != null && !isNumber(query.page)) || query.page === '0') {
@@ -203,6 +210,9 @@ export default {
     }
   },
   computed: {
+    aggs () {
+      return this.$store.state.es.aggs
+    },
     currentPage () {
       return this.$route.query.page ?? 1
     },
