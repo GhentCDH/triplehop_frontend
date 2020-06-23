@@ -35,6 +35,7 @@
                 :data="autocompleteData[filter.systemName]"
                 :disable-sort="true"
                 :show-all-results="true"
+                :disabled="disableFormElements"
                 @input="autocompleteLookup(filter.systemName)"
                 @hit="searchQueryChanged"
                 @keyup.enter.prevent="searchQueryChanged"
@@ -194,6 +195,7 @@ export default {
         from: 0,
         size: 25
       },
+      disableFormElements: true,
       form: {},
       oldForm: {},
       sortBy: null,
@@ -260,6 +262,9 @@ export default {
   },
   watch: {
     '$route.query': '$fetch'
+  },
+  mounted () {
+    this.disableFormElements = false
   },
   methods: {
     isArray,
