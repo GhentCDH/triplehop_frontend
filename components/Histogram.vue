@@ -1,6 +1,6 @@
 <script>
 import { Bar, mixins } from 'vue-chartjs'
-import { CHART_BAR_COLOR_PRIMARY } from '~/assets/js/variables'
+import { COLOR_PRIMARY } from '~/assets/js/variables'
 
 const { reactiveProp } = mixins
 
@@ -29,7 +29,7 @@ export default {
         labels: [],
         datasets: [
           {
-            backgroundColor: CHART_BAR_COLOR_PRIMARY,
+            backgroundColor: COLOR_PRIMARY,
             data: []
           }
         ]

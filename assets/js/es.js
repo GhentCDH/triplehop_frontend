@@ -5,16 +5,39 @@ export function constructQuery (body, entityTypeConfig) {
   }
 
   const aggs = {}
+  const filterDefs = {}
   for (const section of entityTypeConfig.es_filters) {
     for (const filter of section.filters) {
       if (filter.type === 'histogram_slider') {
-        aggs[filter.systemName] = {
+        aggs[`${filter.systemName}_hist`] = {
           histogram: {
             field: filter.systemName,
             interval: filter.interval
           }
         }
+        if (
+          `${filter.systemName}_min` in body.fullRangeData &&
+          `${filter.systemName}_max` in body.fullRangeData
+        ) {
+          const min = body.fullRangeData[`${filter.systemName}_min`]
+          const max = body.fullRangeData[`${filter.systemName}_max`]
+          aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
+            min: min - (min % filter.interval),
+            max: max - (max % filter.interval)
+          }
+        }
+        aggs[`${filter.systemName}_min`] = {
+          min: {
+            field: filter.systemName
+          }
+        }
+        aggs[`${filter.systemName}_max`] = {
+          max: {
+            field: filter.systemName
+          }
+        }
       }
+      filterDefs[filter.systemName] = filter
     }
   }
   if (Object.keys(aggs).length > 0) {
@@ -49,17 +72,60 @@ export function constructQuery (body, entityTypeConfig) {
       must: []
     }
   }
-  for (const filter in body.filters) {
-    if (body.filters[filter] != null) {
-      const match = {
+  for (const systemName in body.filters) {
+    if (filterDefs[systemName].type === 'histogram_slider') {
+      const queryPart = {
+        range: {}
+      }
+      queryPart.range[systemName] = {}
+      if (body.filters[systemName][0] != null) {
+        queryPart.range[systemName].gte = body.filters[systemName][0]
+      }
+      if (body.filters[systemName][1] != null) {
+        queryPart.range[systemName].lte = body.filters[systemName][1]
+      }
+      if (Object.keys(queryPart.range[systemName]).length > 0) {
+        query.bool.must.push(queryPart)
+      }
+      continue
+    }
+    if (body.filters[systemName] != null) {
+      const queryPart = {
         match: {}
       }
-      match.match[filter] = body.filters[filter]
-      query.bool.must.push(match)
+      queryPart.match[systemName] = body.filters[systemName]
+      query.bool.must.push(queryPart)
     }
   }
   if (query.bool.must.length > 0) {
     result.query = query
+  }
+
+  return result
+}
+
+export function constructFullRangeAggQuery (esFiltersDefs) {
+  const result = {
+    size: 0
+  }
+
+  const aggs = {}
+  for (const systemName in esFiltersDefs) {
+    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+      aggs[`${systemName}_min`] = {
+        min: {
+          field: systemName
+        }
+      }
+      aggs[`${systemName}_max`] = {
+        max: {
+          field: systemName
+        }
+      }
+    }
+  }
+  if (Object.keys(aggs).length > 0) {
+    result.aggs = aggs
   }
 
   return result
@@ -78,10 +144,10 @@ export function extractFields (entityTypeConfig) {
 }
 
 export function extractAggs (data) {
-  if (data.aggregations != null) {
-    return JSON.parse(JSON.stringify(data.aggregations))
+  if (data.aggregations == null) {
+    return null
   }
-  return null
+  return JSON.parse(JSON.stringify(data.aggregations))
 }
 
 export function extractItems (keys, data, entityTypeName) {

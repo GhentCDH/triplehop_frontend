@@ -6,7 +6,7 @@
       Fetching data...
     </p>
     <p v-else-if="$fetchState.error">
-      Error while fetching data...
+      Error while fetching data... {{ $fetchState.error }}
     </p>
     <b-row
       v-else
@@ -29,7 +29,7 @@
               :label-for="`i_${filter.systemName}`"
             >
               <vue-typeahead-bootstrap
-                v-if="filter.type === 'autocomplete'"
+                v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
                 :id="`i_${filter.systemName}`"
                 v-model="form[filter.systemName]"
                 :data="autocompleteData[filter.systemName]"
@@ -40,11 +40,23 @@
                 @hit="searchQueryChanged"
                 @keyup.enter.prevent="searchQueryChanged"
               />
-              <histogram
-                v-if="filter.type === 'histogram_slider' && aggs != null"
-                :chart-data="aggs[filter.systemName]"
-                :interval=filter.interval
-              />
+              <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
+                <vue-slider
+                  v-model="form[filter.systemName]"
+                  class="mt-5"
+                  :min="fullRangeData[`${filter.systemName}_min`]"
+                  :max="fullRangeData[`${filter.systemName}_max`]"
+                  :dot-options="sliderDotOptions"
+                  :process-style="sliderProcessStyle"
+                  :tooltip-style="sliderTooltipStyle"
+                  :tooltip="'always'"
+                  @drag-end="searchQueryChanged"
+                />
+                <histogram
+                  :chart-data="aggs[`${filter.systemName}_hist`]"
+                  :interval="filter.interval"
+                />
+              </template>
             </b-form-group>
           </div>
         </b-form>
@@ -122,17 +134,22 @@
 </template>
 
 <script>
+import VueSlider from 'vue-slider-component/dist-css/vue-slider-component.umd.min.js'
+import 'vue-slider-component/dist-css/vue-slider-component.css'
+import 'vue-slider-component/theme/default.css'
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 import Histogram from '~/components/Histogram'
 
-import { extractFields, extractSystemNames } from '~/assets/js/es'
+import { constructFullRangeAggQuery, extractFields, extractSystemNames } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
+import { COLOR_PRIMARY } from '~/assets/js/variables'
 
 export default {
   auth: false,
   components: {
-    'vue-typeahead-bootstrap': VueTypeaheadBootstrap,
-    histogram: Histogram
+    Histogram,
+    VueSlider,
+    VueTypeaheadBootstrap
   },
   validate ({ query }) {
     if ((query.page != null && !isNumber(query.page)) || query.page === '0') {
@@ -157,16 +174,49 @@ export default {
         message: `No search page configured for entity type "${this.$route.params.entity_type_name}".`
       })
     }
-    if ('es_filters' in this.$store.state.config.entity_types[this.$route.params.entity_type_name]) {
-      this.form = {}
-      for (const section of this.$store.state.config.entity_types[this.$route.params.entity_type_name].es_filters) {
-        for (const filter of section.filters) {
-          this.form[filter.systemName] = this.$route.query[`filter[${filter.systemName}]`] ?? null
-          this.autocompleteData[filter.systemName] = []
+    for (const systemName in this.esFiltersDefs) {
+      if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+        this.form[systemName] = [
+          this.$route.query[`filter[${systemName}]_min`] ?? null,
+          this.$route.query[`filter[${systemName}]_max`] ?? null
+        ]
+      } else {
+        this.form[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
+      }
+      if (this.esFiltersDefs[systemName].type === 'autocomplete') {
+        this.autocompleteData[systemName] = []
+      }
+    }
+
+    // Retrieve min and max of all ranges
+    // if not yet known and
+    // if they will not be retrieved by the normal request (i.e. min or max is defined)
+    for (const systemName in this.esFiltersDefs) {
+      if (
+        this.esFiltersDefs[systemName].type === 'histogram_slider' &&
+        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData) &&
+        (
+          this.form[systemName][0] != null ||
+          this.form[systemName][1] != null
+        )
+      ) {
+        const response = await this.$axios.post(
+          `/es/${this.projectName}/${this.entityTypeName}/search`,
+          constructFullRangeAggQuery(this.esFiltersDefs)
+        )
+        if (
+          response.status === 200 &&
+          'aggregations' in response.data
+        ) {
+          for (const aggName in response.data.aggregations) {
+            if (!(aggName in this.fullRangeData)) {
+              this.fullRangeData[aggName] = response.data.aggregations[aggName].value
+            }
+          }
         }
       }
-      this.oldForm = JSON.parse(JSON.stringify(this.form))
     }
+
     const keys = extractSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
     // TODO: make size configurable
     const size = 25
@@ -178,6 +228,7 @@ export default {
       keys,
       filters: this.form,
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
+      fullRangeData: this.fullRangeData,
       size,
       sort: [
         {
@@ -185,6 +236,7 @@ export default {
         }
       ]
     }
+
     await this.$store.dispatch(
       'es/search',
       {
@@ -194,6 +246,26 @@ export default {
         entityTypeConfig: this.$store.state.config.entity_types[this.$route.params.entity_type_name]
       }
     )
+    for (const systemName in this.esFiltersDefs) {
+      if (
+        this.esFiltersDefs[systemName].type === 'histogram_slider' &&
+        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
+      ) {
+        this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`].value
+        this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`].value
+      }
+      if (
+        this.esFiltersDefs[systemName].type === 'histogram_slider'
+      ) {
+        if (this.form[systemName][0] == null) {
+          this.form[systemName][0] = this.fullRangeData[`${systemName}_min`]
+        }
+        if (this.form[systemName][1] == null) {
+          this.form[systemName][1] = this.fullRangeData[`${systemName}_max`]
+        }
+      }
+      this.oldForm = JSON.parse(JSON.stringify(this.form))
+    }
   },
   data () {
     return {
@@ -204,7 +276,20 @@ export default {
       },
       disableFormElements: true,
       form: {},
+      fullRangeData: {},
       oldForm: {},
+      sliderDotOptions: {
+        focusStyle: {
+          'box-shadow': `0px 0px 1px 2px ${COLOR_PRIMARY}`
+        }
+      },
+      sliderProcessStyle: {
+        backgroundColor: COLOR_PRIMARY
+      },
+      sliderTooltipStyle: {
+        backgroundColor: COLOR_PRIMARY,
+        borderColor: COLOR_PRIMARY
+      },
       sortBy: null,
       sortOrder: null
     }
@@ -224,6 +309,15 @@ export default {
     },
     entityTypeName () {
       return this.$route.params.entity_type_name
+    },
+    esFiltersDefs () {
+      const filterDefs = {}
+      for (const section of this.entityTypeConfig.es_filters) {
+        for (const filter of section.filters) {
+          filterDefs[filter.systemName] = filter
+        }
+      }
+      return filterDefs
     },
     fields () {
       return extractFields(this.entityTypeConfig)
@@ -314,6 +408,21 @@ export default {
       const query = {}
 
       for (const systemName in this.form) {
+        if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+          if (
+            this.form[systemName][0] != null &&
+            this.form[systemName][0] !== this.fullRangeData[`${systemName}_min`]
+          ) {
+            query[`filter[${systemName}]_min`] = this.form[systemName][0]
+          }
+          if (
+            this.form[systemName][1] != null &&
+            this.form[systemName][1] !== this.fullRangeData[`${systemName}_max`]
+          ) {
+            query[`filter[${systemName}]_max`] = this.form[systemName][1]
+          }
+          continue
+        }
         if (this.form[systemName] != null && this.form[systemName] !== '') {
           query[`filter[${systemName}]`] = this.form[systemName]
         }
