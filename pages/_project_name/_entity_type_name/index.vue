@@ -42,6 +42,7 @@
                 />
                 <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
                   <vue-slider
+                    v-if="fullRangeData[`${filter.systemName}_min`] != null && fullRangeData[`${filter.systemName}_max`] != null"
                     v-model="form[filter.systemName]"
                     class="mt-5"
                     :min="fullRangeData[`${filter.systemName}_min`]"
@@ -51,6 +52,10 @@
                     :tooltip-style="sliderTooltipStyle"
                     tooltip="always"
                     @drag-end="searchQueryChanged"
+                  />
+                  <vue-slider
+                    v-else
+                    class="mt-5"
                   />
                   <histogram
                     :chart-data="aggs[`${filter.systemName}_hist`]"
