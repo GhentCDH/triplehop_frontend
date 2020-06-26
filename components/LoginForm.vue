@@ -4,7 +4,10 @@
       md="6"
       lg="4"
     >
-      <b-overlay :show="busy">
+      <b-overlay
+        :show="busy"
+        spinner-variant="primary"
+      >
         <b-card class="bg-light border-0">
           <h2 class="text-center mb-4">
             Login

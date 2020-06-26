@@ -2,134 +2,135 @@
   <div>
     <!-- TODO: configure multiple or search page title -->
     <h1>Search {{ entityTypeDisplayName }}s</h1>
-    <p v-if="$fetchState.pending">
-      Fetching data...
+    <p v-if="$fetchState.error">
+      Error while fetching data...
     </p>
-    <p v-else-if="$fetchState.error">
-      Error while fetching data... {{ $fetchState.error }}
-    </p>
-    <b-row
+    <b-overlay
       v-else
+      :show="$fetchState.pending"
+      spinner-variant="primary"
     >
-      <b-col
-        v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
-        cols="3"
-      >
-        <b-form @submit.prevent="searchQueryChanged">
-          <div
-            v-for="(group, index) in filterGroups"
-            :key="index"
-            class="bg-light p-3"
-          >
-            <b-form-group
-              v-for="filter in group.filters"
-              :id="`ig_${filter.systemName}`"
-              :key="filter.systemName"
-              :label="filter.displayName"
-              :label-for="`i_${filter.systemName}`"
-            >
-              <vue-typeahead-bootstrap
-                v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
-                :id="`i_${filter.systemName}`"
-                v-model="form[filter.systemName]"
-                :data="autocompleteData[filter.systemName]"
-                :disable-sort="true"
-                :show-all-results="true"
-                :disabled="disableFormElements"
-                @input="autocompleteLookup(filter.systemName)"
-                @hit="searchQueryChanged"
-                @keyup.enter.prevent="searchQueryChanged"
-              />
-              <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
-                <vue-slider
-                  v-model="form[filter.systemName]"
-                  class="mt-5"
-                  :min="fullRangeData[`${filter.systemName}_min`]"
-                  :max="fullRangeData[`${filter.systemName}_max`]"
-                  :dot-options="sliderDotOptions"
-                  :process-style="sliderProcessStyle"
-                  :tooltip-style="sliderTooltipStyle"
-                  :tooltip="'always'"
-                  @drag-end="searchQueryChanged"
-                />
-                <histogram
-                  :chart-data="aggs[`${filter.systemName}_hist`]"
-                  :interval="filter.interval"
-                />
-              </template>
-            </b-form-group>
-          </div>
-        </b-form>
-      </b-col>
-      <b-col cols="9">
-        Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
-        <b-pagination
-          :value="currentPage"
-          :total-rows="total"
-          :per-page="body.size"
-          @input="pageChanged"
-        />
-        <b-table
-          striped
-          hover
-          :items="sortedItems"
-          :fields="fields"
-          :sort-by="sortBy"
-          :sort-desc="sortDesc"
-          :no-local-sorting="true"
-          @sort-changed="sortingChanged"
+      <b-row>
+        <b-col
+          v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
+          cols="3"
         >
-          <template v-slot:cell()="data">
-            <template v-if="isArray(data.value)">
-              <ul v-if="data.value.length > 1">
-                <li
-                  v-for="(item, index) in data.value"
-                  :key="index"
-                >
-                  <nuxt-link
-                    v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
-                    :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+          <b-form @submit.prevent="searchQueryChanged">
+            <div
+              v-for="(group, index) in filterGroups"
+              :key="index"
+              class="bg-light p-3"
+            >
+              <b-form-group
+                v-for="filter in group.filters"
+                :id="`ig_${filter.systemName}`"
+                :key="filter.systemName"
+                :label="filter.displayName"
+                :label-for="`i_${filter.systemName}`"
+              >
+                <vue-typeahead-bootstrap
+                  v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
+                  :id="`i_${filter.systemName}`"
+                  v-model="form[filter.systemName]"
+                  :data="autocompleteData[filter.systemName]"
+                  :disable-sort="true"
+                  :show-all-results="true"
+                  :disabled="disableFormElements"
+                  @input="autocompleteLookup(filter.systemName)"
+                  @hit="searchQueryChanged"
+                  @keyup.enter.prevent="searchQueryChanged"
+                />
+                <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
+                  <vue-slider
+                    v-model="form[filter.systemName]"
+                    class="mt-5"
+                    :min="fullRangeData[`${filter.systemName}_min`]"
+                    :max="fullRangeData[`${filter.systemName}_max`]"
+                    :dot-options="sliderDotOptions"
+                    :process-style="sliderProcessStyle"
+                    :tooltip-style="sliderTooltipStyle"
+                    tooltip="always"
+                    @drag-end="searchQueryChanged"
+                  />
+                  <histogram
+                    :chart-data="aggs[`${filter.systemName}_hist`]"
+                    :interval="filter.interval"
+                  />
+                </template>
+              </b-form-group>
+            </div>
+          </b-form>
+        </b-col>
+        <b-col cols="9">
+          Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
+          <b-pagination
+            :value="currentPage"
+            :total-rows="total"
+            :per-page="body.size"
+            @input="pageChanged"
+          />
+          <b-table
+            striped
+            hover
+            :items="sortedItems"
+            :fields="fields"
+            :sort-by="sortBy"
+            :sort-desc="sortDesc"
+            :no-local-sorting="true"
+            @sort-changed="sortingChanged"
+          >
+            <template v-slot:cell()="data">
+              <template v-if="isArray(data.value)">
+                <ul v-if="data.value.length > 1">
+                  <li
+                    v-for="(item, index) in data.value"
+                    :key="index"
                   >
-                    {{ item.name }}
+                    <nuxt-link
+                      v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
+                      :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+                    >
+                      {{ item.name }}
+                    </nuxt-link>
+                    <template v-else>
+                      {{ item.value }}
+                    </template>
+                  </li>
+                </ul>
+                <template v-else-if="data.value.length == 1">
+                  <nuxt-link
+                    v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
+                    :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+                  >
+                    {{ data.value[0].name }}
                   </nuxt-link>
                   <template v-else>
-                    {{ item.value }}
+                    {{ data.value[0] }}
                   </template>
-                </li>
-              </ul>
-              <template v-else-if="data.value.length == 1">
+                </template>
+              </template>
+              <template v-else>
                 <nuxt-link
-                  v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
-                  :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+                  v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
+                  :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
                 >
-                  {{ data.value[0].name }}
+                  {{ data.value.name }}
                 </nuxt-link>
                 <template v-else>
-                  {{ data.value[0] }}
+                  {{ data.value }}
                 </template>
               </template>
             </template>
-            <template v-else>
-              <nuxt-link
-                v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
-                :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
-              >
-                {{ data.value.name }}
-              </nuxt-link>
-              <template v-else>
-                {{ data.value }}
-              </template>
-            </template>
-          </template>
-        </b-table>
-        <b-pagination
-          :value="currentPage"
-          :total-rows="total"
-          :per-page="body.size"
-          @input="pageChanged"
-        />
-      </b-col>
-    </b-row>
+          </b-table>
+          <b-pagination
+            :value="currentPage"
+            :total-rows="total"
+            :per-page="body.size"
+            @input="pageChanged"
+          />
+        </b-col>
+      </b-row>
+    </b-overlay>
   </div>
 </template>
 
@@ -251,18 +252,16 @@ export default {
         this.esFiltersDefs[systemName].type === 'histogram_slider' &&
         !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
       ) {
-        this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`].value
-        this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`].value
+        this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
+        this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
       }
       if (
         this.esFiltersDefs[systemName].type === 'histogram_slider'
       ) {
-        if (this.form[systemName][0] == null) {
-          this.form[systemName][0] = this.fullRangeData[`${systemName}_min`]
-        }
-        if (this.form[systemName][1] == null) {
-          this.form[systemName][1] = this.fullRangeData[`${systemName}_max`]
-        }
+        this.form[systemName] = [
+          this.form[systemName][0] ?? this.fullRangeData[`${systemName}_min`],
+          this.form[systemName][1] ?? this.fullRangeData[`${systemName}_max`]
+        ]
       }
       this.oldForm = JSON.parse(JSON.stringify(this.form))
     }

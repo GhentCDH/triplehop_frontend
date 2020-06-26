@@ -1,3 +1,5 @@
+import { COLOR_PRIMARY } from '~/assets/js/variables'
+
 export function constructQuery (body, entityTypeConfig) {
   const result = {
     from: body.from,
@@ -147,7 +149,27 @@ export function extractAggs (data) {
   if (data.aggregations == null) {
     return null
   }
-  return JSON.parse(JSON.stringify(data.aggregations))
+  const result = {}
+  for (const aggName in data.aggregations) {
+    if (aggName.endsWith('_hist')) {
+      result[aggName] = {
+        labels: [],
+        datasets: [
+          {
+            backgroundColor: COLOR_PRIMARY,
+            data: []
+          }
+        ]
+      }
+      for (const bucket of data.aggregations[aggName].buckets) {
+        result[aggName].labels.push(bucket.key)
+        result[aggName].datasets[0].data.push(bucket.doc_count)
+      }
+    } else {
+      result[aggName] = data.aggregations[aggName].value
+    }
+  }
+  return result
 }
 
 export function extractItems (keys, data, entityTypeName) {
