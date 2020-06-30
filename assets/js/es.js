@@ -95,7 +95,10 @@ export function constructQuery (body, entityTypeConfig) {
       const queryPart = {
         match: {}
       }
-      queryPart.match[systemName] = body.filters[systemName]
+      queryPart.match[systemName] = { query: body.filters[systemName] }
+      if (filterDefs[systemName].type === 'autocomplete') {
+        queryPart.match[systemName].operator = 'and'
+      }
       query.bool.must.push(queryPart)
     }
   }
