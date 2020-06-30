@@ -194,17 +194,11 @@ export default {
       }
     }
 
-    // Retrieve min and max of all ranges
-    // if not yet known and
-    // if they will not be retrieved by the normal request (i.e. min or max is defined)
+    // Retrieve min and max of all ranges if not yet known
     for (const systemName in this.esFiltersDefs) {
       if (
         this.esFiltersDefs[systemName].type === 'histogram_slider' &&
-        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData) &&
-        (
-          this.form[systemName][0] != null ||
-          this.form[systemName][1] != null
-        )
+        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
       ) {
         const response = await this.$axios.post(
           `/es/${this.projectName}/${this.entityTypeName}/search`,
