@@ -1,4 +1,5 @@
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-vue/src/index';
 
-@import '@/assets/scss/leaflet';
+@import './partials/leaflet';
+@import './partials/multiselect';

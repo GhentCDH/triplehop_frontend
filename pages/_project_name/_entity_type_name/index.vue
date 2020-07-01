@@ -62,6 +62,31 @@
                     :interval="filter.interval"
                   />
                 </template>
+                <multiselect
+                  v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
+                  v-model="form[filter.systemName]"
+                  :clear-on-select="false"
+                  :close-on-select="false"
+                  :disabled="disableFormElements"
+                  label="name"
+                  :multiple="true"
+                  :options="aggs[filter.systemName]"
+                  :preserve-search="true"
+                  :show-labels="false"
+                  track-by="id"
+                  @close="multiselectClose(filter.systemName)"
+                  @input="multiselectInput(filter.systemName)"
+                  @open="multiselectOpen(filter.systemName)"
+                >
+                  <template slot="option" slot-scope="props">
+                    {{ props.option.name }}
+                    <b-badge
+                      :pill="true"
+                    >
+                      {{ props.option.count }}
+                    </b-badge>
+                  </template>
+                </multiselect>
               </b-form-group>
             </div>
           </b-form>
@@ -140,13 +165,14 @@
 </template>
 
 <script>
+import Multiselect from 'vue-multiselect'
 import VueSlider from 'vue-slider-component/dist-css/vue-slider-component.umd.min.js'
 import 'vue-slider-component/dist-css/vue-slider-component.css'
 import 'vue-slider-component/theme/default.css'
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 import Histogram from '~/components/Histogram'
 
-import { constructFullRangeAggQuery, extractFields, extractSystemNames } from '~/assets/js/es'
+import { constructFullRangeAggQuery, getFields, getFilterDefs, getSystemNames } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
@@ -154,6 +180,7 @@ export default {
   auth: false,
   components: {
     Histogram,
+    Multiselect,
     VueSlider,
     VueTypeaheadBootstrap
   },
@@ -217,7 +244,7 @@ export default {
       }
     }
 
-    const keys = extractSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
+    const keys = getSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
     // TODO: make size configurable
     const size = 25
     // TODO: make default sorting configurable
@@ -275,6 +302,7 @@ export default {
       disableFormElements: true,
       form: {},
       fullRangeData: {},
+      multiselectState: {},
       oldForm: {},
       sliderDotOptions: {
         focusStyle: {
@@ -309,16 +337,10 @@ export default {
       return this.$route.params.entity_type_name
     },
     esFiltersDefs () {
-      const filterDefs = {}
-      for (const section of this.entityTypeConfig.es_filters) {
-        for (const filter of section.filters) {
-          filterDefs[filter.systemName] = filter
-        }
-      }
-      return filterDefs
+      return getFilterDefs(this.entityTypeConfig)
     },
     fields () {
-      return extractFields(this.entityTypeConfig)
+      return getFields(this.entityTypeConfig)
     },
     filterGroups () {
       return this.entityTypeConfig.es_filters
@@ -421,6 +443,14 @@ export default {
           }
           continue
         }
+        if (this.esFiltersDefs[systemName].type === 'nested') {
+          if (this.form[systemName] != null && this.form[systemName].length > 0) {
+            for (const [i, filterValue] of this.form[systemName].entries()) {
+              query[`filter[${systemName}][${i}]`] = filterValue.id
+            }
+          }
+          continue
+        }
         if (this.form[systemName] != null && this.form[systemName] !== '') {
           query[`filter[${systemName}]`] = this.form[systemName]
         }
@@ -453,6 +483,18 @@ export default {
           form[field] = this.form[field]
         }
       }
+    },
+    multiselectClose (systemName) {
+      this.multiselectState[systemName] = 'closed'
+      this.searchQueryChanged()
+    },
+    multiselectInput (systemName) {
+      if (this.multiselectState[systemName] !== 'open') {
+        this.searchQueryChanged()
+      }
+    },
+    multiselectOpen (systemName) {
+      this.multiselectState[systemName] = 'open'
     },
     pageChanged (page) {
       if (page == null && this.body.from === 0) {

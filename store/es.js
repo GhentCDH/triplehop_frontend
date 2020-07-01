@@ -25,7 +25,7 @@ export const actions = {
       constructQuery(body, entityTypeConfig)
     )
     if (response.data != null) {
-      commit('SET_AGGS', extractAggs(response.data))
+      commit('SET_AGGS', extractAggs(response.data, entityTypeConfig))
       commit('SET_ITEMS', extractItems(body.keys, response.data, entityTypeName))
       commit('SET_TOTAL', extractTotal(response.data))
     }

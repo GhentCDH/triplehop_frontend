@@ -1,5 +1,7 @@
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
+const SIZE_AGG_MAX = 2147483647
+
 export function constructQuery (body, entityTypeConfig) {
   const result = {
     from: body.from,
@@ -39,6 +41,28 @@ export function constructQuery (body, entityTypeConfig) {
           }
         }
       }
+      if (filter.type === 'nested') {
+        aggs[filter.systemName] = {
+          nested: {
+            path: filter.systemName
+          },
+          aggs: {
+            id: {
+              terms: {
+                field: `${filter.systemName}.id`,
+                size: SIZE_AGG_MAX
+              },
+              aggs: {
+                name: {
+                  terms: {
+                    field: `${filter.systemName}.name.keyword`
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       filterDefs[filter.systemName] = filter
     }
   }
@@ -51,7 +75,7 @@ export function constructQuery (body, entityTypeConfig) {
     const key = Object.keys(sortPart)[0]
     const newSortPart = {}
     if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'nested') {
-      newSortPart[`${key}.name.keyword`] = {
+      newSortPart[`${key}.name.normalized_keyword`] = {
         mode: sortPart[key] === 'desc' ? 'max' : 'min',
         order: sortPart[key],
         nested: {
@@ -59,7 +83,7 @@ export function constructQuery (body, entityTypeConfig) {
         }
       }
     } else if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'text') {
-      newSortPart[`${key}.keyword`] = sortPart[key]
+      newSortPart[`${key}.normalized_keyword`] = sortPart[key]
     } else {
       newSortPart[key] = sortPart[key]
     }
@@ -91,11 +115,17 @@ export function constructQuery (body, entityTypeConfig) {
       }
       continue
     }
+    if (filterDefs[systemName].type === 'nested') {
+      // TODO
+    }
     if (body.filters[systemName] != null) {
       const queryPart = {
-        match: {}
+        match: {
+          [systemName]: {
+            query: body.filters[systemName]
+          }
+        }
       }
-      queryPart.match[systemName] = { query: body.filters[systemName] }
       if (filterDefs[systemName].type === 'autocomplete') {
         queryPart.match[systemName].operator = 'and'
       }
@@ -136,40 +166,37 @@ export function constructFullRangeAggQuery (esFiltersDefs) {
   return result
 }
 
-export function extractFields (entityTypeConfig) {
-  const fields = []
-  for (const fieldConfig of entityTypeConfig.es_columns) {
-    fields.push({
-      key: fieldConfig.systemName,
-      label: fieldConfig.displayName,
-      sortable: fieldConfig.sortable
-    })
-  }
-  return fields
-}
-
-export function extractAggs (data) {
+export function extractAggs (data, entityTypeConfig) {
+  const esFiltersDefs = getFilterDefs(entityTypeConfig)
   if (data.aggregations == null) {
     return null
   }
   const result = {}
-  for (const aggName in data.aggregations) {
-    if (aggName.endsWith('_hist')) {
-      result[aggName] = {
-        labels: [],
+  for (const systemName in esFiltersDefs) {
+    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+      result[`${systemName}_hist`] = {
+        labels: data.aggregations[`${systemName}_hist`].buckets.map(b => b.key),
         datasets: [
           {
+            // TODO: move styling to histogram component
             backgroundColor: COLOR_PRIMARY,
-            data: []
+            data: data.aggregations[`${systemName}_hist`].buckets.map(b => b.doc_count)
           }
         ]
       }
-      for (const bucket of data.aggregations[aggName].buckets) {
-        result[aggName].labels.push(bucket.key)
-        result[aggName].datasets[0].data.push(bucket.doc_count)
-      }
-    } else {
-      result[aggName] = data.aggregations[aggName].value
+      result[`${systemName}_min`] = data.aggregations[`${systemName}_min`].value
+      result[`${systemName}_max`] = data.aggregations[`${systemName}_max`].value
+      continue
+    }
+    if (esFiltersDefs[systemName].type === 'nested') {
+      result[systemName] = data.aggregations[systemName].id.buckets.map((b) => {
+        return {
+          id: b.key,
+          name: b.name.buckets[0].key,
+          count: b.doc_count
+        }
+      })
+      continue
     }
   }
   return result
@@ -196,14 +223,36 @@ export function extractItems (keys, data, entityTypeName) {
   return items
 }
 
-export function extractSystemNames (entityTypeConfig) {
+export function extractTotal (data) {
+  return data.hits.total
+}
+
+export function getFields (entityTypeConfig) {
+  const fields = []
+  for (const fieldConfig of entityTypeConfig.es_columns) {
+    fields.push({
+      key: fieldConfig.systemName,
+      label: fieldConfig.displayName,
+      sortable: fieldConfig.sortable
+    })
+  }
+  return fields
+}
+
+export function getFilterDefs (entityTypeConfig) {
+  const filterDefs = {}
+  for (const section of entityTypeConfig.es_filters) {
+    for (const filter of section.filters) {
+      filterDefs[filter.systemName] = filter
+    }
+  }
+  return filterDefs
+}
+
+export function getSystemNames (entityTypeConfig) {
   const systemNames = []
   for (const fieldConfig of entityTypeConfig.es_columns) {
     systemNames.push(fieldConfig.systemName)
   }
   return systemNames
-}
-
-export function extractTotal (data) {
-  return data.hits.total
 }
