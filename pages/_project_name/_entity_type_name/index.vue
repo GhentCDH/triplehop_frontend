@@ -303,11 +303,13 @@ export default {
         continue
       }
       if (this.esFiltersDefs[systemName].type === 'nested') {
-        this.form[systemName] = this.form[systemName].map(
-          (filterValue) => {
-            return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
-          }
-        )
+        if (this.form[systemName] != null) {
+          this.form[systemName] = this.form[systemName].map(
+            (filterValue) => {
+              return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
+            }
+          )
+        }
         continue
       }
     }
