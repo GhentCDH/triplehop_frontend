@@ -213,9 +213,26 @@ export default {
           this.$route.query[`filter[${systemName}]_min`] ?? null,
           this.$route.query[`filter[${systemName}]_max`] ?? null
         ]
-      } else {
-        this.form[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
+        continue
       }
+      if (this.esFiltersDefs[systemName].type === 'nested') {
+        if (this.$route.query[`filter[${systemName}][0]`] == null) {
+          this.form[systemName] = null
+          continue
+        }
+        this.form[systemName] = []
+        let counter = 0
+        while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
+          this.form[systemName].push(
+            {
+              id: parseInt(this.$route.query[`filter[${systemName}][${counter}]`])
+            }
+          )
+          counter++
+        }
+        continue
+      }
+      this.form[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
       if (this.esFiltersDefs[systemName].type === 'autocomplete') {
         this.autocompleteData[systemName] = []
       }
@@ -274,23 +291,27 @@ export default {
       }
     )
     for (const systemName in this.esFiltersDefs) {
-      if (
-        this.esFiltersDefs[systemName].type === 'histogram_slider' &&
-        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
-      ) {
-        this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
-        this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
-      }
-      if (
-        this.esFiltersDefs[systemName].type === 'histogram_slider'
-      ) {
+      if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+        if (!(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)) {
+          this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
+          this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
+        }
         this.form[systemName] = [
           this.form[systemName][0] ?? this.fullRangeData[`${systemName}_min`],
           this.form[systemName][1] ?? this.fullRangeData[`${systemName}_max`]
         ]
+        continue
       }
-      this.oldForm = JSON.parse(JSON.stringify(this.form))
+      if (this.esFiltersDefs[systemName].type === 'nested') {
+        this.form[systemName] = this.form[systemName].map(
+          (filterValue) => {
+            return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
+          }
+        )
+        continue
+      }
     }
+    this.oldForm = JSON.parse(JSON.stringify(this.form))
   },
   data () {
     return {

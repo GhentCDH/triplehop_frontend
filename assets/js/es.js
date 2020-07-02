@@ -100,6 +100,9 @@ export function constructQuery (body, entityTypeConfig) {
   }
   for (const systemName in body.filters) {
     if (filterDefs[systemName].type === 'histogram_slider') {
+      if (body.filters[systemName][0] == null && body.filters[systemName][1] == null) {
+        continue
+      }
       const queryPart = {
         range: {}
       }
@@ -110,13 +113,36 @@ export function constructQuery (body, entityTypeConfig) {
       if (body.filters[systemName][1] != null) {
         queryPart.range[systemName].lte = body.filters[systemName][1]
       }
-      if (Object.keys(queryPart.range[systemName]).length > 0) {
-        query.bool.must.push(queryPart)
-      }
+      query.bool.must.push(queryPart)
       continue
     }
     if (filterDefs[systemName].type === 'nested') {
-      // TODO
+      if (body.filters[systemName] == null || body.filters[systemName].length === 0) {
+        continue
+      }
+      const queryPart = {
+        nested: {
+          path: systemName,
+          query: {
+            bool: {
+              should: []
+            }
+          }
+        }
+      }
+      for (const filterValue of body.filters[systemName]) {
+        queryPart.nested.query.bool.should.push(
+          {
+            match: {
+              [`${systemName}.id`]: {
+                query: filterValue.id
+              }
+            }
+          }
+        )
+      }
+      query.bool.must.push(queryPart)
+      continue
     }
     if (body.filters[systemName] != null) {
       const queryPart = {
