@@ -5,7 +5,8 @@
   "author": "Pieterjan De Potter",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
+    "dev": "nuxt --config-file nuxt.config.dev.js",
+    "buildqas": "nuxt build --config-file nuxt.config.qas.js",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate",

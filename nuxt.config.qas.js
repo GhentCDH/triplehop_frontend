@@ -56,7 +56,7 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    baseURL: 'https://crdb-backend.ugent.be/'
+    baseURL: 'https://qas.crdb-backend.ugent.be/'
   },
   auth: {
     strategies: {
