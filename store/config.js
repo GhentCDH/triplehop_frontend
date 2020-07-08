@@ -1,9 +1,13 @@
 export const state = () => ({
+  project_def: {},
   entity_types: {},
   relation_types: {}
 })
 
 export const mutations = {
+  SET_PROJECT_DEF (state, payload) {
+    state.project_def = payload
+  },
   SET_ENTITY_TYPES (state, payload) {
     state.entity_types = payload
   },
@@ -13,6 +17,22 @@ export const mutations = {
 }
 
 export const actions = {
+  async load_poject_def ({ commit }, projectName) {
+    const response = await this.$axios.post(
+      `/config/${projectName}`,
+      {
+        query: `
+        {
+          Project_config {
+            system_name
+            display_name
+          }
+        }
+        `
+      }
+    )
+    commit('SET_PROJECT_DEF', response.data.data.Project_config)
+  },
   async load_entity_types ({ commit }, projectName) {
     const response = await this.$axios.post(
       `/config/${projectName}`,

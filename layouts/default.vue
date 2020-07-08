@@ -2,8 +2,8 @@
   <b-container fluid="lg">
     <header>
       <b-navbar toggleable="lg" type="light" variant="light" class="mb-4">
-        <b-navbar-brand to="/">
-          CRDB
+        <b-navbar-brand :to="homeUrl">
+          {{ brand }}
         </b-navbar-brand>
 
         <b-navbar-toggle target="nav-collapse" />
@@ -68,6 +68,20 @@ import { hasGlobalAdminAccess, hasProjectAdminAccess } from '@/assets/js/auth'
 export default {
   components: {
     Notifications
+  },
+  computed: {
+    brand () {
+      if (
+        this.$store.state.config.project_def == null ||
+        this.$store.state.config.project_def.display_name == null
+      ) {
+        return 'CRDB'
+      }
+      return this.$store.state.config.project_def.display_name ?? 'CRDB'
+    },
+    homeUrl () {
+      return `/${this.$route.params.project_name ?? ''}`
+    }
   },
   methods: {
     hasGlobalAdminAccess,
