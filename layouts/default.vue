@@ -80,7 +80,7 @@ export default {
       return this.$store.state.config.project_def.display_name ?? 'CRDB'
     },
     homeUrl () {
-      return `/${this.$route.params.project_name ?? ''}`
+      return this.$route.params.project_name ? `/${this.$route.params.project_name}` : ''
     }
   },
   methods: {
