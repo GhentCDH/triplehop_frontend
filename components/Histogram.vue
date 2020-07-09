@@ -7,14 +7,6 @@ export default {
   extends: Bar,
   mixins: [reactiveProp],
   props: {
-    chartdata: {
-      type: Object,
-      default () { return {} }
-    },
-    interval: {
-      type: Number,
-      default: 10
-    },
     options: {
       type: Object,
       default () {

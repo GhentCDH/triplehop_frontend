@@ -62,10 +62,7 @@
                     v-else
                     class="mt-5"
                   />
-                  <histogram
-                    :chart-data="aggs[`${filter.systemName}_hist`]"
-                    :interval="filter.interval"
-                  />
+                  <histogram :chart-data="aggs[`${filter.systemName}_hist`]" />
                 </template>
                 <multiselect
                   v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
