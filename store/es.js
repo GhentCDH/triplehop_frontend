@@ -2,7 +2,7 @@ import { constructQuery, extractAggs, extractItems, extractTotal } from '~/asset
 
 export const state = () => ({
   aggs: {},
-  items: {},
+  items: [],
   total: 0
 })
 
