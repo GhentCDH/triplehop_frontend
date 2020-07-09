@@ -204,7 +204,7 @@ export default {
     if (!('es_columns' in this.$store.state.config.entity_types[this.$route.params.entity_type_name])) {
       return this.$nuxt.error({
         statusCode: 404,
-        message: `No search page configured for entity type "${this.$route.params.entity_type_name}".`
+        message: `No search page available for entity type "${this.$route.params.entity_type_name}".`
       })
     }
     for (const systemName in this.esFiltersDefs) {
