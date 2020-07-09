@@ -8,7 +8,23 @@
 
         <b-navbar-toggle target="nav-collapse" />
 
-        <b-collapse id="nav-collapse" is-nav>
+        <b-collapse
+          id="nav-collapse"
+          is-nav
+          class="text-primary"
+        >
+          <b-navbar-nav>
+            <b-nav-item :to="homeUrl">
+              Home
+            </b-nav-item>
+            <b-nav-item
+              v-for="link in links"
+              :key="link.systemName"
+              :to="`${homeUrl}/${link.systemName}`"
+            >
+              {{ link.displayName }}
+            </b-nav-item>
+          </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
             <b-nav-item-dropdown v-if="$auth.loggedIn">
               <template v-slot:button-content>
@@ -81,6 +97,22 @@ export default {
     },
     homeUrl () {
       return this.$route.params.project_name ? `/${this.$route.params.project_name}` : ''
+    },
+    links () {
+      const result = []
+      if (
+        this.$store.state.config.entity_types != null
+      ) {
+        for (const [entityTypeName, entityTypeConfig] of Object.entries(this.$store.state.config.entity_types)) {
+          if ('es_columns' in entityTypeConfig) {
+            result.push({
+              systemName: entityTypeName,
+              displayName: entityTypeConfig.display_name
+            })
+          }
+        }
+      }
+      return result
     }
   },
   methods: {
