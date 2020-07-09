@@ -158,11 +158,11 @@ export default {
       return [
         {
           text: 'Home',
-          href: `/${this.projectName}`
+          to: `/${this.projectName}`
         },
         {
           text: this.entityTypeConfig.display_name,
-          href: `/${this.projectName}/${this.entityTypeName}`
+          to: `/${this.projectName}/${this.entityTypeName}`
         },
         {
           text: this.title,

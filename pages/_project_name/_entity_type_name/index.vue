@@ -355,7 +355,7 @@ export default {
       return [
         {
           text: 'Home',
-          href: `/${this.projectName}`
+          to: `/${this.projectName}`
         },
         {
           text: this.entityTypeConfig.display_name,
