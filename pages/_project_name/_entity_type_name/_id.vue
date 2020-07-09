@@ -123,7 +123,6 @@ export default {
     // TODO (backend): allow display widget configuration
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
-    await store.dispatch('config/load_entity_types', params.project_name)
     if (!(params.entity_type_name in store.state.config.entity_types)) {
       return error({
         statusCode: 404,

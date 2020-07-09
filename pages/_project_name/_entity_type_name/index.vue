@@ -194,7 +194,6 @@ export default {
     return true
   },
   async fetch () {
-    await this.$store.dispatch('config/load_entity_types', this.$route.params.project_name)
     if (!(this.$route.params.entity_type_name in this.$store.state.config.entity_types)) {
       return this.$nuxt.error({
         statusCode: 404,
