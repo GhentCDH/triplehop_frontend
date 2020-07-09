@@ -168,6 +168,7 @@
 
 <script>
 import Multiselect from 'vue-multiselect'
+import rfdc from 'rfdc'
 import VueSlider from 'vue-slider-component/dist-css/vue-slider-component.umd.min.js'
 import 'vue-slider-component/dist-css/vue-slider-component.css'
 import 'vue-slider-component/theme/default.css'
@@ -346,7 +347,7 @@ export default {
   },
   computed: {
     aggs () {
-      return this.$store.state.es.aggs
+      return rfdc(this.$store.state.es.aggs)
     },
     breadcrumbs () {
       return [
