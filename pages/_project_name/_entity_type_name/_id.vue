@@ -1,7 +1,12 @@
 <template>
   <div>
+    <b-breadcrumb
+      class="bg-light"
+      :items="breadcrumbs"
+    />
+
     <h1>
-      {{ constructTitle(entityTypeConfig.display.title, entityData) }}
+      {{ title }}
     </h1>
 
     <b-card
@@ -149,6 +154,22 @@ export default {
     }
   },
   computed: {
+    breadcrumbs () {
+      return [
+        {
+          text: 'Home',
+          href: `/${this.projectName}`
+        },
+        {
+          text: this.entityTypeConfig.display_name,
+          href: `/${this.projectName}/${this.entityTypeName}`
+        },
+        {
+          text: this.title,
+          active: true
+        }
+      ]
+    },
     // TODO: camelCase
     domainRelationTypesConfig () {
       return filterObject(
@@ -176,6 +197,9 @@ export default {
         this.$store.state.config.relation_types,
         relationConfig => relationConfig.range_names.includes(this.entityTypeName)
       )
+    },
+    title () {
+      return this.constructTitle(this.entityTypeConfig.display.title, this.entityData)
     }
   },
   methods: {

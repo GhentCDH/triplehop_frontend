@@ -1,7 +1,7 @@
 <template>
   <b-container fluid="lg">
     <header>
-      <b-navbar toggleable="lg" type="light" variant="light" class="mb-4">
+      <b-navbar toggleable="lg" type="light" variant="light" class="mb-3">
         <b-navbar-brand :to="homeUrl">
           {{ brand }}
         </b-navbar-brand>

@@ -1,5 +1,10 @@
 <template>
   <div>
+    <b-breadcrumb
+      class="bg-light"
+      :items="breadcrumbs"
+    />
+
     <!-- TODO: configure multiple or search page title -->
     <h1>Search {{ entityTypeDisplayName }}s</h1>
     <p v-if="$fetchState.error">
@@ -345,6 +350,18 @@ export default {
   computed: {
     aggs () {
       return this.$store.state.es.aggs
+    },
+    breadcrumbs () {
+      return [
+        {
+          text: 'Home',
+          href: `/${this.projectName}`
+        },
+        {
+          text: this.entityTypeConfig.display_name,
+          active: true
+        }
+      ]
     },
     currentPage () {
       return this.$route.query.page ?? 1
