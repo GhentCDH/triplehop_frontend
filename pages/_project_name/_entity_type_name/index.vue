@@ -347,7 +347,7 @@ export default {
   },
   computed: {
     aggs () {
-      return rfdc(this.$store.state.es.aggs)
+      return rfdc()(this.$store.state.es.aggs)
     },
     breadcrumbs () {
       return [
