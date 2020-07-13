@@ -28,18 +28,17 @@
           >
             {{ field.label ? field.label : entityTypeConfig.data[field.field].display_name }}
           </dt>
-          <GeometryField
-            v-if="field.type === 'geometry'"
-            :key="`field-value-${field.field}`"
-            :geometry="entityData[field.field]"
-            class="col-sm-9 col-lg-10"
-          />
           <dd
-            v-else
             :key="`field-value-${field.field}`"
             class="col-sm-9 col-lg-10"
           >
-            {{ entityData[field.field] }}
+            <GeometryField
+              v-if="field.type === 'geometry'"
+              :geometry="entityData[field.field]"
+            />
+            <template v-else>
+              {{ entityData[field.field] }}
+            </template>
           </dd>
         </template>
       </dl>
