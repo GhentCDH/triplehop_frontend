@@ -56,6 +56,7 @@ export const actions = {
                   field
                   type
                   base_layer
+                  base_url
                 }
               }
             }
