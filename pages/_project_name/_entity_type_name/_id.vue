@@ -43,6 +43,23 @@
             >
               {{ entityData[field.field] }}
             </b-link>
+            <template
+              v-else-if="field.type === 'list'"
+            >
+              <ul
+                v-if="entityData[field.field].length > 1"
+              >
+                <li
+                  v-for="(item, index) in entityData[field.field]"
+                  :key="index"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+              <template v-else>
+                {{ entityData[field.field][0] }}
+              </template>
+            </template>
             <template v-else>
               {{ entityData[field.field] }}
             </template>
