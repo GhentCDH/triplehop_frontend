@@ -125,7 +125,7 @@
                       {{ item.name }}
                     </nuxt-link>
                     <template v-else>
-                      {{ item.value }}
+                      {{ item }}
                     </template>
                   </li>
                 </ul>
