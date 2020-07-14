@@ -37,7 +37,7 @@
               :geometry="entityData[field.field]"
             />
             <b-link
-              v-if="field.type === 'online_identifier'"
+              v-else-if="field.type === 'online_identifier'"
               :href="`${field.base_url}${entityData[field.field]}`"
               target="_blank"
             >
