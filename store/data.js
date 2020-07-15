@@ -28,7 +28,7 @@ function extractFieldNames (displayFields) {
   const fieldNames = displayFields.map(displayField => displayField.field)
 
   for (const displayField of displayFields) {
-    if (displayField.type === 'geometry') {
+    if (displayField.type === 'geometry' && displayField.base_layer != null) {
       fieldNames.push(displayField.base_layer)
     }
   }
