@@ -22,17 +22,20 @@
         <template
           v-for="field in panel.fields"
         >
+          <!-- TODO: let component update text-muted class (idea: emit loaded event) -->
           <dt
             :key="`field-label-${field.field}`"
             class="col-sm-3 col-lg-2"
+            :class="{'text-muted': entityData[field.field] == null}"
           >
             {{ field.label ? field.label : entityTypeConfig.data[field.field].display_name }}
           </dt>
           <dd
+            v-if="entityData[field.field] != null"
             :key="`field-value-${field.field}`"
             class="col-sm-9 col-lg-10"
           >
-            <GeometryField
+            <geometry-field
               v-if="field.type === 'geometry'"
               :geometry="entityData[field.field]"
             />
@@ -60,6 +63,14 @@
                 {{ entityData[field.field][0] }}
               </template>
             </template>
+            <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
+            <client-only
+              v-else-if="field.type === 'wikidata_images'"
+            >
+              <wikidata-images-field
+                :wikidata-id="entityData[field.field]"
+              />
+            </client-only>
             <template v-else>
               {{ entityData[field.field] }}
             </template>
@@ -132,11 +143,13 @@
 <script>
 import { filterObject, isNumber } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
+import WikidataImagesField from '~/components/WikidataImagesField.vue'
 
 export default {
   auth: false,
   components: {
-    GeometryField
+    GeometryField,
+    WikidataImagesField
   },
   validate ({ params }) {
     // TODO: validate project_name based on cached config
