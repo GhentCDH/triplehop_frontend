@@ -431,7 +431,6 @@ export default {
     isArray,
     isObject,
     async autocompleteLookup (systemName) {
-      // First search for 10 exact matches. If there are less results, use fuzzy matching
       const response = await this.$axios.post(
         `/es/${this.projectName}/${this.entityTypeName}/search`,
         {
