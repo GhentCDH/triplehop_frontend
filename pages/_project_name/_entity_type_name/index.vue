@@ -431,6 +431,7 @@ export default {
     isArray,
     isObject,
     async autocompleteLookup (systemName) {
+      // TODO: create component to include this functionality?
       const response = await this.$axios.post(
         `/es/${this.projectName}/${this.entityTypeName}/search`,
         {
