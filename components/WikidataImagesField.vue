@@ -6,8 +6,8 @@
     :interval="0"
   >
     <b-carousel-slide
-      v-for="imageURL in imageURLs"
-      :key="imageURL"
+      v-for="(imageURL, index) in imageURLs"
+      :key="index"
       :img-src="imageURL"
     />
   </b-carousel>
