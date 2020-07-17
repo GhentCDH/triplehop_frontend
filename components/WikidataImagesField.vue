@@ -3,6 +3,7 @@
     controls
     indicators
     fade
+    :interval="0"
   >
     <b-carousel-slide
       v-for="imageURL in imageURLs"
