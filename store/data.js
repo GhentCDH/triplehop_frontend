@@ -16,6 +16,9 @@ export const mutations = {
  * @return {Array}             all required fieldNames
  */
 function extractTitleFieldNames (titleField) {
+  if (!(/(?<![$])[$]([a-z_]+)/.test(titleField))) {
+    return []
+  }
   return [...new Set([...titleField.match(/(?<![$])[$]([a-z_]+)/g)].map(f => f.slice(1)))]
 }
 
