@@ -20,18 +20,18 @@
         class="row mb-0"
       >
         <template
-          v-for="field in panel.fields"
+          v-for="(field, fieldIndex) in panel.fields"
         >
           <!-- TODO: let component update text-muted class (idea: emit loaded event) -->
           <dt
-            :key="`field-label-${field.field}`"
+            :key="`field-label-${panelIndex}-${fieldIndex}`"
             class="col-sm-3 col-lg-2"
             :class="{'text-muted': entityData[field.field] == null}"
           >
             {{ field.label ? field.label : entityTypeConfig.data[field.field].display_name }}
           </dt>
           <dd
-            :key="`field-value-${field.field}`"
+            :key="`field-value-${panelIndex}-${fieldIndex}`"
             class="col-sm-9 col-lg-10"
           >
             <template
