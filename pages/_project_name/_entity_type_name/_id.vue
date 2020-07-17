@@ -194,20 +194,30 @@ export default {
   },
   computed: {
     breadcrumbs () {
-      return [
-        {
-          text: 'Home',
-          to: `/${this.projectName}`
-        },
-        {
+      const breadcrumbs = []
+      // project home
+      breadcrumbs.push({
+        text: 'Home',
+        to: `/${this.projectName}`
+      })
+      // entity search
+      if ('es_columns' in this.entityTypeConfig) {
+        breadcrumbs.push({
           text: this.entityTypeConfig.display_name,
           to: `/${this.projectName}/${this.entityTypeName}`
-        },
-        {
-          text: this.title,
+        })
+      } else {
+        breadcrumbs.push({
+          text: this.entityTypeConfig.display_name,
           active: true
-        }
-      ]
+        })
+      }
+      // current entity
+      breadcrumbs.push({
+        text: this.title,
+        active: true
+      })
+      return breadcrumbs
     },
     // TODO: camelCase
     domainRelationTypesConfig () {
