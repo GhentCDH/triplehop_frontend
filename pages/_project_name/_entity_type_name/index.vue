@@ -6,7 +6,7 @@
     />
 
     <!-- TODO: configure multiple or search page title -->
-    <h1>Search {{ entityTypeDisplayName }}s</h1>
+    <h1>{{ entityTypeConfig.elasticsearch.title }}</h1>
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>
@@ -203,7 +203,7 @@ export default {
         message: `Entity type "${this.$route.params.entity_type_name}" cannot be found.`
       })
     }
-    if (!('es_columns' in this.$store.state.config.entity_types[this.$route.params.entity_type_name])) {
+    if (!('elasticsearch' in this.$store.state.config.entity_types[this.$route.params.entity_type_name])) {
       return this.$nuxt.error({
         statusCode: 404,
         message: `No search page available for entity type "${this.$route.params.entity_type_name}".`
@@ -380,7 +380,7 @@ export default {
       return getFields(this.entityTypeConfig)
     },
     filterGroups () {
-      return this.entityTypeConfig.es_filters
+      return this.entityTypeConfig.elasticsearch.filters
     },
     items () {
       return this.$store.state.es.items
@@ -403,7 +403,7 @@ export default {
     sortedItems () {
       if (
         this.sortBy != null &&
-        this.entityTypeConfig.es_columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
+        this.entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
       ) {
         const items = []
         for (const item of this.items) {

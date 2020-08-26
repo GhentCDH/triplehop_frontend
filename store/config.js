@@ -60,18 +60,21 @@ export const actions = {
                 }
               }
             }
-            es_columns {
-              system_name
-              display_name
-              type
-              sortable
-            }
-            es_filters {
-              filters {
+            elasticsearch {
+              title
+              columns {
                 system_name
                 display_name
                 type
-                interval
+                sortable
+              }
+              filters {
+                filters {
+                  system_name
+                  display_name
+                  type
+                  interval
+                }
               }
             }
           }
@@ -93,35 +96,40 @@ export const actions = {
           type: rawField.type
         }
       }
-      if (raw.es_columns != null) {
-        config[raw.system_name].es_columns = []
-        for (const rawColumn of raw.es_columns) {
-          config[raw.system_name].es_columns.push({
-            systemName: rawColumn.system_name,
-            displayName: rawColumn.display_name,
-            type: rawColumn.type,
-            sortable: rawColumn.sortable
-          })
+      if (raw.elasticsearch != null) {
+        config[raw.system_name].elasticsearch = {
+          title: raw.elasticsearch.title
         }
-      }
-      if (raw.es_filters != null) {
-        config[raw.system_name].es_filters = []
-        for (const rawSection of raw.es_filters) {
-          const section = {
-            filters: []
+        if (raw.elasticsearch.columns != null) {
+          config[raw.system_name].elasticsearch.columns = []
+          for (const rawColumn of raw.elasticsearch.columns) {
+            config[raw.system_name].elasticsearch.columns.push({
+              systemName: rawColumn.system_name,
+              displayName: rawColumn.display_name,
+              type: rawColumn.type,
+              sortable: rawColumn.sortable
+            })
           }
-          for (const rawFilter of rawSection.filters) {
-            const filter = {
-              systemName: rawFilter.system_name,
-              displayName: rawFilter.display_name,
-              type: rawFilter.type
+        }
+        if (raw.elasticsearch.filters != null) {
+          config[raw.system_name].elasticsearch.filters = []
+          for (const rawSection of raw.elasticsearch.filters) {
+            const section = {
+              filters: []
             }
-            if ('interval' in rawFilter) {
-              filter.interval = rawFilter.interval
+            for (const rawFilter of rawSection.filters) {
+              const filter = {
+                systemName: rawFilter.system_name,
+                displayName: rawFilter.display_name,
+                type: rawFilter.type
+              }
+              if ('interval' in rawFilter) {
+                filter.interval = rawFilter.interval
+              }
+              section.filters.push(filter)
             }
-            section.filters.push(filter)
+            config[raw.system_name].elasticsearch.filters.push(section)
           }
-          config[raw.system_name].es_filters.push(section)
         }
       }
     }

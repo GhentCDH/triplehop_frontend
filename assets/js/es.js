@@ -10,7 +10,7 @@ export function constructQuery (body, entityTypeConfig) {
 
   const aggs = {}
   const filterDefs = {}
-  for (const section of entityTypeConfig.es_filters) {
+  for (const section of entityTypeConfig.elasticsearch.filters) {
     for (const filter of section.filters) {
       if (filter.type === 'histogram_slider') {
         aggs[`${filter.systemName}_hist`] = {
@@ -74,7 +74,7 @@ export function constructQuery (body, entityTypeConfig) {
   for (const sortPart of body.sort) {
     const key = Object.keys(sortPart)[0]
     const newSortPart = {}
-    if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'nested') {
+    if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
       newSortPart[`${key}.name.normalized_keyword`] = {
         mode: sortPart[key] === 'desc' ? 'max' : 'min',
         order: sortPart[key],
@@ -82,7 +82,7 @@ export function constructQuery (body, entityTypeConfig) {
           path: key
         }
       }
-    } else if (entityTypeConfig.es_columns.filter(c => c.systemName === key)[0].type === 'text') {
+    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'text') {
       newSortPart[`${key}.normalized_keyword`] = sortPart[key]
     } else {
       newSortPart[key] = sortPart[key]
@@ -255,7 +255,7 @@ export function extractTotal (data) {
 
 export function getFields (entityTypeConfig) {
   const fields = []
-  for (const fieldConfig of entityTypeConfig.es_columns) {
+  for (const fieldConfig of entityTypeConfig.elasticsearch.columns) {
     fields.push({
       key: fieldConfig.systemName,
       label: fieldConfig.displayName,
@@ -267,7 +267,7 @@ export function getFields (entityTypeConfig) {
 
 export function getFilterDefs (entityTypeConfig) {
   const filterDefs = {}
-  for (const section of entityTypeConfig.es_filters) {
+  for (const section of entityTypeConfig.elasticsearch.filters) {
     for (const filter of section.filters) {
       filterDefs[filter.systemName] = filter
     }
@@ -277,7 +277,7 @@ export function getFilterDefs (entityTypeConfig) {
 
 export function getSystemNames (entityTypeConfig) {
   const systemNames = []
-  for (const fieldConfig of entityTypeConfig.es_columns) {
+  for (const fieldConfig of entityTypeConfig.elasticsearch.columns) {
     systemNames.push(fieldConfig.systemName)
   }
   return systemNames

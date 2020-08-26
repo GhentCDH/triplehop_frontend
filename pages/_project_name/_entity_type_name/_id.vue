@@ -201,7 +201,7 @@ export default {
         to: `/${this.projectName}`
       })
       // entity search
-      if ('es_columns' in this.entityTypeConfig) {
+      if ('elasticsearch' in this.entityTypeConfig) {
         breadcrumbs.push({
           text: this.entityTypeConfig.display_name,
           to: `/${this.projectName}/${this.entityTypeName}`

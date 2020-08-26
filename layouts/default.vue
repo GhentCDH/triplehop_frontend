@@ -104,7 +104,7 @@ export default {
         this.$store.state.config.entity_types != null
       ) {
         for (const [entityTypeName, entityTypeConfig] of Object.entries(this.$store.state.config.entity_types)) {
-          if ('es_columns' in entityTypeConfig) {
+          if ('elasticsearch' in entityTypeConfig) {
             result.push({
               systemName: entityTypeName,
               displayName: entityTypeConfig.display_name
