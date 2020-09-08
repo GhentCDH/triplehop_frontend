@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+update_flag=''
+
+while getopts u option
+do
+    case "${option}" in
+    u) update_flag='u'
+    esac
+done
+
 declare -a paths=(
     'assets'
     'components'
@@ -20,15 +29,15 @@ declare -a paths=(
 
 for path in "${paths[@]}"; do
     if test -d "crdb_frontend/$path"; then
-        cp -ruTv "crdb_frontend/$path" "$path"
+        cp -rTv"$update_flag" "crdb_frontend/$path" "$path"
     fi
     if test -f "crdb_frontend/$path"; then
-        cp -uTv "crdb_frontend/$path" "$path"
+        cp -Tv"$update_flag" "crdb_frontend/$path" "$path"
     fi
     if test -d "overrides/$path"; then
-        cp -ruTv "overrides/$path" "$path"
+        cp -rTv"$update_flag" "overrides/$path" "$path"
     fi
     if test -f "overrides/$path"; then
-        cp -uTv "overrides/$path" "$path"
+        cp -Tv"$update_flag" "overrides/$path" "$path"
     fi
 done
