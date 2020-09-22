@@ -31,19 +31,19 @@ import { hasProjectPermission } from '@/assets/js/auth'
 
 // TODO: check for es_index jobs with status 'started'
 export default {
-  async fetch ({ params, store }) {
+  async fetch () {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
-    await store.dispatch('config/load_entity_types', params.project_name)
+    await this.$store.dispatch('config/load_entity_types', this.projectName)
   },
   data () {
     return {
       busy: false
     }
   },
-  validate ({ $auth, params, error }) {
+  validate ({ $auth, $config, error, params }) {
     // TODO: validate project_name based on cached config
-    if (!hasProjectPermission($auth.user, params.project_name, 'es_index')) {
+    if (!hasProjectPermission($auth.user, $config.projectName ?? params.project_name, 'es_index')) {
       return error({ statusCode: 403, message: 'Unauthorized.' })
     }
     return true
@@ -54,7 +54,10 @@ export default {
       return this.$store.state.config.entity_types
     },
     projectName () {
-      return this.$route.params.project_name
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
+    projectPrefix () {
+      return this.$config.projectName == null ? `/${this.projectName}/` : '/'
     }
   },
   methods: {
@@ -65,7 +68,7 @@ export default {
         const response = await this.$axios.get(
           `/es/${this.projectName}/${entityTypeName}/reindex`
         )
-        this.$router.push(`/${this.projectName}/admin/job/${response.data.id}`)
+        this.$router.push(`${this.projectPrefix}admin/job/${response.data.id}`)
       } catch (error) {
         this.$store.dispatch(
           'notifications/create',

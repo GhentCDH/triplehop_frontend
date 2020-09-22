@@ -9,7 +9,7 @@
         block
         variant="secondary"
         class="text-center"
-        :to="`/${$route.params.project_name}/admin/es_index`"
+        :to="`${projectPrefix}admin/es_index`"
       >
         <b-icon
           icon="search"
@@ -27,16 +27,24 @@
 import { hasProjectAdminAccess, hasProjectPermission } from '@/assets/js/auth'
 
 export default {
-  validate ({ $auth, params, error }) {
+  validate ({ $auth, $config, error, params }) {
     // TODO: validate project_name based on cached config
-    if (!hasProjectAdminAccess($auth.user, params.project_name)) {
+    if (!hasProjectAdminAccess($auth.user, $config.projectName ?? params.project_name)) {
       return error({ statusCode: 403, message: 'Unauthorized.' })
     }
     return true
   },
+  computed: {
+    projectName () {
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
+    projectPrefix () {
+      return this.$config.projectName == null ? `/${this.projectName}/` : '/'
+    }
+  },
   methods: {
     hasProjectPermission (permission) {
-      return hasProjectPermission(this.$auth.user, this.$route.params.project_name, permission)
+      return hasProjectPermission(this.$auth.user, this.projectName, permission)
     }
   }
 }

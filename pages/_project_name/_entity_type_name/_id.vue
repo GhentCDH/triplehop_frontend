@@ -162,33 +162,33 @@ export default {
     }
     return true
   },
-  async fetch ({ params, store, error }) {
+  async fetch () {
     // TODO (backend): allow fields to be ordered
     // TODO (backend): allow display widget configuration
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
-    if (!(params.entity_type_name in store.state.config.entity_types)) {
-      return error({
+    if (!(this.entityTypeName in this.entityTypesConfig)) {
+      return this.$nuxt.error({
         statusCode: 404,
-        message: `Entity type "${params.entity_type_name}" cannot be found.`
+        message: `Entity type "${this.entityTypeName}" cannot be found.`
       })
     }
-    await store.dispatch('config/load_relation_types', params.project_name)
+    await this.$store.dispatch('config/load_relation_types', this.projectName)
 
-    await store.dispatch(
+    await this.$store.dispatch(
       'data/load',
       {
-        entityTypeName: params.entity_type_name,
-        entityTypesConfig: store.state.config.entity_types,
-        id: params.id,
-        projectName: params.project_name,
-        relationTypesConfig: store.state.config.relation_types
+        entityTypeName: this.entityTypeName,
+        entityTypesConfig: this.entityTypesConfig,
+        id: this.$route.params.id,
+        projectName: this.projectName,
+        relationTypesConfig: this.relationTypesConfig
       }
     )
-    if (store.state.data.data == null) {
-      return error({
+    if (this.$store.state.data.data == null) {
+      return this.$nuxt.error({
         statusCode: 404,
-        message: `Entity of type "${params.entity_type_name}" with id "${params.id}" cannot be found.`
+        message: `Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`
       })
     }
   },
@@ -198,13 +198,13 @@ export default {
       // project home
       breadcrumbs.push({
         text: 'Home',
-        to: `/${this.projectName}`
+        to: this.projectPrefix
       })
       // entity search
       if ('elasticsearch' in this.entityTypeConfig) {
         breadcrumbs.push({
           text: this.entityTypeConfig.display_name,
-          to: `/${this.projectName}/${this.entityTypeName}`
+          to: `${this.projectPrefix}${this.entityTypeName}`
         })
       } else {
         breadcrumbs.push({
@@ -222,7 +222,7 @@ export default {
     // TODO: camelCase
     domainRelationTypesConfig () {
       return filterObject(
-        this.$store.state.config.relation_types,
+        this.relationTypesConfig,
         relationConfig => relationConfig.domain_names.includes(this.entityTypeName)
       )
     },
@@ -239,13 +239,19 @@ export default {
       return this.$route.params.entity_type_name
     },
     projectName () {
-      return this.$route.params.project_name
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
+    projectPrefix () {
+      return this.$config.projectName == null ? `/${this.projectName}/` : '/'
     },
     rangeRelationTypesConfig () {
       return filterObject(
-        this.$store.state.config.relation_types,
+        this.relationTypesConfig,
         relationConfig => relationConfig.range_names.includes(this.entityTypeName)
       )
+    },
+    relationTypesConfig () {
+      return this.$store.state.config.relation_types
     },
     title () {
       return this.constructTitle(this.entityTypeConfig.display.title, this.entityData)

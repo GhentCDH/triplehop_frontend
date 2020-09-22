@@ -90,24 +90,27 @@ export default {
     }
     return true
   },
-  async fetch ({ params, store, error }) {
-    await store.dispatch(
+  async fetch () {
+    await this.$store.dispatch(
       'job/load_single_by_project',
       {
-        id: params.id,
-        projectName: params.project_name
+        id: this.$route.params.id,
+        projectName: this.projectName
       }
     )
-    if (!(params.id in store.state.job.jobs)) {
-      return error({
+    if (!(this.$route.params.id in this.$store.state.job.jobs)) {
+      return this.$nuxt.error({
         statusCode: 404,
-        message: `Job with id "${params.id}" cannot be found.`
+        message: `Job with id "${this.$route.params.id}" cannot be found.`
       })
     }
   },
   computed: {
     jobData () {
       return this.$store.state.job.jobs[this.$route.params.id]
+    },
+    projectName () {
+      return this.$config.projectName ?? this.$route.params.project_name
     }
   },
   methods: {

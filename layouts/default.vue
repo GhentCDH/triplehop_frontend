@@ -2,7 +2,7 @@
   <b-container fluid="lg">
     <header>
       <b-navbar toggleable="lg" type="light" variant="light" class="mb-3">
-        <b-navbar-brand :to="homeUrl">
+        <b-navbar-brand :to="projectPrefix">
           {{ brand }}
         </b-navbar-brand>
 
@@ -14,13 +14,13 @@
           class="text-primary"
         >
           <b-navbar-nav>
-            <b-nav-item :to="homeUrl">
+            <b-nav-item :to="projectPrefix">
               Home
             </b-nav-item>
             <b-nav-item
               v-for="link in links"
               :key="link.systemName"
-              :to="`${homeUrl}/${link.systemName}`"
+              :to="`${projectPrefix}${link.systemName}`"
             >
               {{ link.displayName }}
             </b-nav-item>
@@ -32,7 +32,7 @@
                 {{ $auth.user.display_name }}
               </template>
               <b-dropdown-item
-                v-if="hasGlobalAdminAccess($auth.user)"
+                v-if="this.$route.params.project_name != null && hasGlobalAdminAccess($auth.user)"
                 to="/admin"
               >
                 <b-icon
@@ -41,8 +41,8 @@
                 Global admin dashboard
               </b-dropdown-item>
               <b-dropdown-item
-                v-if="hasProjectAdminAccess($auth.user, $route.params.project_name)"
-                :to="'/' + $route.params.project_name + '/admin'"
+                v-if="hasProjectAdminAccess($auth.user, projectName)"
+                :to="`${projectPrefix}admin`"
               >
                 <b-icon
                   icon="gear-fill"
@@ -95,9 +95,6 @@ export default {
       }
       return this.$store.state.config.project_def.display_name ?? 'CRDB'
     },
-    homeUrl () {
-      return this.$route.params.project_name ? `/${this.$route.params.project_name}` : ''
-    },
     links () {
       const result = []
       if (
@@ -113,6 +110,12 @@ export default {
         }
       }
       return result
+    },
+    projectName () {
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
+    projectPrefix () {
+      return this.$config.projectName == null ? `/${this.projectName}/` : '/'
     }
   },
   methods: {

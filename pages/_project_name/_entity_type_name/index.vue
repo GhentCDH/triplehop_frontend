@@ -120,7 +120,7 @@
                   >
                     <nuxt-link
                       v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
-                      :to="`/${projectName}/${item.entity_type_name}/${item.id}`"
+                      :to="`${projectPrefix}${item.entity_type_name}/${item.id}`"
                     >
                       {{ item.name }}
                     </nuxt-link>
@@ -132,7 +132,7 @@
                 <template v-else-if="data.value.length == 1">
                   <nuxt-link
                     v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
-                    :to="`/${projectName}/${data.value[0].entity_type_name}/${data.value[0].id}`"
+                    :to="`${projectPrefix}${data.value[0].entity_type_name}/${data.value[0].id}`"
                   >
                     {{ data.value[0].name }}
                   </nuxt-link>
@@ -144,7 +144,7 @@
               <template v-else>
                 <nuxt-link
                   v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
-                  :to="`/${projectName}/${data.value.entity_type_name}/${data.value.id}`"
+                  :to="`${projectPrefix}${data.value.entity_type_name}/${data.value.id}`"
                 >
                   {{ data.value.name }}
                 </nuxt-link>
@@ -197,16 +197,16 @@ export default {
     return true
   },
   async fetch () {
-    if (!(this.$route.params.entity_type_name in this.$store.state.config.entity_types)) {
+    if (!(this.entityTypeName in this.entityTypesConfig)) {
       return this.$nuxt.error({
         statusCode: 404,
-        message: `Entity type "${this.$route.params.entity_type_name}" cannot be found.`
+        message: `Entity type "${this.entityTypeName}" cannot be found.`
       })
     }
-    if (!('elasticsearch' in this.$store.state.config.entity_types[this.$route.params.entity_type_name])) {
+    if (!('elasticsearch' in this.entityTypeConfig)) {
       return this.$nuxt.error({
         statusCode: 404,
-        message: `No search page available for entity type "${this.$route.params.entity_type_name}".`
+        message: `No search page available for entity type "${this.entityTypeName}".`
       })
     }
     for (const systemName in this.esFiltersDefs) {
@@ -287,9 +287,9 @@ export default {
       'es/search',
       {
         body: this.body,
-        entityTypeName: this.$route.params.entity_type_name,
-        projectName: this.$route.params.project_name,
-        entityTypeConfig: this.$store.state.config.entity_types[this.$route.params.entity_type_name]
+        entityTypeName: this.entityTypeName,
+        projectName: this.projectName,
+        entityTypeConfig: this.entityTypeConfig
       }
     )
     for (const systemName in this.esFiltersDefs) {
@@ -353,7 +353,7 @@ export default {
       return [
         {
           text: 'Home',
-          to: `/${this.projectName}`
+          to: this.projectPrefix
         },
         {
           text: this.entityTypeConfig.display_name,
@@ -365,7 +365,10 @@ export default {
       return this.$route.query.page ?? 1
     },
     entityTypeConfig () {
-      return this.$store.state.config.entity_types[this.entityTypeName]
+      return this.entityTypesConfig[this.entityTypeName]
+    },
+    entityTypesConfig () {
+      return this.$store.state.config.entity_types
     },
     entityTypeDisplayName () {
       return this.entityTypeConfig.display_name
@@ -386,7 +389,10 @@ export default {
       return this.$store.state.es.items
     },
     projectName () {
-      return this.$route.params.project_name
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
+    projectPrefix () {
+      return this.$config.projectName == null ? `/${this.projectName}/` : '/'
     },
     showingStart () {
       return this.body.from + 1
