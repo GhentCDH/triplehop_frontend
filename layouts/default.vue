@@ -32,7 +32,7 @@
                 {{ $auth.user.display_name }}
               </template>
               <b-dropdown-item
-                v-if="this.$route.params.project_name != null && hasGlobalAdminAccess($auth.user)"
+                v-if="$route.params.project_name != null && hasGlobalAdminAccess($auth.user)"
                 to="/admin"
               >
                 <b-icon
