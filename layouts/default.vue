@@ -14,7 +14,10 @@
           class="text-primary"
         >
           <b-navbar-nav>
-            <b-nav-item :to="projectPrefix">
+            <b-nav-item v-if="$config.homepage != null" :href="$config.homepage">
+              Home
+            </b-nav-item>
+            <b-nav-item v-else :to="projectPrefix">
               Home
             </b-nav-item>
             <b-nav-item

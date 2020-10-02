@@ -350,16 +350,25 @@ export default {
       return rfdc()(this.$store.state.es.aggs)
     },
     breadcrumbs () {
-      return [
-        {
+      const breadcrumbs = []
+      // project home
+      if (this.$config.homepage != null) {
+        breadcrumbs.push({
+          text: 'Home',
+          href: this.$config.homepage
+        })
+      } else {
+        breadcrumbs.push({
           text: 'Home',
           to: this.projectPrefix
-        },
-        {
-          text: this.entityTypeConfig.display_name,
-          active: true
-        }
-      ]
+        })
+      }
+      // entity search
+      breadcrumbs.push({
+        text: this.entityTypeConfig.display_name,
+        active: true
+      })
+      return breadcrumbs
     },
     currentPage () {
       return this.$route.query.page ?? 1

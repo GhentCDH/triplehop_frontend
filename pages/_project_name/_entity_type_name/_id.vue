@@ -196,10 +196,17 @@ export default {
     breadcrumbs () {
       const breadcrumbs = []
       // project home
-      breadcrumbs.push({
-        text: 'Home',
-        to: this.projectPrefix
-      })
+      if (this.$config.homepage != null) {
+        breadcrumbs.push({
+          text: 'Home',
+          href: this.$config.homepage
+        })
+      } else {
+        breadcrumbs.push({
+          text: 'Home',
+          to: this.projectPrefix
+        })
+      }
       // entity search
       if ('elasticsearch' in this.entityTypeConfig) {
         breadcrumbs.push({
