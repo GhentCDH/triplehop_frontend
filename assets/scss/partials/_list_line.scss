@@ -1,0 +1,13 @@
+.list-line {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    border-bottom: 1px solid $gray-400;
+
+    &:last-child {
+      border: 0;
+    }
+  }
+}

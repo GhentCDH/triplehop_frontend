@@ -113,7 +113,10 @@
           >
             <template v-slot:cell()="data">
               <template v-if="isArray(data.value)">
-                <ul v-if="data.value.length > 1">
+                <ul
+                  v-if="data.value.length > 1"
+                  class="list-line"
+                >
                   <li
                     v-for="(item, index) in data.value"
                     :key="index"
