@@ -67,10 +67,15 @@
               </template>
               <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
               <client-only
-                v-else-if="field.type === 'wikidata_images'"
+                v-else-if="field.type === 'wikidata_images' || field.type === 'vooruit_image'"
               >
                 <wikidata-images-field
+                  v-if="field.type === 'wikidata_images'"
                   :wikidata-id="entityData[field.field]"
+                />
+                <vooruit-image-field
+                  v-if="field.type === 'vooruit_image'"
+                  :image-url="entityData[field.field]"
                 />
               </client-only>
               <template v-else>
@@ -146,12 +151,14 @@
 <script>
 import { filterObject, isNumber } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
+import VooruitImageField from '~/components/VooruitImageField.vue'
 import WikidataImagesField from '~/components/WikidataImagesField.vue'
 
 export default {
   auth: false,
   components: {
     GeometryField,
+    VooruitImageField,
     WikidataImagesField
   },
   validate ({ params }) {
