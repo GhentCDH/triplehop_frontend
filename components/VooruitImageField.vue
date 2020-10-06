@@ -1,7 +1,14 @@
 <template>
   <b-row>
     <b-col md="3">
-      <b-img :src="displayUrl" />
+      <b-img
+        v-if="!imageError"
+        :src="displayUrl"
+        @error="imageError = true"
+      />
+      <template v-if="imageError">
+        This content can only be viewed from the Ghent University network.
+      </template>
     </b-col>
     <b-col md="9">
       <template v-if="attribution">
@@ -40,6 +47,7 @@ export default {
     return {
       attribution: null,
       displayUrl: null,
+      imageError: false,
       linkUrl: null
     }
   },
