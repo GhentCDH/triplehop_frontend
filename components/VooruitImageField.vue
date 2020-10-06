@@ -5,7 +5,11 @@
     </b-col>
     <b-col md="9">
       <template v-if="attribution">
-        <strong>Attribution</strong> {{ attribution }}
+        <strong>Attribution</strong>
+        <br>
+        {{ attribution }}
+        <br>
+        Hosted by Ghent University Library
         <br>
       </template>
       <b-link
