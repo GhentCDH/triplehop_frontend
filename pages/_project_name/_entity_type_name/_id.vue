@@ -90,67 +90,32 @@
     <template
       v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
     >
-      <b-card
-        v-if="entityData[`r_${relationTypeName}_s`] && relationTypeConfig.display.domain_title !== ''"
+      <relation-data
         :key="relationTypeName"
-        :title="relationTypeConfig.display.domain_title"
-        class="border-0 bg-light mb-3"
-      >
-        <b-card
-          v-for="relation in entityData[`r_${relationTypeName}_s`]"
-          :key="relation.id"
-          class="border-0 bg-white mb-1"
-        >
-          <nuxt-link
-            :to="{
-              name: 'project_name-entity_type_name-id',
-              params: {
-                project_name: projectName,
-                entity_type_name: relation.entity.__typename.toLowerCase(),
-                id: relation.entity.id
-              }
-            }"
-          >
-            {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
-          </nuxt-link>
-        </b-card>
-      </b-card>
+        :entity-types-config="entityTypesConfig"
+        :project-name="projectName"
+        :relation-data="entityData[`r_${relationTypeName}_s`]"
+        :relation-title="relationTypeConfig.display.domain_title"
+      />
     </template>
     <template
       v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
     >
-      <b-card
-        v-if="entityData[`ri_${relationTypeName}_s`] && relationTypeConfig.display.range_title !== ''"
+      <relation-data
         :key="relationTypeName"
-        :title="relationTypeConfig.display.range_title"
-        class="border-0 bg-light mb-3"
-      >
-        <b-card
-          v-for="relation in entityData[`ri_${relationTypeName}_s`]"
-          :key="relation.id"
-          class="border-0 bg-white mb-1"
-        >
-          <nuxt-link
-            :to="{
-              name: 'project_name-entity_type_name-id',
-              params: {
-                project_name: projectName,
-                entity_type_name: relation.entity.__typename.toLowerCase(),
-                id: relation.entity.id
-              }
-            }"
-          >
-            {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
-          </nuxt-link>
-        </b-card>
-      </b-card>
+        :project-name="projectName"
+        :entity-types-config="entityTypesConfig"
+        :relation-data="entityData[`ri_${relationTypeName}_s`]"
+        :relation-title="relationTypeConfig.display.range_title"
+      />
     </template>
   </div>
 </template>
 
 <script>
-import { filterObject, isNumber } from '~/assets/js/utils'
+import { constructTitle, filterObject, isNumber } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
+import RelationData from '~/components/RelationData.vue'
 import VooruitImageField from '~/components/VooruitImageField.vue'
 import WikidataImagesField from '~/components/WikidataImagesField.vue'
 
@@ -158,6 +123,7 @@ export default {
   auth: false,
   components: {
     GeometryField,
+    RelationData,
     VooruitImageField,
     WikidataImagesField
   },
@@ -272,9 +238,7 @@ export default {
     }
   },
   methods: {
-    constructTitle (title, data) {
-      return title.replace(/(?<![$])[$]([a-z_]+)/g, m => data[m.slice(1)])
-    }
+    constructTitle
   },
   head () {
     // TODO: set Meta Tags for this Page
