@@ -91,7 +91,7 @@
       v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
     >
       <b-card
-        v-if="entityData[`r_${relationTypeName}_s`]"
+        v-if="entityData[`r_${relationTypeName}_s`] && relationTypeConfig.display.domain_title !== ''"
         :key="relationTypeName"
         :title="relationTypeConfig.display.domain_title"
         class="border-0 bg-light mb-3"
@@ -120,7 +120,7 @@
       v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
     >
       <b-card
-        v-if="entityData[`ri_${relationTypeName}_s`]"
+        v-if="entityData[`ri_${relationTypeName}_s`] && relationTypeConfig.display.range_title !== ''"
         :key="relationTypeName"
         :title="relationTypeConfig.display.range_title"
         class="border-0 bg-light mb-3"
