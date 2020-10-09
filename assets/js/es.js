@@ -218,7 +218,7 @@ export function extractAggs (data, entityTypeConfig) {
       result[systemName] = data.aggregations[systemName].id.buckets.map((b) => {
         return {
           id: b.key,
-          name: b.name.buckets[0].key,
+          name: b.name.buckets.length ? b.name.buckets[0].key : 'N/A',
           count: b.doc_count
         }
       })
