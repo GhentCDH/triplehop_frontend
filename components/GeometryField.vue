@@ -9,7 +9,7 @@
         <!-- TODO: provide a way to configure a default base layer (project / entity based) -->
         <!-- TODO: add button to display larger map? -->
         <l-tile-layer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}.png"
           attribution="Tiles &copy; <a href='http://esri.com'>Esri</a>"
           :options="{ maxZoom: 17 }"
         />
@@ -23,7 +23,6 @@
 </template>
 
 <script>
-
 export default {
   props: {
     geometry: {
@@ -36,7 +35,7 @@ export default {
       this.$refs.map.mapObject.fitBounds(
         this.$refs['feature-group'].mapObject.getBounds(),
         {
-          maxZoom: 14
+          maxZoom: 13
         }
       )
     }
