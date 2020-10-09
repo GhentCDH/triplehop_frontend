@@ -1,6 +1,6 @@
 <template>
   <b-card
-    v-if="relationData && relationData.length && relationTitle !== ''"
+    v-if="data && data.length && relationTitle !== ''"
     :title="relationTitle"
     class="border-0 bg-light mb-3"
   >
@@ -13,7 +13,7 @@
       :relation-type-config="relationTypeConfig"
     />
     <b-button
-      v-if="relationData.length > 5"
+      v-if="data.length > 5"
       class="mt-3"
       variant="primary"
       @click="collapsed = !collapsed"
@@ -35,6 +35,10 @@ export default {
       type: Boolean,
       default: true
     },
+    data: {
+      type: Array,
+      required: true
+    },
     entityTypesConfig: {
       type: Object,
       required: true
@@ -43,8 +47,8 @@ export default {
       type: String,
       required: true
     },
-    relationData: {
-      type: Array,
+    relationTitle: {
+      type: String,
       required: true
     },
     relationTypeConfig: {
@@ -55,21 +59,18 @@ export default {
   computed: {
     buttonText () {
       if (this.collapsed) {
-        return `Show ${this.relationData.length - 3} more results (${this.relationData.length} in total)`
+        return `Show ${this.data.length - 3} more results (${this.data.length} in total)`
       }
-      return `Hide ${this.relationData.length - 3} results (${this.relationData.length} in total)`
+      return `Hide ${this.data.length - 3} results (${this.data.length} in total)`
     },
     firstThree () {
-      return this.relationData.slice(0, 3)
+      return this.data.slice(0, 3)
     },
     relations () {
-      if (this.relationData.length > 5 && this.collapsed) {
+      if (this.data.length > 5 && this.collapsed) {
         return this.firstThree
       }
-      return this.relationData
-    },
-    relationTitle () {
-      return this.relationTypeConfig.display.title
+      return this.data
     }
   },
   methods: {

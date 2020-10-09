@@ -23,7 +23,8 @@
       :key="relationTypeName"
       :entity-types-config="entityTypesConfig"
       :project-name="projectName"
-      :relation-data="entityData[`r_${relationTypeName}_s`]"
+      :data="entityData[`r_${relationTypeName}_s`]"
+      :relation-title="relationTypeConfig.display.domain_title"
       :relation-type-config="relationTypeConfig"
     />
     <relation-list
@@ -31,7 +32,8 @@
       :key="relationTypeName"
       :project-name="projectName"
       :entity-types-config="entityTypesConfig"
-      :relation-data="entityData[`ri_${relationTypeName}_s`]"
+      :data="entityData[`ri_${relationTypeName}_s`]"
+      :relation-title="relationTypeConfig.display.range_title"
       :relation-type-config="relationTypeConfig"
     />
   </div>
