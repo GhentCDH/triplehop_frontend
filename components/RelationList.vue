@@ -1,27 +1,17 @@
 <template>
   <b-card
-    v-if="relationData.length && relationTitle !== ''"
+    v-if="relationData && relationData.length && relationTitle !== ''"
     :title="relationTitle"
     class="border-0 bg-light mb-3"
   >
-    <b-card
+    <relation
       v-for="relation in relations"
       :key="relation.id"
-      class="border-0 bg-white mb-1"
-    >
-      <b-link
-        :to="{
-          name: 'project_name-entity_type_name-id',
-          params: {
-            project_name: projectName,
-            entity_type_name: relation.entity.__typename.toLowerCase(),
-            id: relation.entity.id
-          }
-        }"
-      >
-        {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
-      </b-link>
-    </b-card>
+      :project-name="projectName"
+      :entity-types-config="entityTypesConfig"
+      :relation="relation"
+      :relation-type-config="relationTypeConfig"
+    />
     <b-button
       v-if="relationData.length > 5"
       class="mt-3"
@@ -34,8 +24,12 @@
 </template>
 <script>
 import { constructTitle } from '~/assets/js/utils'
+import Relation from '~/components/Relation.vue'
 
 export default {
+  components: {
+    Relation
+  },
   props: {
     collapsed: {
       type: Boolean,
@@ -53,8 +47,8 @@ export default {
       type: Array,
       required: true
     },
-    relationTitle: {
-      type: String,
+    relationTypeConfig: {
+      type: Object,
       required: true
     }
   },
@@ -73,6 +67,9 @@ export default {
         return this.firstThree
       }
       return this.relationData
+    },
+    relationTitle () {
+      return this.relationTypeConfig.display.title
     }
   },
   methods: {

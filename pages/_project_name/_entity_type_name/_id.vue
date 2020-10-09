@@ -9,123 +9,44 @@
       {{ title }}
     </h1>
 
-    <b-card
+    <layout-panel
       v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
       :key="`panel-${panelIndex}`"
-      :title="panel.label"
-      class="bg-light border-0 mb-3"
-    >
-      <dl
-        v-if="'fields' in panel"
-        class="row mb-0"
-      >
-        <template
-          v-for="(field, fieldIndex) in panel.fields"
-        >
-          <!-- TODO: let component update text-muted class (idea: emit loaded event) -->
-          <dt
-            :key="`field-label-${panelIndex}-${fieldIndex}`"
-            class="col-sm-3 col-lg-2"
-            :class="{'text-muted': entityData[field.field] == null}"
-          >
-            {{ field.label ? field.label : entityTypeConfig.data[field.field].display_name }}
-          </dt>
-          <dd
-            :key="`field-value-${panelIndex}-${fieldIndex}`"
-            class="col-sm-9 col-lg-10"
-          >
-            <template
-              v-if="entityData[field.field] != null"
-            >
-              <geometry-field
-                v-if="field.type === 'geometry'"
-                :geometry="entityData[field.field]"
-              />
-              <b-link
-                v-else-if="field.type === 'online_identifier'"
-                :href="`${field.base_url}${entityData[field.field]}`"
-                target="_blank"
-              >
-                {{ entityData[field.field] }}
-              </b-link>
-              <template
-                v-else-if="field.type === 'list'"
-              >
-                <ul
-                  v-if="entityData[field.field].length > 1"
-                >
-                  <li
-                    v-for="(item, index) in entityData[field.field]"
-                    :key="index"
-                  >
-                    {{ item }}
-                  </li>
-                </ul>
-                <template v-else>
-                  {{ entityData[field.field][0] }}
-                </template>
-              </template>
-              <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
-              <client-only
-                v-else-if="field.type === 'wikidata_images' || field.type === 'vooruit_image'"
-              >
-                <wikidata-images-field
-                  v-if="field.type === 'wikidata_images'"
-                  :wikidata-id="entityData[field.field]"
-                />
-                <vooruit-image-field
-                  v-if="field.type === 'vooruit_image'"
-                  :image-url="entityData[field.field]"
-                />
-              </client-only>
-              <template v-else>
-                {{ entityData[field.field] }}
-              </template>
-            </template>
-          </dd>
-        </template>
-      </dl>
-    </b-card>
+      :panel="panel"
+      :panel-index="panelIndex"
+      :config="entityTypeConfig"
+      :data="entityData"
+    />
 
-    <template
+    <relation-list
       v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
-    >
-      <relation-data
-        :key="relationTypeName"
-        :entity-types-config="entityTypesConfig"
-        :project-name="projectName"
-        :relation-data="entityData[`r_${relationTypeName}_s`]"
-        :relation-title="relationTypeConfig.display.domain_title"
-      />
-    </template>
-    <template
+      :key="relationTypeName"
+      :entity-types-config="entityTypesConfig"
+      :project-name="projectName"
+      :relation-data="entityData[`r_${relationTypeName}_s`]"
+      :relation-type-config="relationTypeConfig"
+    />
+    <relation-list
       v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
-    >
-      <relation-data
-        :key="relationTypeName"
-        :project-name="projectName"
-        :entity-types-config="entityTypesConfig"
-        :relation-data="entityData[`ri_${relationTypeName}_s`]"
-        :relation-title="relationTypeConfig.display.range_title"
-      />
-    </template>
+      :key="relationTypeName"
+      :project-name="projectName"
+      :entity-types-config="entityTypesConfig"
+      :relation-data="entityData[`ri_${relationTypeName}_s`]"
+      :relation-type-config="relationTypeConfig"
+    />
   </div>
 </template>
 
 <script>
 import { constructTitle, filterObject, isNumber } from '~/assets/js/utils'
-import GeometryField from '~/components/GeometryField.vue'
-import RelationData from '~/components/RelationData.vue'
-import VooruitImageField from '~/components/VooruitImageField.vue'
-import WikidataImagesField from '~/components/WikidataImagesField.vue'
+import LayoutPanel from '~/components/LayoutPanel.vue'
+import RelationList from '~/components/RelationList.vue'
 
 export default {
   auth: false,
   components: {
-    GeometryField,
-    RelationData,
-    VooruitImageField,
-    WikidataImagesField
+    LayoutPanel,
+    RelationList
   },
   validate ({ params }) {
     // TODO: validate project_name based on cached config
