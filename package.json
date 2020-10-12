@@ -20,6 +20,7 @@
     "bootstrap-icons": "^1.0.0-alpha5",
     "bootstrap-vue": "^2.15.0",
     "chart.js": "^2.9.3",
+    "crypto-js": "^4.0.0",
     "leaflet": "^1.6.0",
     "nuxt": "^2.13.3",
     "nuxt-leaflet": "0.0.19",
