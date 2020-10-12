@@ -1,18 +1,36 @@
 <template>
-  <b-carousel
-    controls
-    indicators
-    fade
-    :interval="0"
-  >
-    <b-carousel-slide
-      v-for="(imageURL, index) in imageURLs"
+  <div>
+    <b-row
+      v-for="(image, index) in images"
       :key="index"
-      :img-src="imageURL"
-    />
-  </b-carousel>
+    >
+      <b-col md="3">
+        <b-img
+          v-if="!image.error"
+          :src="image.thumbUrl"
+          @error="image.error = true"
+          @load="image.loaded = true"
+        />
+        <template v-if="image.error">
+          There was a problem while loading this image.
+        </template>
+      </b-col>
+      <b-col md="9">
+        <b-link
+          v-if="image.loaded || image.error"
+          :href="image.linkUrl"
+          target="_blank"
+        >
+          <b-icon icon="box-arrow-up-right" />
+          View complete source
+        </b-link>
+      </b-col>
+    </b-row>
+  </div>
 </template>
 <script>
+import MD5 from 'crypto-js/md5'
+
 const baseURL = 'https://query.wikidata.org/sparql?query='
 export default {
   props: {
@@ -23,7 +41,7 @@ export default {
   },
   data () {
     return {
-      imageURLs: []
+      images: []
     }
   },
   async created () {
@@ -58,7 +76,15 @@ export default {
             result[binding].type === 'uri' &&
             'value' in result[binding]
           ) {
-            this.imageURLs.push(result[binding].value.replace('http://', 'https://'))
+            const url = result[binding].value.replace('http://', 'https://')
+            const fileName = decodeURIComponent(url.substr(url.lastIndexOf('/') + 1)).replaceAll(' ', '_')
+            const hash = MD5(fileName).toString()
+            this.images.push({
+              error: false,
+              linkUrl: `https://commons.wikimedia.org/wiki/File:${fileName}`,
+              loaded: false,
+              thumbUrl: `https://upload.wikimedia.org/wikipedia/commons/thumb/${hash.substr(0, 1)}/${hash.substr(0, 2)}/${fileName}/200px-${fileName}`
+            })
           }
         }
       }
