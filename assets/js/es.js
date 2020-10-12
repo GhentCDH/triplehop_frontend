@@ -63,6 +63,13 @@ export function constructQuery (body, entityTypeConfig) {
           }
         }
       }
+      if (filter.type === 'dropdown') {
+        aggs[filter.systemName] = {
+          terms: {
+            field: `${filter.systemName}.keyword`
+          }
+        }
+      }
       filterDefs[filter.systemName] = filter
     }
   }
@@ -144,6 +151,25 @@ export function constructQuery (body, entityTypeConfig) {
       query.bool.must.push(queryPart)
       continue
     }
+    if (filterDefs[systemName].type === 'dropdown') {
+      if (body.filters[systemName] == null || body.filters[systemName].length === 0) {
+        continue
+      }
+      const queryPart = {
+        bool: {
+          should: []
+        }
+      }
+      queryPart.bool.should.push(
+        {
+          terms: {
+            [`${systemName}.keyword`]: body.filters[systemName].map(f => f.key)
+          }
+        }
+      )
+      query.bool.must.push(queryPart)
+      continue
+    }
     if (body.filters[systemName] != null) {
       const queryPart = {
         match: {
@@ -219,6 +245,15 @@ export function extractAggs (data, entityTypeConfig) {
         return {
           id: b.key,
           name: b.name.buckets.length ? b.name.buckets[0].key : 'N/A',
+          count: b.doc_count
+        }
+      })
+      continue
+    }
+    if (esFiltersDefs[systemName].type === 'dropdown') {
+      result[systemName] = data.aggregations[systemName].buckets.map((b) => {
+        return {
+          key: b.key,
           count: b.doc_count
         }
       })

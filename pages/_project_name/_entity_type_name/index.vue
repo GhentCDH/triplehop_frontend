@@ -102,6 +102,31 @@
                       </b-badge>
                     </template>
                   </multiselect>
+                  <multiselect
+                    v-if="filter.type === 'dropdown' && aggs != null && aggs[filter.systemName] != null"
+                    v-model="form[filter.systemName]"
+                    :clear-on-select="false"
+                    :close-on-select="false"
+                    :disabled="disableFormElements"
+                    label="key"
+                    :multiple="true"
+                    :options="aggs[filter.systemName]"
+                    :preserve-search="true"
+                    :show-labels="false"
+                    track-by="key"
+                    @close="multiselectClose(filter.systemName)"
+                    @input="multiselectInput(filter.systemName)"
+                    @open="multiselectOpen(filter.systemName)"
+                  >
+                    <template slot="option" slot-scope="props">
+                      {{ props.option.key }}
+                      <b-badge
+                        :pill="true"
+                      >
+                        {{ props.option.count }}
+                      </b-badge>
+                    </template>
+                  </multiselect>
                 </b-form-group>
               </div>
             </b-form>
@@ -251,6 +276,23 @@ export default {
         }
         continue
       }
+      if (this.esFiltersDefs[systemName].type === 'dropdown') {
+        if (this.$route.query[`filter[${systemName}][0]`] == null) {
+          this.form[systemName] = null
+          continue
+        }
+        this.form[systemName] = []
+        let counter = 0
+        while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
+          this.form[systemName].push(
+            {
+              key: this.$route.query[`filter[${systemName}][${counter}]`]
+            }
+          )
+          counter++
+        }
+        continue
+      }
       this.form[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
       if (this.esFiltersDefs[systemName].type === 'autocomplete') {
         this.autocompleteData[systemName] = []
@@ -326,6 +368,16 @@ export default {
           this.form[systemName] = this.form[systemName].map(
             (filterValue) => {
               return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
+            }
+          )
+        }
+        continue
+      }
+      if (this.esFiltersDefs[systemName].type === 'dropdown') {
+        if (this.form[systemName] != null) {
+          this.form[systemName] = this.form[systemName].map(
+            (filterValue) => {
+              return this.aggs[systemName].filter(v => v.key === filterValue.key)[0]
             }
           )
         }
@@ -522,6 +574,14 @@ export default {
           if (this.form[systemName] != null && this.form[systemName].length > 0) {
             for (const [i, filterValue] of this.form[systemName].entries()) {
               query[`filter[${systemName}][${i}]`] = filterValue.id
+            }
+          }
+          continue
+        }
+        if (this.esFiltersDefs[systemName].type === 'dropdown') {
+          if (this.form[systemName] != null && this.form[systemName].length > 0) {
+            for (const [i, filterValue] of this.form[systemName].entries()) {
+              query[`filter[${systemName}][${i}]`] = filterValue.key
             }
           }
           continue
