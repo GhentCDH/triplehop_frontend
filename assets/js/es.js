@@ -1,5 +1,6 @@
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
+const NESTED_AGG_REGEX = /^\[(?<id>[0-9]+)\]\[(?<name>[\s\S]*)\]$/
 const SIZE_AGG_MAX = 2147483647
 
 export function constructQuery (body, entityTypeConfig) {
@@ -47,17 +48,12 @@ export function constructQuery (body, entityTypeConfig) {
             path: filter.systemName
           },
           aggs: {
-            id: {
+            id_and_name: {
               terms: {
-                field: `${filter.systemName}.id`,
+                script: {
+                  source: `String.valueOf(doc['${filter.systemName}.id']) + doc['${filter.systemName}.name.keyword']`
+                },
                 size: SIZE_AGG_MAX
-              },
-              aggs: {
-                name: {
-                  terms: {
-                    field: `${filter.systemName}.name.keyword`
-                  }
-                }
               }
             }
           }
@@ -241,10 +237,11 @@ export function extractAggs (data, entityTypeConfig) {
       continue
     }
     if (esFiltersDefs[systemName].type === 'nested') {
-      result[systemName] = data.aggregations[systemName].id.buckets.map((b) => {
+      result[systemName] = data.aggregations[systemName].id_and_name.buckets.map((b) => {
+        const match = b.key.match(NESTED_AGG_REGEX)
         return {
-          id: b.key,
-          name: b.name.buckets.length ? b.name.buckets[0].key : 'N/A',
+          id: parseInt(match.groups.id),
+          name: match.groups.name === '' ? 'N/A' : match.groups.name,
           count: b.doc_count
         }
       })
