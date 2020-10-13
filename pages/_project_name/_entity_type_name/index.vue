@@ -132,7 +132,10 @@
             </b-form>
           </b-collapse>
         </b-col>
-        <b-col md="9">
+        <b-col
+          v-if="total > 0"
+          md="9"
+        >
           Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
           <b-pagination
             :value="currentPage"
@@ -202,6 +205,12 @@
             :per-page="body.size"
             @input="pageChanged"
           />
+        </b-col>
+        <b-col
+          v-else
+          md="9"
+        >
+          <em>No results found.</em>
         </b-col>
       </b-row>
     </b-overlay>
