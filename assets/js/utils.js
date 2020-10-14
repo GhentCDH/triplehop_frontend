@@ -15,7 +15,7 @@ export function compareNameUnicode (a, b) {
 }
 
 export function constructTitle (title, data) {
-  return title.replace(/(?<![$])[$]([a-z_]+)/g, m => data[m.slice(1)])
+  return title.replace(/[$]([a-z_]+)/g, m => data[m.slice(1)])
 }
 
 export function formatDateTime (string) {
