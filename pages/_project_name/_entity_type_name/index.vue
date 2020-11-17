@@ -167,7 +167,7 @@
                       v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
                       :to="`${projectPrefix}${item.entity_type_name}/${item.id}`"
                     >
-                      {{ item.name }}
+                      {{ nameOrNA(item.name) }}
                     </nuxt-link>
                     <template v-else>
                       {{ item }}
@@ -179,7 +179,7 @@
                     v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
                     :to="`${projectPrefix}${data.value[0].entity_type_name}/${data.value[0].id}`"
                   >
-                    {{ data.value[0].name }}
+                    {{ nameOrNA(data.value[0].name) }}
                   </nuxt-link>
                   <template v-else>
                     {{ data.value[0] }}
@@ -191,7 +191,7 @@
                   v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
                   :to="`${projectPrefix}${data.value.entity_type_name}/${data.value.id}`"
                 >
-                  {{ data.value.name }}
+                  {{ nameOrNA(data.value.name) }}
                 </nuxt-link>
                 <template v-else>
                   {{ data.value }}
@@ -648,6 +648,16 @@ export default {
     },
     multiselectOpen (systemName) {
       this.multiselectState[systemName] = 'open'
+    },
+    nameOrNA (itemName) {
+      console.log(itemName)
+      if (itemName == null) {
+        return 'N/A'
+      }
+      if (itemName === '') {
+        return 'N/A'
+      }
+      return itemName
     },
     pageChanged (page) {
       if (page == null && this.body.from === 0) {
