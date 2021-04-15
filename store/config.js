@@ -174,15 +174,17 @@ export const actions = {
     for (const raw of rawConfig) {
       config[raw.system_name] = {
         display_name: raw.display_name,
-        data: {},
         display: raw.display,
         domain_names: raw.domain_names,
         range_names: raw.range_names
       }
-      for (const rawField of raw.data) {
-        config[raw.system_name].data[rawField.system_name] = {
-          display_name: rawField.display_name,
-          type: rawField.type
+      if (raw.data != null) {
+        config[raw.system_name].data = {}
+        for (const rawField of raw.data) {
+          config[raw.system_name].data[rawField.system_name] = {
+            display_name: rawField.display_name,
+            type: rawField.type
+          }
         }
       }
     }

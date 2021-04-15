@@ -97,8 +97,10 @@ export const actions = {
             fields: [],
             titles: {}
           }
-          for (const panel of relationTypesConfig[relation].display.layout) {
-            relationFieldNames[side][relation].fields.push(...extractFieldNames(panel.fields))
+          if (relationTypesConfig[relation].display.layout != null) {
+            for (const panel of relationTypesConfig[relation].display.layout) {
+              relationFieldNames[side][relation].fields.push(...extractFieldNames(panel.fields))
+            }
           }
           for (const linkedEntityTypeName of relationTypesConfig[relation][`${relationSides[side].inverse}_names`]) {
             relationFieldNames[side][relation].titles[linkedEntityTypeName] = [
