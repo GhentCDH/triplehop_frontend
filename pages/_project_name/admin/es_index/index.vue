@@ -27,7 +27,7 @@
   </b-row>
 </template>
 <script>
-import { hasProjectPermission } from '@/assets/js/auth'
+import { hasEntityPermission, hasProjectPermission } from '@/assets/js/auth'
 
 // TODO: check for es_index jobs with status 'started'
 export default {
@@ -50,8 +50,20 @@ export default {
   },
   computed: {
     entityTypesConfig () {
-      // TODO: filter on hasEntityPermission
-      return this.$store.state.config.entity_types
+      const entityTypesConfig = JSON.parse(JSON.stringify(this.$store.state.config.entity_types))
+      // Filter out entity types without elasticsearch config
+      for (const entityTypeName of Object.keys(entityTypesConfig)) {
+        if (!('elasticsearch' in entityTypesConfig[entityTypeName])) {
+          delete entityTypesConfig[entityTypeName]
+        }
+      }
+      // Filter out entity types for wich the user has no es_index permission
+      for (const entityTypeName of Object.keys(entityTypesConfig)) {
+        if (!hasEntityPermission(this.$auth.user, this.projectName, entityTypeName, 'es_index')) {
+          delete entityTypesConfig[entityTypeName]
+        }
+      }
+      return entityTypesConfig
     },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
