@@ -64,13 +64,10 @@ export function hasEntityPermission (user, projectName, entityName, permission) 
     return false
   }
 
-  // TODO: check (entity, relation)
-  // console.log(user.permissions)
-
   if (
     '__all__' in user.permissions[permission] && (
-      '__all__' in user.permissions[permission].__all__ ||
-      entityName in user.permissions[permission].__all__
+      '__all__' in user.permissions[permission].__all__.entities ||
+      entityName in user.permissions[permission].__all__.entities
     )
   ) {
     return true
@@ -78,8 +75,8 @@ export function hasEntityPermission (user, projectName, entityName, permission) 
 
   if (
     projectName in user.permissions[permission] && (
-      '__all__' in user.permissions[permission][projectName] ||
-      entityName in user.permissions[permission][projectName]
+      '__all__' in user.permissions[permission][projectName].entities ||
+      entityName in user.permissions[permission][projectName].entities
     )
   ) {
     return true
