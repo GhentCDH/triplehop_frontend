@@ -660,7 +660,6 @@ export default {
       this.multiselectState[systemName] = 'open'
     },
     nameOrNA (itemName) {
-      console.log(itemName)
       if (itemName == null) {
         return 'N/A'
       }
