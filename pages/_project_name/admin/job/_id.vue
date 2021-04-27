@@ -3,78 +3,73 @@
     <h1>
       Job {{ $route.params.id }}
     </h1>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Entity type name
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.entity_type_display_name }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Relation type name
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.relation_type_display_name }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Type
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.type }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Status
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.status }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Counter
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.counter }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Total
-      </dt>
-      <dd class="col-sm-9">
-        {{ jobData.total }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Created
-      </dt>
-      <dd class="col-sm-9">
-        {{ formatDateTime(jobData.created) }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Started
-      </dt>
-      <dd class="col-sm-9">
-        {{ formatDateTime(jobData.started) }}
-      </dd>
-    </dl>
-    <dl class="row">
-      <dt class="col-sm-3">
-        Ended
-      </dt>
-      <dd class="col-sm-9">
-        {{ formatDateTime(jobData.ended) }}
-      </dd>
-    </dl>
+    <p v-if="$fetchState.error">
+      Error while fetching data...
+    </p>
+    <b-overlay
+      :show="$fetchState.pending"
+      spinner-variant="primary"
+    >
+      <dl
+        v-if="!($fetchState.pending)"
+        class="row"
+      >
+        <dt class="col-sm-3">
+          Entity type name
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.entity_type_display_name }}
+        </dd>
+        <dt class="col-sm-3">
+          Relation type name
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.relation_type_display_name }}
+        </dd>
+        <dt class="col-sm-3">
+          Type
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.type }}
+        </dd>
+        <dt class="col-sm-3">
+          Status
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.status }}
+        </dd>
+        <dt class="col-sm-3">
+          Counter
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.counter }}
+        </dd>
+        <dt class="col-sm-3">
+          Total
+        </dt>
+        <dd class="col-sm-9">
+          {{ jobData.total }}
+        </dd>
+        <dt class="col-sm-3">
+          Created
+        </dt>
+        <dd class="col-sm-9">
+          {{ formatDateTime(jobData.created) }}
+        </dd>
+        <dt class="col-sm-3">
+          Started
+        </dt>
+        <dd class="col-sm-9">
+          {{ formatDateTime(jobData.started) }}
+        </dd>
+        <dt class="col-sm-3">
+          Ended
+        </dt>
+        <dd class="col-sm-9">
+          {{ formatDateTime(jobData.ended) }}
+        </dd>
+      </dl>
+    </b-overlay>
   </div>
 </template>
 
