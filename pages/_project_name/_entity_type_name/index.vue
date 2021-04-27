@@ -133,13 +133,14 @@
           </b-collapse>
         </b-col>
         <b-col
-          v-if="total > 0"
+          v-if="total.value > 0"
           md="9"
         >
-          Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
+          Displaying {{ showingStart }} to {{ showingEnd }}
+          of {{ total.relation === 'gte' ? 'more than' : '' }} {{ total.value }} results.
           <b-pagination
             :value="currentPage"
-            :total-rows="total"
+            :total-rows="total.value"
             :per-page="body.size"
             @input="pageChanged"
           />
@@ -210,7 +211,7 @@
           </b-table>
           <b-pagination
             :value="currentPage"
-            :total-rows="total"
+            :total-rows="total.value"
             :per-page="body.size"
             @input="pageChanged"
           />
@@ -495,8 +496,8 @@ export default {
       return this.body.from + 1
     },
     showingEnd () {
-      if (this.total < this.body.from + this.body.size) {
-        return this.total
+      if (this.total.value < this.body.from + this.body.size) {
+        return this.total.value
       }
       return this.body.from + this.body.size
     },
