@@ -77,7 +77,12 @@ export function constructQuery (body, entityTypeConfig) {
   for (const sortPart of body.sort) {
     const key = Object.keys(sortPart)[0]
     const newSortPart = {}
-    if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
+    if (
+      key.includes('.') &&
+      entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key.split('.')[0])[0].type === 'edtf'
+    ) {
+      newSortPart[key] = sortPart[key]
+    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
       newSortPart[`${key}.name.normalized_keyword`] = {
         mode: sortPart[key] === 'desc' ? 'max' : 'min',
         order: sortPart[key],
@@ -291,7 +296,8 @@ export function getFields (entityTypeConfig) {
     fields.push({
       key: fieldConfig.systemName,
       label: fieldConfig.displayName,
-      sortable: fieldConfig.sortable
+      sortable: fieldConfig.sortable,
+      type: fieldConfig.type
     })
   }
   return fields

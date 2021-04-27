@@ -148,7 +148,7 @@
             hover
             :items="sortedItems"
             :fields="fields"
-            :sort-by="sortBy"
+            :sort-by="sortBy.split('.')[0]"
             :sort-desc="sortDesc"
             :no-local-sorting="true"
             @sort-changed="sortingChanged"
@@ -163,6 +163,7 @@
                     v-for="(item, index) in data.value"
                     :key="index"
                   >
+                    <!-- nested -->
                     <nuxt-link
                       v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
                       :to="`${projectPrefix}${item.entity_type_name}/${item.id}`"
@@ -175,6 +176,7 @@
                   </li>
                 </ul>
                 <template v-else-if="data.value.length == 1">
+                  <!-- nested -->
                   <nuxt-link
                     v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
                     :to="`${projectPrefix}${data.value[0].entity_type_name}/${data.value[0].id}`"
@@ -187,12 +189,19 @@
                 </template>
               </template>
               <template v-else>
+                <!-- nested -->
                 <nuxt-link
                   v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
                   :to="`${projectPrefix}${data.value.entity_type_name}/${data.value.id}`"
                 >
                   {{ nameOrNA(data.value.name) }}
                 </nuxt-link>
+                <!-- edtf -->
+                <template
+                  v-else-if="isObject(data.value) && 'text' in data.value"
+                >
+                  {{ nameOrNA(data.value.text) }}
+                </template>
                 <template v-else>
                   {{ data.value }}
                 </template>
@@ -497,6 +506,7 @@ export default {
     sortedItems () {
       if (
         this.sortBy != null &&
+        !(this.sortBy.includes('.')) &&
         this.entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
       ) {
         const items = []
@@ -674,6 +684,12 @@ export default {
       }
     },
     sortingChanged ({ sortBy, sortDesc }) {
+      // For edtf:
+      // * sort on lower value when sorting ascending
+      // * sort on upper value when sorting descending
+      if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
+        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
+      }
       this.$router.push({ query: this.constructRouterQuery({ sortBy, sortOrder: sortDesc ? 'desc' : 'asc' }) })
     },
     sortItem (item) {
