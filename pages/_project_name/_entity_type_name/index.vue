@@ -24,112 +24,120 @@
             aria-controles="filters"
             :aria-expanded="displayFilters ? 'true' : 'false'"
             variant="primary"
-            class="d-md-none mb-3"
+            class="d-md-none"
+            :disabled="!displayFiltersInitialized"
             @click="displayFilters = !displayFilters"
           >
-            {{ displayFilters ? 'Hide filters' : 'Display filters' }}
+            {{ displayFiltersInitialized && displayFilters ? 'Hide filters' : 'Display filters' }}
           </b-button>
+          <!-- Hide on small screens using bootstrap classes first, then with v-model -->
           <b-collapse
             id="filters"
             v-model="displayFilters"
+            :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
           >
-            <b-form @submit.prevent="searchQueryChanged">
-              <div
-                v-for="(group, index) in filterGroups"
-                :key="index"
-                class="bg-light p-3"
-              >
-                <b-form-group
-                  v-for="filter in group.filters"
-                  :id="`ig_${filter.systemName}`"
-                  :key="filter.systemName"
-                  :label="filter.displayName"
-                  :label-for="`i_${filter.systemName}`"
+            <b-overlay
+              :show="disableFormElements"
+              spinner-variant="primary"
+            >
+              <b-form @submit.prevent="searchQueryChanged">
+                <div
+                  v-for="(group, index) in filterGroups"
+                  :key="index"
+                  class="bg-light p-3"
                 >
-                  <vue-typeahead-bootstrap
-                    v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
-                    :id="`i_${filter.systemName}`"
-                    v-model="form[filter.systemName]"
-                    :data="autocompleteData[filter.systemName]"
-                    :disable-sort="true"
-                    :show-all-results="true"
-                    :disabled="disableFormElements"
-                    @input="autocompleteLookup(filter.systemName)"
-                    @hit="searchQueryChanged"
-                    @keyup.enter.prevent="searchQueryChanged"
-                  />
-                  <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
-                    <vue-slider
-                      v-if="fullRangeData[`${filter.systemName}_min`] != null && fullRangeData[`${filter.systemName}_max`] != null"
+                  <b-form-group
+                    v-for="filter in group.filters"
+                    :id="`ig_${filter.systemName}`"
+                    :key="filter.systemName"
+                    :label="filter.displayName"
+                    :label-for="`i_${filter.systemName}`"
+                  >
+                    <vue-typeahead-bootstrap
+                      v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
+                      :id="`i_${filter.systemName}`"
                       v-model="form[filter.systemName]"
-                      class="mt-5"
-                      :min="fullRangeData[`${filter.systemName}_min`]"
-                      :max="fullRangeData[`${filter.systemName}_max`]"
-                      :dot-options="sliderDotOptions"
-                      :process-style="sliderProcessStyle"
-                      :tooltip-style="sliderTooltipStyle"
-                      tooltip="always"
-                      @drag-end="searchQueryChanged"
+                      :data="autocompleteData[filter.systemName]"
+                      :disable-sort="true"
+                      :show-all-results="true"
+                      :disabled="disableFormElements"
+                      @input="autocompleteLookup(filter.systemName)"
+                      @hit="searchQueryChanged"
+                      @keyup.enter.prevent="searchQueryChanged"
                     />
-                    <vue-slider
-                      v-else
-                      class="mt-5"
-                    />
-                    <histogram :chart-data="aggs[`${filter.systemName}_hist`]" />
-                  </template>
-                  <multiselect
-                    v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
-                    v-model="form[filter.systemName]"
-                    :clear-on-select="false"
-                    :close-on-select="false"
-                    :disabled="disableFormElements"
-                    label="name"
-                    :multiple="true"
-                    :options="aggs[filter.systemName]"
-                    :preserve-search="true"
-                    :show-labels="false"
-                    track-by="id"
-                    @close="multiselectClose(filter.systemName)"
-                    @input="multiselectInput(filter.systemName)"
-                    @open="multiselectOpen(filter.systemName)"
-                  >
-                    <template slot="option" slot-scope="props">
-                      {{ props.option.name }}
-                      <b-badge
-                        :pill="true"
-                      >
-                        {{ props.option.count }}
-                      </b-badge>
+                    <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
+                      <vue-slider
+                        v-if="fullRangeData[`${filter.systemName}_min`] != null && fullRangeData[`${filter.systemName}_max`] != null"
+                        v-model="form[filter.systemName]"
+                        class="mt-5"
+                        :min="fullRangeData[`${filter.systemName}_min`]"
+                        :max="fullRangeData[`${filter.systemName}_max`]"
+                        :dot-options="sliderDotOptions"
+                        :process-style="sliderProcessStyle"
+                        :tooltip-style="sliderTooltipStyle"
+                        tooltip="always"
+                        @drag-end="searchQueryChanged"
+                      />
+                      <vue-slider
+                        v-else
+                        class="mt-5"
+                      />
+                      <histogram :chart-data="aggs[`${filter.systemName}_hist`]" />
                     </template>
-                  </multiselect>
-                  <multiselect
-                    v-if="filter.type === 'dropdown' && aggs != null && aggs[filter.systemName] != null"
-                    v-model="form[filter.systemName]"
-                    :clear-on-select="false"
-                    :close-on-select="false"
-                    :disabled="disableFormElements"
-                    label="key"
-                    :multiple="true"
-                    :options="aggs[filter.systemName]"
-                    :preserve-search="true"
-                    :show-labels="false"
-                    track-by="key"
-                    @close="multiselectClose(filter.systemName)"
-                    @input="multiselectInput(filter.systemName)"
-                    @open="multiselectOpen(filter.systemName)"
-                  >
-                    <template slot="option" slot-scope="props">
-                      {{ props.option.key }}
-                      <b-badge
-                        :pill="true"
-                      >
-                        {{ props.option.count }}
-                      </b-badge>
-                    </template>
-                  </multiselect>
-                </b-form-group>
-              </div>
-            </b-form>
+                    <multiselect
+                      v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
+                      v-model="form[filter.systemName]"
+                      :clear-on-select="false"
+                      :close-on-select="false"
+                      :disabled="disableFormElements"
+                      label="name"
+                      :multiple="true"
+                      :options="aggs[filter.systemName]"
+                      :preserve-search="true"
+                      :show-labels="false"
+                      track-by="id"
+                      @close="multiselectClose(filter.systemName)"
+                      @input="multiselectInput(filter.systemName)"
+                      @open="multiselectOpen(filter.systemName)"
+                    >
+                      <template slot="option" slot-scope="props">
+                        {{ props.option.name }}
+                        <b-badge
+                          :pill="true"
+                        >
+                          {{ props.option.count }}
+                        </b-badge>
+                      </template>
+                    </multiselect>
+                    <multiselect
+                      v-if="filter.type === 'dropdown' && aggs != null && aggs[filter.systemName] != null"
+                      v-model="form[filter.systemName]"
+                      :clear-on-select="false"
+                      :close-on-select="false"
+                      :disabled="disableFormElements"
+                      label="key"
+                      :multiple="true"
+                      :options="aggs[filter.systemName]"
+                      :preserve-search="true"
+                      :show-labels="false"
+                      track-by="key"
+                      @close="multiselectClose(filter.systemName)"
+                      @input="multiselectInput(filter.systemName)"
+                      @open="multiselectOpen(filter.systemName)"
+                    >
+                      <template slot="option" slot-scope="props">
+                        {{ props.option.key }}
+                        <b-badge
+                          :pill="true"
+                        >
+                          {{ props.option.count }}
+                        </b-badge>
+                      </template>
+                    </multiselect>
+                  </b-form-group>
+                </div>
+              </b-form>
+            </b-overlay>
           </b-collapse>
         </b-col>
         <b-col
@@ -318,28 +326,7 @@ export default {
       }
     }
 
-    // Retrieve min and max of all ranges if not yet known
-    for (const systemName in this.esFiltersDefs) {
-      if (
-        this.esFiltersDefs[systemName].type === 'histogram_slider' &&
-        !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
-      ) {
-        const response = await this.$axios.post(
-          `/es/${this.projectName}/${this.entityTypeName}/search`,
-          constructFullRangeAggQuery(this.esFiltersDefs)
-        )
-        if (
-          response.status === 200 &&
-          'aggregations' in response.data
-        ) {
-          for (const aggName in response.data.aggregations) {
-            if (!(aggName in this.fullRangeData)) {
-              this.fullRangeData[aggName] = response.data.aggregations[aggName].value
-            }
-          }
-        }
-      }
-    }
+    // Request only the data on initial request, since aggregation can be relatively slow
 
     const keys = getSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
     // TODO: make size configurable
@@ -352,7 +339,6 @@ export default {
       keys,
       filters: this.form,
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
-      fullRangeData: this.fullRangeData,
       size,
       sort: [
         {
@@ -362,7 +348,7 @@ export default {
     }
 
     await this.$store.dispatch(
-      'es/search',
+      'es/search_data',
       {
         body: this.body,
         entityTypeName: this.entityTypeName,
@@ -370,39 +356,6 @@ export default {
         entityTypeConfig: this.entityTypeConfig
       }
     )
-    for (const systemName in this.esFiltersDefs) {
-      if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
-        if (!(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)) {
-          this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
-          this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
-        }
-        this.form[systemName] = [
-          this.form[systemName][0] ?? this.fullRangeData[`${systemName}_min`],
-          this.form[systemName][1] ?? this.fullRangeData[`${systemName}_max`]
-        ]
-        continue
-      }
-      if (this.esFiltersDefs[systemName].type === 'nested') {
-        if (this.form[systemName] != null) {
-          this.form[systemName] = this.form[systemName].map(
-            (filterValue) => {
-              return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
-            }
-          )
-        }
-        continue
-      }
-      if (this.esFiltersDefs[systemName].type === 'dropdown') {
-        if (this.form[systemName] != null) {
-          this.form[systemName] = this.form[systemName].map(
-            (filterValue) => {
-              return this.aggs[systemName].filter(v => v.key === filterValue.key)[0]
-            }
-          )
-        }
-        continue
-      }
-    }
     this.oldForm = JSON.parse(JSON.stringify(this.form))
   },
   data () {
@@ -413,7 +366,8 @@ export default {
         size: 25
       },
       disableFormElements: true,
-      displayFilters: false,
+      displayFilters: true,
+      displayFiltersInitialized: false,
       form: {},
       fullRangeData: {},
       multiselectState: {},
@@ -436,7 +390,61 @@ export default {
   },
   computed: {
     aggs () {
-      return rfdc()(this.$store.state.es.aggs)
+      const aggs = rfdc()(this.$store.state.es.aggs)
+      console.log(this.form)
+
+      // Make sure selected aggregations can be displayed, even if the current query no longer provide results
+      for (const systemName in this.form) {
+        if (this.esFiltersDefs[systemName].type === 'nested') {
+          if (this.form[systemName] != null && this.form[systemName].length > 0) {
+            for (const filterValue of this.form[systemName]) {
+              if (!(systemName in aggs)) {
+                aggs[systemName] = []
+              }
+              let found = false
+              for (const agg of aggs[systemName]) {
+                if (filterValue.id === agg.id) {
+                  found = true
+                  break
+                }
+              }
+              if (!found) {
+                aggs[systemName].push({
+                  id: filterValue.id,
+                  name: '<Not in result list>',
+                  count: 0
+                })
+              }
+            }
+          }
+          continue
+        }
+        if (this.esFiltersDefs[systemName].type === 'dropdown') {
+          if (this.form[systemName] != null && this.form[systemName].length > 0) {
+            for (const filterValue of this.form[systemName]) {
+              if (!(systemName in aggs)) {
+                aggs[systemName] = []
+              }
+              let found = false
+              for (const agg of aggs[systemName]) {
+                if (filterValue.key === agg.key) {
+                  found = true
+                  break
+                }
+              }
+              if (!found) {
+                aggs[systemName].push({
+                  key: filterValue.key,
+                  count: 0
+                })
+              }
+            }
+          }
+          continue
+        }
+      }
+
+      return aggs
     },
     breadcrumbs () {
       const breadcrumbs = []
@@ -527,15 +535,15 @@ export default {
     }
   },
   watch: {
-    '$route.query': '$fetch'
+    '$route.query': 'reload'
   },
-  mounted () {
-    this.disableFormElements = false
-    this.$nextTick(function () {
-      this.displayOrHideFilters()
-      const self = this
-      window.addEventListener('resize', self.displayOrHideFilters)
-    })
+  async mounted () {
+    await this.$nextTick()
+    this.displayOrHideFilters()
+    const self = this
+    window.addEventListener('resize', self.displayOrHideFilters)
+
+    this.fetchAggregations()
   },
   methods: {
     isArray,
@@ -639,6 +647,10 @@ export default {
           this.displayFilters = true
         }
       }
+      // Collapse has a .35s animation when toggled
+      if (!(this.displayFiltersInitialized)) {
+        setTimeout(() => { this.displayFiltersInitialized = true }, 350)
+      }
     },
     formChanged () {
       const form = {}
@@ -647,6 +659,76 @@ export default {
           form[field] = this.form[field]
         }
       }
+    },
+    async fetchAggregations () {
+      // Retrieve min and max of all ranges if not yet known
+      for (const systemName in this.esFiltersDefs) {
+        if (
+          this.esFiltersDefs[systemName].type === 'histogram_slider' &&
+          !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
+        ) {
+          const response = await this.$axios.post(
+            `/es/${this.projectName}/${this.entityTypeName}/search`,
+            constructFullRangeAggQuery(this.esFiltersDefs)
+          )
+          if (
+            response.status === 200 &&
+            'aggregations' in response.data
+          ) {
+            for (const aggName in response.data.aggregations) {
+              if (!(aggName in this.fullRangeData)) {
+                this.fullRangeData[aggName] = response.data.aggregations[aggName].value
+              }
+            }
+          }
+        }
+      }
+      this.body.fullRangeData = this.fullRangeData
+
+      await this.$store.dispatch(
+        'es/search_aggs',
+        {
+          body: this.body,
+          entityTypeName: this.entityTypeName,
+          projectName: this.projectName,
+          entityTypeConfig: this.entityTypeConfig
+        }
+      )
+
+      for (const systemName in this.esFiltersDefs) {
+        if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+          if (!(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)) {
+            this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
+            this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
+          }
+          this.form[systemName] = [
+            this.form[systemName][0] ?? this.fullRangeData[`${systemName}_min`],
+            this.form[systemName][1] ?? this.fullRangeData[`${systemName}_max`]
+          ]
+          continue
+        }
+        if (this.esFiltersDefs[systemName].type === 'nested') {
+          if (this.form[systemName] != null) {
+            this.form[systemName] = this.form[systemName].map(
+              (filterValue) => {
+                return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
+              }
+            )
+          }
+          continue
+        }
+        if (this.esFiltersDefs[systemName].type === 'dropdown') {
+          if (this.form[systemName] != null) {
+            this.form[systemName] = this.form[systemName].map(
+              (filterValue) => {
+                return this.aggs[systemName].filter(v => v.key === filterValue.key)[0]
+              }
+            )
+          }
+          continue
+        }
+      }
+      this.disableFormElements = false
     },
     multiselectClose (systemName) {
       this.multiselectState[systemName] = 'closed'
@@ -677,6 +759,10 @@ export default {
         return
       }
       this.$router.push({ query: this.constructRouterQuery({ page }) })
+    },
+    async reload () {
+      await this.$fetch()
+      await this.fetchAggregations()
     },
     searchQueryChanged () {
       if (JSON.stringify(this.form) !== JSON.stringify(this.oldForm)) {

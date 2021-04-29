@@ -3,104 +3,13 @@ import { COLOR_PRIMARY } from '~/assets/js/variables'
 const NESTED_AGG_REGEX = /^\[(?<id>[0-9]+)\]\[(?<name>[\s\S]*)\]$/
 const SIZE_AGG_MAX = 2147483647
 
-export function constructQuery (body, entityTypeConfig) {
-  const result = {
-    from: body.from,
-    size: body.size
-  }
-
-  const aggs = {}
+function constructQuery (body, entityTypeConfig) {
   const filterDefs = {}
   for (const section of entityTypeConfig.elasticsearch.filters) {
     for (const filter of section.filters) {
-      if (filter.type === 'histogram_slider') {
-        aggs[`${filter.systemName}_hist`] = {
-          histogram: {
-            field: filter.systemName,
-            interval: filter.interval
-          }
-        }
-        if (
-          `${filter.systemName}_min` in body.fullRangeData &&
-          `${filter.systemName}_max` in body.fullRangeData
-        ) {
-          const min = body.fullRangeData[`${filter.systemName}_min`]
-          const max = body.fullRangeData[`${filter.systemName}_max`]
-          aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
-            min: min - (min % filter.interval),
-            max: max - (max % filter.interval)
-          }
-        }
-        aggs[`${filter.systemName}_min`] = {
-          min: {
-            field: filter.systemName
-          }
-        }
-        aggs[`${filter.systemName}_max`] = {
-          max: {
-            field: filter.systemName
-          }
-        }
-      }
-      if (filter.type === 'nested') {
-        aggs[filter.systemName] = {
-          nested: {
-            path: filter.systemName
-          },
-          aggs: {
-            id_and_name: {
-              terms: {
-                script: {
-                  source: `String.valueOf(doc['${filter.systemName}.id']) + doc['${filter.systemName}.name.keyword']`
-                },
-                size: SIZE_AGG_MAX
-              }
-            }
-          }
-        }
-      }
-      if (filter.type === 'dropdown') {
-        aggs[filter.systemName] = {
-          terms: {
-            field: `${filter.systemName}.keyword`
-          }
-        }
-      }
       filterDefs[filter.systemName] = filter
     }
   }
-  if (Object.keys(aggs).length > 0) {
-    result.aggs = aggs
-  }
-
-  const sort = []
-  for (const sortPart of body.sort) {
-    const key = Object.keys(sortPart)[0]
-    const newSortPart = {}
-    if (
-      key.includes('.') &&
-      entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key.split('.')[0])[0].type === 'edtf'
-    ) {
-      newSortPart[key] = sortPart[key]
-    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
-      newSortPart[`${key}.name.normalized_keyword`] = {
-        mode: sortPart[key] === 'desc' ? 'max' : 'min',
-        order: sortPart[key],
-        nested: {
-          path: key
-        }
-      }
-    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'text') {
-      newSortPart[`${key}.normalized_keyword`] = sortPart[key]
-    } else {
-      newSortPart[key] = sortPart[key]
-    }
-    sort.push(newSortPart)
-  }
-  if (sort.length > 0) {
-    result.sort = sort
-  }
-
   const query = {
     bool: {
       must: []
@@ -185,7 +94,123 @@ export function constructQuery (body, entityTypeConfig) {
       query.bool.must.push(queryPart)
     }
   }
-  if (query.bool.must.length > 0) {
+  if (query.bool.must.length === 0) {
+    return null
+  }
+  return query
+}
+
+export function constructDataQuery (body, entityTypeConfig) {
+  const result = {
+    from: body.from,
+    size: body.size
+  }
+
+  const sort = []
+  for (const sortPart of body.sort) {
+    const key = Object.keys(sortPart)[0]
+    const newSortPart = {}
+    if (
+      key.includes('.') &&
+      entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key.split('.')[0])[0].type === 'edtf'
+    ) {
+      newSortPart[key] = sortPart[key]
+    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
+      newSortPart[`${key}.name.normalized_keyword`] = {
+        mode: sortPart[key] === 'desc' ? 'max' : 'min',
+        order: sortPart[key],
+        nested: {
+          path: key
+        }
+      }
+    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'text') {
+      newSortPart[`${key}.normalized_keyword`] = sortPart[key]
+    } else {
+      newSortPart[key] = sortPart[key]
+    }
+    sort.push(newSortPart)
+  }
+  if (sort.length > 0) {
+    result.sort = sort
+  }
+
+  const query = constructQuery(body, entityTypeConfig)
+  if (query != null) {
+    result.query = query
+  }
+
+  return result
+}
+
+export function constructAggsQuery (body, entityTypeConfig) {
+  const result = {
+    size: 0
+  }
+
+  const aggs = {}
+  for (const section of entityTypeConfig.elasticsearch.filters) {
+    for (const filter of section.filters) {
+      if (filter.type === 'histogram_slider') {
+        aggs[`${filter.systemName}_hist`] = {
+          histogram: {
+            field: filter.systemName,
+            interval: filter.interval
+          }
+        }
+        if (
+          `${filter.systemName}_min` in body.fullRangeData &&
+          `${filter.systemName}_max` in body.fullRangeData
+        ) {
+          const min = body.fullRangeData[`${filter.systemName}_min`]
+          const max = body.fullRangeData[`${filter.systemName}_max`]
+          aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
+            min: min - (min % filter.interval),
+            max: max - (max % filter.interval)
+          }
+        }
+        aggs[`${filter.systemName}_min`] = {
+          min: {
+            field: filter.systemName
+          }
+        }
+        aggs[`${filter.systemName}_max`] = {
+          max: {
+            field: filter.systemName
+          }
+        }
+      }
+      if (filter.type === 'nested') {
+        aggs[filter.systemName] = {
+          nested: {
+            path: filter.systemName
+          },
+          aggs: {
+            id_and_name: {
+              terms: {
+                script: {
+                  source: `String.valueOf(doc['${filter.systemName}.id']) + doc['${filter.systemName}.name.keyword']`
+                },
+                size: SIZE_AGG_MAX
+              }
+            }
+          }
+        }
+      }
+      if (filter.type === 'dropdown') {
+        aggs[filter.systemName] = {
+          terms: {
+            field: `${filter.systemName}.keyword`
+          }
+        }
+      }
+    }
+  }
+  if (Object.keys(aggs).length > 0) {
+    result.aggs = aggs
+  }
+
+  const query = constructQuery(body, entityTypeConfig)
+  if (query != null) {
     result.query = query
   }
 

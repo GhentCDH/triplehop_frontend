@@ -1,4 +1,4 @@
-import { constructQuery, extractAggs, extractItems, extractTotal } from '~/assets/js/es'
+import { constructAggsQuery, constructDataQuery, extractAggs, extractItems, extractTotal } from '~/assets/js/es'
 
 export const state = () => ({
   aggs: {},
@@ -19,15 +19,23 @@ export const mutations = {
 }
 
 export const actions = {
-  async search ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
+  async search_data ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
-      constructQuery(body, entityTypeConfig)
+      constructDataQuery(body, entityTypeConfig)
+    )
+    if (response.data != null) {
+      commit('SET_ITEMS', extractItems(body.keys, response.data, entityTypeName))
+      commit('SET_TOTAL', extractTotal(response.data))
+    }
+  },
+  async search_aggs ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
+    const response = await this.$axios.post(
+      `/es/${projectName}/${entityTypeName}/search`,
+      constructAggsQuery(body, entityTypeConfig)
     )
     if (response.data != null) {
       commit('SET_AGGS', extractAggs(response.data, entityTypeConfig))
-      commit('SET_ITEMS', extractItems(body.keys, response.data, entityTypeName))
-      commit('SET_TOTAL', extractTotal(response.data))
     }
   }
 }
