@@ -244,7 +244,7 @@ import 'vue-slider-component/theme/default.css'
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 import Histogram from '~/components/Histogram'
 
-import { constructFullRangeAggQuery, getFields, getFilterDefs, getSystemNames } from '~/assets/js/es'
+import { MAX_INT, getFields, getFilterDefs, getSystemNames } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
@@ -278,15 +278,15 @@ export default {
         message: `No search page available for entity type "${this.entityTypeName}".`
       })
     }
-    for (const systemName in this.esFiltersDefs) {
-      if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+    for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
+      if (filter.type === 'histogram_slider') {
         this.form[systemName] = [
           this.$route.query[`filter[${systemName}]_min`] ?? null,
           this.$route.query[`filter[${systemName}]_max`] ?? null
         ]
         continue
       }
-      if (this.esFiltersDefs[systemName].type === 'nested') {
+      if (filter.type === 'nested') {
         if (this.$route.query[`filter[${systemName}][0]`] == null) {
           this.form[systemName] = null
           continue
@@ -294,16 +294,24 @@ export default {
         this.form[systemName] = []
         let counter = 0
         while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
+          const value = this.$route.query[`filter[${systemName}][${counter}]`]
+          const intValue = parseInt(value)
+          if (Number.isNaN(intValue) || intValue > MAX_INT) {
+            return this.$nuxt.error({
+              statusCode: 400,
+              message: `Invalid value "${value}" for filter "${systemName}".`
+            })
+          }
           this.form[systemName].push(
             {
-              id: parseInt(this.$route.query[`filter[${systemName}][${counter}]`])
+              id: intValue
             }
           )
           counter++
         }
         continue
       }
-      if (this.esFiltersDefs[systemName].type === 'dropdown') {
+      if (filter.type === 'dropdown') {
         if (this.$route.query[`filter[${systemName}][0]`] == null) {
           this.form[systemName] = null
           continue
@@ -325,6 +333,7 @@ export default {
         this.autocompleteData[systemName] = []
       }
     }
+    console.log(this.form)
 
     // Request only the data on initial request, since aggregation can be relatively slow
 
@@ -369,7 +378,6 @@ export default {
       displayFilters: true,
       displayFiltersInitialized: false,
       form: {},
-      fullRangeData: {},
       multiselectState: {},
       oldForm: {},
       sliderDotOptions: {
@@ -391,13 +399,12 @@ export default {
   computed: {
     aggs () {
       const aggs = rfdc()(this.$store.state.es.aggs)
-      console.log(this.form)
 
-      // Make sure selected aggregations can be displayed, even if the current query no longer provide results
-      for (const systemName in this.form) {
+      // Display invalid options
+      for (const [systemName, filterValues] of Object.entries(this.form)) {
         if (this.esFiltersDefs[systemName].type === 'nested') {
-          if (this.form[systemName] != null && this.form[systemName].length > 0) {
-            for (const filterValue of this.form[systemName]) {
+          if (filterValues != null && filterValues.length > 0) {
+            for (const filterValue of filterValues) {
               if (!(systemName in aggs)) {
                 aggs[systemName] = []
               }
@@ -411,7 +418,7 @@ export default {
               if (!found) {
                 aggs[systemName].push({
                   id: filterValue.id,
-                  name: '<Not in result list>',
+                  name: '<Invalid option>',
                   count: 0
                 })
               }
@@ -420,8 +427,8 @@ export default {
           continue
         }
         if (this.esFiltersDefs[systemName].type === 'dropdown') {
-          if (this.form[systemName] != null && this.form[systemName].length > 0) {
-            for (const filterValue of this.form[systemName]) {
+          if (filterValues != null && filterValues.length > 0) {
+            for (const filterValue of filterValues) {
               if (!(systemName in aggs)) {
                 aggs[systemName] = []
               }
@@ -434,7 +441,7 @@ export default {
               }
               if (!found) {
                 aggs[systemName].push({
-                  key: filterValue.key,
+                  key: '<Invalid option>',
                   count: 0
                 })
               }
@@ -490,6 +497,9 @@ export default {
     },
     filterGroups () {
       return this.entityTypeConfig.elasticsearch.filters
+    },
+    fullRangeData () {
+      return this.$store.state.es.fullRangeData
     },
     items () {
       return this.$store.state.es.items
@@ -582,40 +592,40 @@ export default {
     constructRouterQuery (queryPart) {
       const query = {}
 
-      for (const systemName in this.form) {
+      for (const [systemName, filterValues] of Object.entries(this.form)) {
         if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
           if (
-            this.form[systemName][0] != null &&
-            this.form[systemName][0] !== this.fullRangeData[`${systemName}_min`]
+            filterValues[0] != null &&
+            filterValues[0] !== this.fullRangeData[`${systemName}_min`]
           ) {
-            query[`filter[${systemName}]_min`] = this.form[systemName][0]
+            query[`filter[${systemName}]_min`] = filterValues[0]
           }
           if (
-            this.form[systemName][1] != null &&
-            this.form[systemName][1] !== this.fullRangeData[`${systemName}_max`]
+            filterValues[1] != null &&
+            filterValues[1] !== this.fullRangeData[`${systemName}_max`]
           ) {
-            query[`filter[${systemName}]_max`] = this.form[systemName][1]
+            query[`filter[${systemName}]_max`] = filterValues[1]
           }
           continue
         }
         if (this.esFiltersDefs[systemName].type === 'nested') {
-          if (this.form[systemName] != null && this.form[systemName].length > 0) {
-            for (const [i, filterValue] of this.form[systemName].entries()) {
+          if (filterValues != null && filterValues.length > 0) {
+            for (const [i, filterValue] of filterValues.entries()) {
               query[`filter[${systemName}][${i}]`] = filterValue.id
             }
           }
           continue
         }
         if (this.esFiltersDefs[systemName].type === 'dropdown') {
-          if (this.form[systemName] != null && this.form[systemName].length > 0) {
-            for (const [i, filterValue] of this.form[systemName].entries()) {
+          if (filterValues != null && filterValues.length > 0) {
+            for (const [i, filterValue] of filterValues.entries()) {
               query[`filter[${systemName}][${i}]`] = filterValue.key
             }
           }
           continue
         }
-        if (this.form[systemName] != null && this.form[systemName] !== '') {
-          query[`filter[${systemName}]`] = this.form[systemName]
+        if (filterValues != null && filterValues !== '') {
+          query[`filter[${systemName}]`] = filterValues
         }
       }
 
@@ -654,60 +664,32 @@ export default {
     },
     formChanged () {
       const form = {}
-      for (const field in this.form) {
+      for (const field of this.form) {
         if (this.form[field] != null) {
           form[field] = this.form[field]
         }
       }
     },
     async fetchAggregations () {
-      // Retrieve min and max of all ranges if not yet known
-      for (const systemName in this.esFiltersDefs) {
-        if (
-          this.esFiltersDefs[systemName].type === 'histogram_slider' &&
-          !(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)
-        ) {
-          const response = await this.$axios.post(
-            `/es/${this.projectName}/${this.entityTypeName}/search`,
-            constructFullRangeAggQuery(this.esFiltersDefs)
-          )
-          if (
-            response.status === 200 &&
-            'aggregations' in response.data
-          ) {
-            for (const aggName in response.data.aggregations) {
-              if (!(aggName in this.fullRangeData)) {
-                this.fullRangeData[aggName] = response.data.aggregations[aggName].value
-              }
-            }
-          }
-        }
-      }
-      this.body.fullRangeData = this.fullRangeData
-
       await this.$store.dispatch(
         'es/search_aggs',
         {
           body: this.body,
           entityTypeName: this.entityTypeName,
           projectName: this.projectName,
-          entityTypeConfig: this.entityTypeConfig
+          esFiltersDefs: this.esFiltersDefs
         }
       )
 
-      for (const systemName in this.esFiltersDefs) {
-        if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
-          if (!(`${systemName}_min` in this.fullRangeData && `${systemName}_max` in this.fullRangeData)) {
-            this.fullRangeData[`${systemName}_min`] = this.aggs[`${systemName}_min`]
-            this.fullRangeData[`${systemName}_max`] = this.aggs[`${systemName}_max`]
-          }
+      for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
+        if (filter.type === 'histogram_slider') {
           this.form[systemName] = [
             this.form[systemName][0] ?? this.fullRangeData[`${systemName}_min`],
             this.form[systemName][1] ?? this.fullRangeData[`${systemName}_max`]
           ]
           continue
         }
-        if (this.esFiltersDefs[systemName].type === 'nested') {
+        if (filter.type === 'nested') {
           if (this.form[systemName] != null) {
             this.form[systemName] = this.form[systemName].map(
               (filterValue) => {
@@ -717,7 +699,7 @@ export default {
           }
           continue
         }
-        if (this.esFiltersDefs[systemName].type === 'dropdown') {
+        if (filter.type === 'dropdown') {
           if (this.form[systemName] != null) {
             this.form[systemName] = this.form[systemName].map(
               (filterValue) => {
@@ -780,7 +762,7 @@ export default {
     },
     sortItem (item) {
       const result = {}
-      for (const field in item) {
+      for (const field of item) {
         if (field !== this.sortBy) {
           result[field] = item[field]
         } else if (this.sortOrder === 'desc') {

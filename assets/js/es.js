@@ -1,40 +1,35 @@
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
+export const MAX_INT = 2147483647
 const NESTED_AGG_REGEX = /^\[(?<id>[0-9]+)\]\[(?<name>[\s\S]*)\]$/
 const SIZE_AGG_MAX = 2147483647
 
-function constructQuery (body, entityTypeConfig) {
-  const filterDefs = {}
-  for (const section of entityTypeConfig.elasticsearch.filters) {
-    for (const filter of section.filters) {
-      filterDefs[filter.systemName] = filter
-    }
-  }
+function constructQuery (body, esFiltersDefs) {
   const query = {
     bool: {
       must: []
     }
   }
-  for (const systemName in body.filters) {
-    if (filterDefs[systemName].type === 'histogram_slider') {
-      if (body.filters[systemName][0] == null && body.filters[systemName][1] == null) {
+  for (const [systemName, filterValues] of Object.entries(body.filters)) {
+    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+      if (filterValues[0] == null && filterValues[1] == null) {
         continue
       }
       const queryPart = {
         range: {}
       }
       queryPart.range[systemName] = {}
-      if (body.filters[systemName][0] != null) {
-        queryPart.range[systemName].gte = body.filters[systemName][0]
+      if (filterValues[0] != null) {
+        queryPart.range[systemName].gte = filterValues[0]
       }
-      if (body.filters[systemName][1] != null) {
-        queryPart.range[systemName].lte = body.filters[systemName][1]
+      if (filterValues[1] != null) {
+        queryPart.range[systemName].lte = filterValues[1]
       }
       query.bool.must.push(queryPart)
       continue
     }
-    if (filterDefs[systemName].type === 'nested') {
-      if (body.filters[systemName] == null || body.filters[systemName].length === 0) {
+    if (esFiltersDefs[systemName].type === 'nested') {
+      if (filterValues == null || filterValues.length === 0) {
         continue
       }
       const queryPart = {
@@ -47,7 +42,7 @@ function constructQuery (body, entityTypeConfig) {
           }
         }
       }
-      for (const filterValue of body.filters[systemName]) {
+      for (const filterValue of filterValues) {
         queryPart.nested.query.bool.should.push(
           {
             match: {
@@ -61,8 +56,8 @@ function constructQuery (body, entityTypeConfig) {
       query.bool.must.push(queryPart)
       continue
     }
-    if (filterDefs[systemName].type === 'dropdown') {
-      if (body.filters[systemName] == null || body.filters[systemName].length === 0) {
+    if (esFiltersDefs[systemName].type === 'dropdown') {
+      if (filterValues == null || filterValues.length === 0) {
         continue
       }
       const queryPart = {
@@ -73,22 +68,22 @@ function constructQuery (body, entityTypeConfig) {
       queryPart.bool.should.push(
         {
           terms: {
-            [`${systemName}.keyword`]: body.filters[systemName].map(f => f.key)
+            [`${systemName}.keyword`]: filterValues.map(f => f.key)
           }
         }
       )
       query.bool.must.push(queryPart)
       continue
     }
-    if (body.filters[systemName] != null) {
+    if (filterValues != null) {
       const queryPart = {
         match: {
           [systemName]: {
-            query: body.filters[systemName]
+            query: filterValues
           }
         }
       }
-      if (filterDefs[systemName].type === 'autocomplete') {
+      if (esFiltersDefs[systemName].type === 'autocomplete') {
         queryPart.match[systemName].operator = 'and'
       }
       query.bool.must.push(queryPart)
@@ -134,7 +129,7 @@ export function constructDataQuery (body, entityTypeConfig) {
     result.sort = sort
   }
 
-  const query = constructQuery(body, entityTypeConfig)
+  const query = constructQuery(body, getFilterDefs(entityTypeConfig))
   if (query != null) {
     result.query = query
   }
@@ -142,65 +137,64 @@ export function constructDataQuery (body, entityTypeConfig) {
   return result
 }
 
-export function constructAggsQuery (body, entityTypeConfig) {
+export function constructAggsQuery (body, esFiltersDefs) {
   const result = {
     size: 0
   }
 
   const aggs = {}
-  for (const section of entityTypeConfig.elasticsearch.filters) {
-    for (const filter of section.filters) {
-      if (filter.type === 'histogram_slider') {
-        aggs[`${filter.systemName}_hist`] = {
-          histogram: {
-            field: filter.systemName,
-            interval: filter.interval
-          }
-        }
-        if (
-          `${filter.systemName}_min` in body.fullRangeData &&
-          `${filter.systemName}_max` in body.fullRangeData
-        ) {
-          const min = body.fullRangeData[`${filter.systemName}_min`]
-          const max = body.fullRangeData[`${filter.systemName}_max`]
-          aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
-            min: min - (min % filter.interval),
-            max: max - (max % filter.interval)
-          }
-        }
-        aggs[`${filter.systemName}_min`] = {
-          min: {
-            field: filter.systemName
-          }
-        }
-        aggs[`${filter.systemName}_max`] = {
-          max: {
-            field: filter.systemName
-          }
+  for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
+    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+      aggs[`${systemName}_hist`] = {
+        histogram: {
+          field: filter.systemName,
+          interval: filter.interval
         }
       }
-      if (filter.type === 'nested') {
-        aggs[filter.systemName] = {
-          nested: {
-            path: filter.systemName
-          },
-          aggs: {
-            id_and_name: {
-              terms: {
-                script: {
-                  source: `String.valueOf(doc['${filter.systemName}.id']) + doc['${filter.systemName}.name.keyword']`
-                },
-                size: SIZE_AGG_MAX
-              }
+      if (
+        `${systemName}_min` in body.fullRangeData &&
+        `${systemName}_max` in body.fullRangeData
+      ) {
+        const min = body.fullRangeData[`${systemName}_min`]
+        const max = body.fullRangeData[`${systemName}_max`]
+        aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
+          min: min - (min % filter.interval),
+          max: max - (max % filter.interval)
+        }
+      }
+      aggs[`${systemName}_min`] = {
+        min: {
+          field: systemName
+        }
+      }
+      aggs[`${systemName}_max`] = {
+        max: {
+          field: systemName
+        }
+      }
+    }
+    if (filter.type === 'nested') {
+      aggs[systemName] = {
+        nested: {
+          path: systemName
+        },
+        aggs: {
+          id: {
+            terms: {
+              field: `${systemName}.id`,
+              size: SIZE_AGG_MAX,
+              min_doc_count: 0
             }
           }
         }
       }
-      if (filter.type === 'dropdown') {
-        aggs[filter.systemName] = {
-          terms: {
-            field: `${filter.systemName}.keyword`
-          }
+    }
+    if (filter.type === 'dropdown') {
+      aggs[systemName] = {
+        terms: {
+          field: `${systemName}.keyword`,
+          size: SIZE_AGG_MAX,
+          min_doc_count: 0
         }
       }
     }
@@ -209,7 +203,7 @@ export function constructAggsQuery (body, entityTypeConfig) {
     result.aggs = aggs
   }
 
-  const query = constructQuery(body, entityTypeConfig)
+  const query = constructQuery(body, esFiltersDefs)
   if (query != null) {
     result.query = query
   }
@@ -223,8 +217,8 @@ export function constructFullRangeAggQuery (esFiltersDefs) {
   }
 
   const aggs = {}
-  for (const systemName in esFiltersDefs) {
-    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+  for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
+    if (filter.type === 'histogram_slider') {
       aggs[`${systemName}_min`] = {
         min: {
           field: systemName
@@ -244,14 +238,42 @@ export function constructFullRangeAggQuery (esFiltersDefs) {
   return result
 }
 
-export function extractAggs (data, entityTypeConfig) {
-  const esFiltersDefs = getFilterDefs(entityTypeConfig)
-  if (data.aggregations == null) {
-    return null
+export function constructAllNestedAggQuery (esFiltersDefs) {
+  const result = {
+    size: 0
   }
+
+  const aggs = {}
+  for (const systemName of Object.keys(esFiltersDefs)) {
+    if (esFiltersDefs[systemName].type === 'nested') {
+      aggs[systemName] = {
+        nested: {
+          path: systemName
+        },
+        aggs: {
+          id_and_name: {
+            terms: {
+              script: {
+                source: `String.valueOf(doc['${systemName}.id']) + doc['${systemName}.name.keyword']`
+              },
+              size: SIZE_AGG_MAX
+            }
+          }
+        }
+      }
+    }
+  }
+  if (Object.keys(aggs).length > 0) {
+    result.aggs = aggs
+  }
+
+  return result
+}
+
+export function extractAggs (data, esFiltersDefs, nestedAggsCache) {
   const result = {}
-  for (const systemName in esFiltersDefs) {
-    if (esFiltersDefs[systemName].type === 'histogram_slider') {
+  for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
+    if (filter.type === 'histogram_slider') {
       result[`${systemName}_hist`] = {
         labels: data.aggregations[`${systemName}_hist`].buckets.map(b => b.key),
         datasets: [
@@ -266,18 +288,19 @@ export function extractAggs (data, entityTypeConfig) {
       result[`${systemName}_max`] = data.aggregations[`${systemName}_max`].value
       continue
     }
-    if (esFiltersDefs[systemName].type === 'nested') {
-      result[systemName] = data.aggregations[systemName].id_and_name.buckets.map((b) => {
-        const match = b.key.match(NESTED_AGG_REGEX)
-        return {
-          id: parseInt(match.groups.id),
-          name: match.groups.name === '' ? 'N/A' : match.groups.name,
-          count: b.doc_count
-        }
-      })
+    if (filter.type === 'nested') {
+      result[systemName] = data.aggregations[systemName].id.buckets
+        // .filter((bucket) => { return bucket.key in nestedAggsCache[systemName] })
+        .map((bucket) => {
+          return {
+            id: bucket.key,
+            name: nestedAggsCache[systemName][bucket.key],
+            count: bucket.doc_count
+          }
+        })
       continue
     }
-    if (esFiltersDefs[systemName].type === 'dropdown') {
+    if (filter.type === 'dropdown') {
       result[systemName] = data.aggregations[systemName].buckets.map((b) => {
         return {
           key: b.key,
@@ -290,11 +313,27 @@ export function extractAggs (data, entityTypeConfig) {
   return result
 }
 
+export function extractAllNestedAggs (data, esFiltersDefs) {
+  const result = {}
+  for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
+    if (filter.type === 'nested') {
+      result[systemName] = {}
+      for (const bucket of data.aggregations[systemName].id_and_name.buckets) {
+        const match = bucket.key.match(NESTED_AGG_REGEX)
+        if (match) {
+          result[systemName][parseInt(match.groups.id)] = match.groups.name === '' ? 'N/A' : match.groups.name
+        }
+      }
+    }
+  }
+  return result
+}
+
 export function extractItems (keys, data, entityTypeName) {
   const items = []
   for (const hit of data.hits.hits) {
     const item = {}
-    for (const [index, key] of keys.entries()) {
+    for (const [index, key] of Object.entries(keys)) {
       // TODO: make linked column configurable
       if (index === 0) {
         item[key] = {
