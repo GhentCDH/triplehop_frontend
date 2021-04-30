@@ -333,18 +333,10 @@ export function extractItems (keys, data, entityTypeName) {
   const items = []
   for (const hit of data.hits.hits) {
     const item = {}
-    for (const [index, key] of Object.entries(keys)) {
-      // TODO: make linked column configurable
-      if (index === 0) {
-        item[key] = {
-          entity_type_name: entityTypeName,
-          id: hit._id,
-          name: hit._source[key]
-        }
-      } else {
-        item[key] = hit._source[key]
-      }
+    for (const key of keys) {
+      item[key] = hit._source[key]
     }
+    item._id = hit._id
     items.push(item)
   }
   return items
@@ -361,7 +353,9 @@ export function getFields (entityTypeConfig) {
       key: fieldConfig.systemName,
       label: fieldConfig.displayName,
       sortable: fieldConfig.sortable,
-      type: fieldConfig.type
+      type: fieldConfig.type,
+      mainLink: fieldConfig.mainLink,
+      link: fieldConfig.link
     })
   }
   return fields
@@ -377,10 +371,10 @@ export function getFilterDefs (entityTypeConfig) {
   return filterDefs
 }
 
-export function getSystemNames (entityTypeConfig) {
-  const systemNames = []
-  for (const fieldConfig of entityTypeConfig.elasticsearch.columns) {
-    systemNames.push(fieldConfig.systemName)
+export function getColumnDefs (entityTypeConfig) {
+  const columnDefs = {}
+  for (const columnDef of entityTypeConfig.elasticsearch.columns) {
+    columnDefs[columnDef.systemName] = columnDef
   }
-  return systemNames
+  return columnDefs
 }

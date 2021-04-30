@@ -67,6 +67,8 @@ export const actions = {
                 display_name
                 type
                 sortable
+                main_link
+                link
               }
               filters {
                 filters {
@@ -107,7 +109,9 @@ export const actions = {
               systemName: rawColumn.system_name,
               displayName: rawColumn.display_name,
               type: rawColumn.type,
-              sortable: rawColumn.sortable
+              sortable: rawColumn.sortable,
+              mainLink: rawColumn.main_link,
+              link: rawColumn.link
             })
           }
         }

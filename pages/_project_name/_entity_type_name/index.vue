@@ -172,48 +172,33 @@
                     v-for="(item, index) in data.value"
                     :key="index"
                   >
-                    <!-- nested -->
-                    <nuxt-link
-                      v-if="isObject(item) && 'id' in item && 'name' in item && 'entity_type_name' in item"
-                      :to="`${projectPrefix}${item.entity_type_name}/${item.id}`"
-                    >
-                      {{ nameOrNA(item.name) }}
-                    </nuxt-link>
-                    <template v-else>
-                      {{ item }}
-                    </template>
+                    <table-cell-content
+                      :entity-id="data.item._id"
+                      :entity-type-name="entityTypeName"
+                      :field="data.field"
+                      :project-prefix="projectPrefix"
+                      :value="item"
+                    />
                   </li>
                 </ul>
                 <template v-else-if="data.value.length == 1">
-                  <!-- nested -->
-                  <nuxt-link
-                    v-if="isObject(data.value[0]) && 'id' in data.value[0] && 'name' in data.value[0] && 'entity_type_name' in data.value[0]"
-                    :to="`${projectPrefix}${data.value[0].entity_type_name}/${data.value[0].id}`"
-                  >
-                    {{ nameOrNA(data.value[0].name) }}
-                  </nuxt-link>
-                  <template v-else>
-                    {{ data.value[0] }}
-                  </template>
+                  <table-cell-content
+                    :entity-id="data.item._id"
+                    :entity-type-name="entityTypeName"
+                    :field="data.field"
+                    :project-prefix="projectPrefix"
+                    :value="data.value[0]"
+                  />
                 </template>
               </template>
               <template v-else>
-                <!-- nested -->
-                <nuxt-link
-                  v-if="isObject(data.value) && 'id' in data.value && 'name' in data.value && 'entity_type_name' in data.value"
-                  :to="`${projectPrefix}${data.value.entity_type_name}/${data.value.id}`"
-                >
-                  {{ nameOrNA(data.value.name) }}
-                </nuxt-link>
-                <!-- edtf -->
-                <template
-                  v-else-if="isObject(data.value) && 'text' in data.value"
-                >
-                  {{ nameOrNA(data.value.text) }}
-                </template>
-                <template v-else>
-                  {{ data.value }}
-                </template>
+                <table-cell-content
+                  :entity-id="data.item._id"
+                  :entity-type-name="entityTypeName"
+                  :field="data.field"
+                  :project-prefix="projectPrefix"
+                  :value="data.value"
+                />
               </template>
             </template>
           </b-table>
@@ -243,8 +228,9 @@ import 'vue-slider-component/dist-css/vue-slider-component.css'
 import 'vue-slider-component/theme/default.css'
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 import Histogram from '~/components/Histogram'
+import TableCellContent from '~/components/Search/TableCellContent'
 
-import { MAX_INT, getFields, getFilterDefs, getSystemNames } from '~/assets/js/es'
+import { MAX_INT, getFields, getFilterDefs, getColumnDefs } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
@@ -253,6 +239,7 @@ export default {
   components: {
     Histogram,
     Multiselect,
+    TableCellContent,
     VueSlider,
     VueTypeaheadBootstrap
   },
@@ -336,7 +323,7 @@ export default {
 
     // Request only the data on initial request, since aggregation can be relatively slow
 
-    const keys = getSystemNames(this.$store.state.config.entity_types[this.$route.params.entity_type_name])
+    const keys = Object.keys(this.esColumnsDefs)
     // TODO: make size configurable
     const size = 25
     // TODO: make default sorting configurable
@@ -489,6 +476,9 @@ export default {
     },
     entityTypeName () {
       return this.$route.params.entity_type_name
+    },
+    esColumnsDefs () {
+      return getColumnDefs(this.entityTypeConfig)
     },
     esFiltersDefs () {
       return getFilterDefs(this.entityTypeConfig)
@@ -724,15 +714,6 @@ export default {
     },
     multiselectOpen (systemName) {
       this.multiselectState[systemName] = 'open'
-    },
-    nameOrNA (itemName) {
-      if (itemName == null) {
-        return 'N/A'
-      }
-      if (itemName === '') {
-        return 'N/A'
-      }
-      return itemName
     },
     pageChanged (page) {
       if (page == null && this.body.from === 0) {

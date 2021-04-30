@@ -26,6 +26,7 @@
     "nuxt-leaflet": "0.0.19",
     "rfdc": "^1.1.4",
     "vue-chartjs": "^3.5.0",
+    "vue-frag": "^1.1.5",
     "vue-multiselect": "^2.1.6",
     "vue-slider-component": "^3.2.1",
     "vue-typeahead-bootstrap": "^2.5.0",
