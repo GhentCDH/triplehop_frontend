@@ -92,5 +92,14 @@ export const actions = {
     if (response.data != null) {
       commit('SET_AGGS', extractAggs(response.data, esFiltersDefs, state.nestedAggsCache))
     }
+  },
+  initialize_empty_aggs ({ commit }, { esFiltersDefs }) {
+    const aggs = {}
+    for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
+      if (filter.type === 'nested') {
+        aggs[systemName] = []
+      }
+    }
+    commit('SET_AGGS', aggs)
   }
 }

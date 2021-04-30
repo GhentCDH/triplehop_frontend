@@ -364,6 +364,8 @@ export default {
         entityTypeConfig: this.entityTypeConfig
       }
     )
+    // Make sure dropdowns are rendered (with no options)
+    this.$store.dispatch('es/initialize_empty_aggs', { esFiltersDefs: this.esFiltersDefs })
     this.oldForm = JSON.parse(JSON.stringify(this.form))
   },
   data () {
