@@ -51,7 +51,6 @@ export default {
     RelationList
   },
   validate ({ params }) {
-    // TODO: validate project_name based on cached config
     // Make sure id is a number
     if (!isNumber(params.id)) {
       return false
