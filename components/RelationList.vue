@@ -36,7 +36,7 @@ export default {
       default: true
     },
     data: {
-      type: Array,
+      type: null,
       required: true
     },
     entityTypesConfig: {
