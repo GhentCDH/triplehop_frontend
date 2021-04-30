@@ -10,139 +10,138 @@
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>
-    <b-overlay
-      v-else
-      :show="$fetchState.pending"
-      spinner-variant="primary"
-    >
-      <b-row>
-        <b-col
-          v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
-          md="3"
+    <b-row v-else>
+      <b-col
+        v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
+        md="3"
+      >
+        <b-button
+          aria-controles="filters"
+          :aria-expanded="displayFilters ? 'true' : 'false'"
+          variant="primary"
+          class="d-md-none"
+          :disabled="!displayFiltersInitialized"
+          @click="displayFilters = !displayFilters"
         >
-          <b-button
-            aria-controles="filters"
-            :aria-expanded="displayFilters ? 'true' : 'false'"
-            variant="primary"
-            class="d-md-none"
-            :disabled="!displayFiltersInitialized"
-            @click="displayFilters = !displayFilters"
-          >
-            {{ displayFiltersInitialized && displayFilters ? 'Hide filters' : 'Display filters' }}
-          </b-button>
-          <!-- Hide on small screens using bootstrap classes first, then with v-model -->
-          <b-collapse
-            id="filters"
-            v-model="displayFilters"
-            :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
-          >
-            <b-overlay
-              :show="disableFormElements"
-              spinner-variant="primary"
+          {{ displayFiltersInitialized && displayFilters ? 'Hide filters' : 'Display filters' }}
+        </b-button>
+        <!-- Hide on small screens using bootstrap classes first, then with v-model -->
+        <b-collapse
+          id="filters"
+          v-model="displayFilters"
+          :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
+        >
+          <b-form @submit.prevent="searchQueryChanged">
+            <div
+              v-for="(group, index) in filterGroups"
+              :key="index"
+              class="bg-light p-3"
             >
-              <b-form @submit.prevent="searchQueryChanged">
-                <div
-                  v-for="(group, index) in filterGroups"
-                  :key="index"
-                  class="bg-light p-3"
+              <b-overlay
+                :show="disableFormElements"
+                spinner-variant="primary"
+              >
+                <b-form-group
+                  v-for="filter in group.filters"
+                  :id="`ig_${filter.systemName}`"
+                  :key="filter.systemName"
+                  :label="filter.displayName"
+                  :label-for="`i_${filter.systemName}`"
                 >
-                  <b-form-group
-                    v-for="filter in group.filters"
-                    :id="`ig_${filter.systemName}`"
-                    :key="filter.systemName"
-                    :label="filter.displayName"
-                    :label-for="`i_${filter.systemName}`"
-                  >
-                    <vue-typeahead-bootstrap
-                      v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
-                      :id="`i_${filter.systemName}`"
+                  <vue-typeahead-bootstrap
+                    v-if="filter.type === 'autocomplete' && autocompleteData[filter.systemName] != null"
+                    :id="`i_${filter.systemName}`"
+                    v-model="form[filter.systemName]"
+                    :data="autocompleteData[filter.systemName]"
+                    :disable-sort="true"
+                    :show-all-results="true"
+                    :disabled="disableFormElements"
+                    @input="autocompleteLookup(filter.systemName)"
+                    @hit="searchQueryChanged"
+                    @keyup.enter.prevent="searchQueryChanged"
+                  />
+                  <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
+                    <vue-slider
+                      v-if="fullRangeData[`${filter.systemName}_min`] != null && fullRangeData[`${filter.systemName}_max`] != null"
                       v-model="form[filter.systemName]"
-                      :data="autocompleteData[filter.systemName]"
-                      :disable-sort="true"
-                      :show-all-results="true"
-                      :disabled="disableFormElements"
-                      @input="autocompleteLookup(filter.systemName)"
-                      @hit="searchQueryChanged"
-                      @keyup.enter.prevent="searchQueryChanged"
+                      class="mt-5"
+                      :min="fullRangeData[`${filter.systemName}_min`]"
+                      :max="fullRangeData[`${filter.systemName}_max`]"
+                      :dot-options="sliderDotOptions"
+                      :process-style="sliderProcessStyle"
+                      :tooltip-style="sliderTooltipStyle"
+                      tooltip="always"
+                      @drag-end="searchQueryChanged"
                     />
-                    <template v-if="filter.type === 'histogram_slider' && aggs != null && aggs[`${filter.systemName}_hist`] != null">
-                      <vue-slider
-                        v-if="fullRangeData[`${filter.systemName}_min`] != null && fullRangeData[`${filter.systemName}_max`] != null"
-                        v-model="form[filter.systemName]"
-                        class="mt-5"
-                        :min="fullRangeData[`${filter.systemName}_min`]"
-                        :max="fullRangeData[`${filter.systemName}_max`]"
-                        :dot-options="sliderDotOptions"
-                        :process-style="sliderProcessStyle"
-                        :tooltip-style="sliderTooltipStyle"
-                        tooltip="always"
-                        @drag-end="searchQueryChanged"
-                      />
-                      <vue-slider
-                        v-else
-                        class="mt-5"
-                      />
-                      <histogram :chart-data="aggs[`${filter.systemName}_hist`]" />
+                    <vue-slider
+                      v-else
+                      class="mt-5"
+                    />
+                    <histogram :chart-data="aggs[`${filter.systemName}_hist`]" />
+                  </template>
+                  <multiselect
+                    v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
+                    v-model="form[filter.systemName]"
+                    :clear-on-select="false"
+                    :close-on-select="false"
+                    :disabled="disableFormElements"
+                    label="name"
+                    :multiple="true"
+                    :options="aggs[filter.systemName]"
+                    :preserve-search="true"
+                    :show-labels="false"
+                    track-by="id"
+                    @close="multiselectClose(filter.systemName)"
+                    @input="multiselectInput(filter.systemName)"
+                    @open="multiselectOpen(filter.systemName)"
+                  >
+                    <template slot="option" slot-scope="props">
+                      {{ props.option.name }}
+                      <b-badge
+                        :pill="true"
+                      >
+                        {{ props.option.count }}
+                      </b-badge>
                     </template>
-                    <multiselect
-                      v-if="filter.type === 'nested' && aggs != null && aggs[filter.systemName] != null"
-                      v-model="form[filter.systemName]"
-                      :clear-on-select="false"
-                      :close-on-select="false"
-                      :disabled="disableFormElements"
-                      label="name"
-                      :multiple="true"
-                      :options="aggs[filter.systemName]"
-                      :preserve-search="true"
-                      :show-labels="false"
-                      track-by="id"
-                      @close="multiselectClose(filter.systemName)"
-                      @input="multiselectInput(filter.systemName)"
-                      @open="multiselectOpen(filter.systemName)"
-                    >
-                      <template slot="option" slot-scope="props">
-                        {{ props.option.name }}
-                        <b-badge
-                          :pill="true"
-                        >
-                          {{ props.option.count }}
-                        </b-badge>
-                      </template>
-                    </multiselect>
-                    <multiselect
-                      v-if="filter.type === 'dropdown' && aggs != null && aggs[filter.systemName] != null"
-                      v-model="form[filter.systemName]"
-                      :clear-on-select="false"
-                      :close-on-select="false"
-                      :disabled="disableFormElements"
-                      label="key"
-                      :multiple="true"
-                      :options="aggs[filter.systemName]"
-                      :preserve-search="true"
-                      :show-labels="false"
-                      track-by="key"
-                      @close="multiselectClose(filter.systemName)"
-                      @input="multiselectInput(filter.systemName)"
-                      @open="multiselectOpen(filter.systemName)"
-                    >
-                      <template slot="option" slot-scope="props">
-                        {{ props.option.key }}
-                        <b-badge
-                          :pill="true"
-                        >
-                          {{ props.option.count }}
-                        </b-badge>
-                      </template>
-                    </multiselect>
-                  </b-form-group>
-                </div>
-              </b-form>
-            </b-overlay>
-          </b-collapse>
-        </b-col>
-        <b-col
-          v-if="total.value > 0"
-          md="9"
+                  </multiselect>
+                  <multiselect
+                    v-if="filter.type === 'dropdown' && aggs != null && aggs[filter.systemName] != null"
+                    v-model="form[filter.systemName]"
+                    :clear-on-select="false"
+                    :close-on-select="false"
+                    :disabled="disableFormElements"
+                    label="key"
+                    :multiple="true"
+                    :options="aggs[filter.systemName]"
+                    :preserve-search="true"
+                    :show-labels="false"
+                    track-by="key"
+                    @close="multiselectClose(filter.systemName)"
+                    @input="multiselectInput(filter.systemName)"
+                    @open="multiselectOpen(filter.systemName)"
+                  >
+                    <template slot="option" slot-scope="props">
+                      {{ props.option.key }}
+                      <b-badge
+                        :pill="true"
+                      >
+                        {{ props.option.count }}
+                      </b-badge>
+                    </template>
+                  </multiselect>
+                </b-form-group>
+              </b-overlay>
+            </div>
+          </b-form>
+        </b-collapse>
+      </b-col>
+      <b-col
+        v-if="total.value > 0"
+        md="9"
+      >
+        <b-overlay
+          :show="$fetchState.pending"
+          spinner-variant="primary"
         >
           Displaying {{ showingStart }} to {{ showingEnd }}
           of {{ total.relation === 'gte' ? 'more than' : '' }} {{ total.value }} results.
@@ -208,15 +207,15 @@
             :per-page="body.size"
             @input="pageChanged"
           />
-        </b-col>
-        <b-col
-          v-else
-          md="9"
-        >
-          <em>No results found.</em>
-        </b-col>
-      </b-row>
-    </b-overlay>
+        </b-overlay>
+      </b-col>
+      <b-col
+        v-else
+        md="9"
+      >
+        <em>No results found.</em>
+      </b-col>
+    </b-row>
   </div>
 </template>
 
@@ -253,6 +252,7 @@ export default {
     return true
   },
   async fetch () {
+    this.disableFormElements = true
     if (!(this.entityTypeName in this.entityTypesConfig)) {
       return this.$nuxt.error({
         statusCode: 404,
