@@ -333,7 +333,6 @@ export default {
         this.autocompleteData[systemName] = []
       }
     }
-    console.log(this.form)
 
     // Request only the data on initial request, since aggregation can be relatively slow
 
