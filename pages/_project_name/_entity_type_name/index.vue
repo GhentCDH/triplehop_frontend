@@ -5,8 +5,8 @@
       :items="breadcrumbs"
     />
 
-    <!-- TODO: configure multiple or search page title -->
     <h1>{{ entityTypeConfig.elasticsearch.title }}</h1>
+
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>

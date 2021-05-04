@@ -1,46 +1,56 @@
 <template>
   <div>
-    <b-breadcrumb
-      class="bg-light"
-      :items="breadcrumbs"
-    />
+    <p v-if="$fetchState.error">
+      Error while fetching data...
+    </p>
+    <div
+      v-else-if="$fetchState.pending"
+      class="text-center"
+    >
+      <b-spinner variant="primary" />
+    </div>
+    <template v-else>
+      <b-breadcrumb
+        class="bg-light"
+        :items="breadcrumbs"
+      />
+      <h1>
+        {{ title }}
+      </h1>
 
-    <h1>
-      {{ title }}
-    </h1>
+      <layout-panel
+        v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
+        :key="`panel-${panelIndex}`"
+        :panel="panel"
+        :panel-index="panelIndex"
+        :config="entityTypeConfig"
+        :data="entityData"
+      />
 
-    <layout-panel
-      v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
-      :key="`panel-${panelIndex}`"
-      :panel="panel"
-      :panel-index="panelIndex"
-      :config="entityTypeConfig"
-      :data="entityData"
-    />
-
-    <relation-list
-      v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
-      :key="relationTypeName"
-      :entity-types-config="entityTypesConfig"
-      :project-name="projectName"
-      :data="entityData[`r_${relationTypeName}_s`]"
-      :relation-title="relationTypeConfig.display.domain_title"
-      :relation-type-config="relationTypeConfig"
-    />
-    <relation-list
-      v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
-      :key="relationTypeName"
-      :project-name="projectName"
-      :entity-types-config="entityTypesConfig"
-      :data="entityData[`ri_${relationTypeName}_s`]"
-      :relation-title="relationTypeConfig.display.range_title"
-      :relation-type-config="relationTypeConfig"
-    />
+      <relation-list
+        v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
+        :key="relationTypeName"
+        :entity-types-config="entityTypesConfig"
+        :project-name="projectName"
+        :data="entityData[`r_${relationTypeName}_s`]"
+        :relation-title="relationTypeConfig.display.domain_title"
+        :relation-type-config="relationTypeConfig"
+      />
+      <relation-list
+        v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
+        :key="relationTypeName"
+        :project-name="projectName"
+        :entity-types-config="entityTypesConfig"
+        :data="entityData[`ri_${relationTypeName}_s`]"
+        :relation-title="relationTypeConfig.display.range_title"
+        :relation-type-config="relationTypeConfig"
+      />
+    </template>
   </div>
 </template>
 
 <script>
-import { constructTitle, filterObject, isNumber } from '~/assets/js/utils'
+import { constructFieldFromData, filterObject, isNumber } from '~/assets/js/utils'
 import LayoutPanel from '~/components/LayoutPanel.vue'
 import RelationList from '~/components/RelationList.vue'
 
@@ -121,7 +131,6 @@ export default {
       })
       return breadcrumbs
     },
-    // TODO: camelCase
     domainRelationTypesConfig () {
       return filterObject(
         this.relationTypesConfig,
@@ -156,11 +165,11 @@ export default {
       return this.$store.state.config.relation_types
     },
     title () {
-      return this.constructTitle(this.entityTypeConfig.display.title, this.entityData)
+      return this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData).join(', ')
     }
   },
   methods: {
-    constructTitle
+    constructFieldFromData
   },
   head () {
     // TODO: set Meta Tags for this Page

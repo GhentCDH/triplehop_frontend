@@ -23,7 +23,6 @@
   </b-card>
 </template>
 <script>
-import { constructTitle } from '~/assets/js/utils'
 import Relation from '~/components/Relation.vue'
 
 export default {
@@ -31,10 +30,6 @@ export default {
     Relation
   },
   props: {
-    collapsed: {
-      type: Boolean,
-      default: true
-    },
     data: {
       type: null,
       required: true
@@ -56,6 +51,11 @@ export default {
       required: true
     }
   },
+  data () {
+    return {
+      collapsed: true
+    }
+  },
   computed: {
     buttonText () {
       if (this.collapsed) {
@@ -72,9 +72,6 @@ export default {
       }
       return this.data
     }
-  },
-  methods: {
-    constructTitle
   }
 }
 </script>

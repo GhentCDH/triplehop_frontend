@@ -1,3 +1,13 @@
+export const RE_FIELD_CONVERSION = new RegExp([
+  // zero, one or multiple (inverse) relations
+  /(?:[$]ri?_[a-z_]+->)*/,
+  // zero or one (inverse) relations; dot for relation property and arrow for entity property
+  /(?:[$]ri?_[a-z_]+(?:[.]|->)){0,1}/,
+  // one property (entity or relation)
+  /[$](?:[a-z_]+)/
+].map(r => r.source).join(''),
+'g')
+
 export function capitalizeFirstLetter (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
@@ -14,8 +24,58 @@ export function compareNameUnicode (a, b) {
   return 0
 }
 
-export function constructTitle (title, data) {
-  return title.replace(/[$]([a-z_]+)/g, m => data[m.slice(1)])
+export function constructFieldFromData (input, data, displayNA = false) {
+  const matches = input.match(RE_FIELD_CONVERSION)
+  if (matches == null) {
+    return input
+  }
+  let results = [input]
+  for (const match of matches) {
+    let currentLevels = [data]
+    // remove all dollar signs, split in parts
+    const path = match.split('$').join('').split('->')
+    for (const [i, p] of path.entries()) {
+      if (i === path.length - 1) {
+        // last element => p = relation.r_prop or e_prop
+        if (p.includes('.')) {
+          // relation property
+          const [relation, rProp] = p.split('.')
+          const newResults = []
+          for (const result of results) {
+            for (const currentLevel of currentLevels) {
+              for (const rel of currentLevel[`${relation}_s`]) {
+                newResults.push(result.replace(match, rel[rProp]))
+              }
+            }
+          }
+          results = newResults
+        } else {
+          // entity property
+          const newResults = []
+          for (const result of results) {
+            for (const currentLevel of currentLevels) {
+              if (currentLevel[p] != null) {
+                newResults.push(result.replace(match, currentLevel[p]))
+              } else if (displayNA) {
+                newResults.push(result.replace(match, 'N/A'))
+              }
+            }
+          }
+          results = newResults
+        }
+      } else {
+        // not last element => p = relation => travel
+        const newCurrentLevels = []
+        for (const currentLevel of currentLevels) {
+          for (const rel of currentLevel[`${p}_s`]) {
+            newCurrentLevels.push(rel.entity)
+          }
+        }
+        currentLevels = newCurrentLevels
+      }
+    }
+  }
+  return results
 }
 
 export function formatDateTime (string) {

@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter } from '~/assets/js/utils'
+import { RE_FIELD_CONVERSION, capitalizeFirstLetter } from '~/assets/js/utils'
 
 export const state = () => ({
   data: {}
@@ -11,102 +11,172 @@ export const mutations = {
 }
 
 /**
- * Extract all fieldNames required to construct an entity title
- * @param  {String} titleField text string where used fieldNames are indicated with a dollar sign
- * @return {Array}             all required fieldNames
+ * Extract all data paths required to display an title or field
+ * @param  {String} field    Field config
+ * @param  {String} position Relative position (path)
+ * @return {Set}             All required data paths to display this field
  */
-function extractTitleFieldNames (titleField) {
-  if (!(/[$]([a-z_]+)/.test(titleField))) {
-    return []
+function extractDataPathsForField (field) {
+  const matches = field.match(RE_FIELD_CONVERSION)
+  if (matches != null) {
+    return new Set(matches)
   }
-  return [...new Set([...titleField.match(/[$]([a-z_]+)/g)].map(f => f.slice(1)))]
+
+  return new Set()
 }
 
 /**
- * Extract all fieldNames required to correctly display all properties of an entity or relation
- * @param  {Array} displayFields definition of which fields are used to display a panel of properties
- * @return {Array}               all required fieldNames
+ * Extract all fieldNames required to display an entity
+ * @param  {Object} display object containing display information: title and layout with panels and fields
+ * @return {Set}            all required data paths to display the entity
  */
-function extractFieldNames (displayFields) {
-  const fieldNames = displayFields.map(displayField => displayField.field)
+function extractDataPaths (display) {
+  const dataPaths = new Set()
 
-  for (const displayField of displayFields) {
-    if (displayField.type === 'geometry' && displayField.base_layer != null) {
-      fieldNames.push(displayField.base_layer)
+  if (display.title != null) {
+    // Get all fieldNames used in the title
+    extractDataPathsForField(display.title).forEach(path => dataPaths.add(path))
+  }
+
+  // Get all fieldNames used in the layout
+  if (display.layout != null) {
+    for (const panel of display.layout) {
+      for (const field of panel.fields) {
+        extractDataPathsForField(field.field).forEach(path => dataPaths.add(path))
+        if (field.type === 'geometry' && field.base_layer != null) {
+          extractDataPathsForField(field.base_layer).forEach(path => dataPaths.add(path))
+        }
+      }
     }
   }
 
-  return fieldNames
+  return dataPaths
 }
 
-function constructQueryParts (fieldNames, typeConfig) {
+function constructQueryPartsForProps (props, dataConfig) {
   const queryParts = []
-  for (const fieldName of fieldNames) {
-    if (['id', '__typename'].includes(fieldName)) {
-      queryParts.push(fieldName)
-      continue
+  for (const prop of props) {
+    if (dataConfig[prop].type === 'Geometry') {
+      queryParts.push(`${prop} {`)
+      queryParts.push('type')
+      queryParts.push('coordinates')
+      queryParts.push('}')
+    } else {
+      queryParts.push(prop)
     }
+  }
+  return queryParts
+}
 
-    if (typeConfig.data[fieldName].type === 'Geometry') {
-      queryParts.push(`${fieldName} {
-        type
-        coordinates
-      }`)
-      continue
+/**
+ * Extract GraphQL query parts
+ * @param  {Object} crdbQuery
+ * @param  {Object} relationTypesConfig
+ * @param  {String} currentRelationType
+ * @return {Array}
+ */
+function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
+  const queryParts = []
+  if (currentRelationType == null) {
+    // current position = base entity
+    queryParts.push(...constructQueryPartsForProps(crdbQuery.e_props, entityTypesConfig[initialEntityTypeName].data))
+
+    for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+      queryParts.push(`${relation}_s {`)
+      queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
+      queryParts.push('}')
     }
-
-    queryParts.push(fieldName)
+    return queryParts
   }
 
+  // current position = relation
+  const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
+  queryParts.push(...constructQueryPartsForProps(crdbQuery.r_props, relationTypeConfig.data))
+  if (crdbQuery.e_props.size || Object.keys(crdbQuery.relations).length) {
+    // Remove r_ or ri_
+    const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
+    queryParts.push('entity {')
+    // TODO: check if this works with relations with multiple domains or ranges
+    for (const linkedEntityTypeName of relationTypeConfig[`${currentRelationType.split('_')[0] === 'r' ? 'range' : 'domain'}_names`]) {
+      queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
+      queryParts.push('id')
+      queryParts.push('__typename')
+      queryParts.push(...constructQueryPartsForProps(crdbQuery.e_props, entityTypesConfig[linkedEntityTypeName].data))
+      for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+        queryParts.push(`${relation}_s {`)
+        queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
+        // relation
+        queryParts.push('}')
+      }
+      // on entity type name
+      queryParts.push('}')
+    }
+    // entity
+    queryParts.push('}')
+  }
   return queryParts
 }
 
 export const actions = {
   async load ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
-    const relationSides = {
-      domain: {
-        inverse: 'range',
-        graphqlPrefix: 'r'
-      },
-      range: {
-        inverse: 'domain',
-        graphqlPrefix: 'ri'
+
+    // Get all fieldNames used in the title and layout
+    const dataPaths = extractDataPaths(entityTypeConfig.display)
+
+    // Relations
+    const relationSides = ['domain', 'range']
+    for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
+      for (const side of relationSides) {
+        const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
+        if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
+          if (relationTypeConfig.display != null) {
+            // Add relation prefix to each path
+            extractDataPaths(relationTypeConfig.display).forEach(path => dataPaths.add(`${prefix}.${path}`))
+          }
+          for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
+            extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title).forEach(path => dataPaths.add(`${prefix}->${path}`))
+          }
+        }
       }
     }
 
-    // Get all fieldNames used in the title
-    const fieldNames = extractTitleFieldNames(entityTypeConfig.display.title)
-
-    // Get all fieldNames used in the layout
-    for (const panel of entityTypeConfig.display.layout) {
-      fieldNames.push(...extractFieldNames(panel.fields))
+    const crdbQuery = {
+      e_props: new Set(),
+      relations: {}
     }
-
-    // Relations
-    // Get all fieldNames used in the layout of the display of the relation
-    // and all fieldNames in the titles of linked entities
-    const relationFieldNames = {
-      domain: [],
-      range: []
-    }
-    for (const relation in relationTypesConfig) {
-      for (const side in relationSides) {
-        if (relationTypesConfig[relation][`${side}_names`].includes(entityTypeName)) {
-          relationFieldNames[side][relation] = {
-            fields: [],
-            titles: {}
+    for (const dataPath of dataPaths) {
+      let currentLevel = crdbQuery
+      // remove all dollar signs, split in parts
+      const path = dataPath.split('$').join('').split('->')
+      for (const [i, p] of path.entries()) {
+        if (i === path.length - 1) {
+          // last element => p = relation.r_prop or e_prop
+          if (p.includes('.')) {
+            // relation property
+            const [relation, rProp] = p.split('.')
+            if (!(relation in currentLevel.relations)) {
+              currentLevel.relations[relation] = {
+                e_props: new Set(),
+                r_props: new Set(),
+                relations: {}
+              }
+            }
+            currentLevel.relations[relation].r_props.add(rProp)
+          } else {
+            // entity property
+            currentLevel.e_props.add(p)
           }
-          if (relationTypesConfig[relation].display.layout != null) {
-            for (const panel of relationTypesConfig[relation].display.layout) {
-              relationFieldNames[side][relation].fields.push(...extractFieldNames(panel.fields))
+        } else {
+          // not last element => p = relation => travel
+          if (!(p in currentLevel.relations)) {
+            currentLevel.relations[p] = {
+              e_props: new Set(),
+              r_props: new Set(),
+              relations: {}
             }
           }
-          for (const linkedEntityTypeName of relationTypesConfig[relation][`${relationSides[side].inverse}_names`]) {
-            relationFieldNames[side][relation].titles[linkedEntityTypeName] = [
-              ...new Set(['id', ...extractTitleFieldNames(entityTypesConfig[linkedEntityTypeName].display.title)])
-            ]
-          }
+          currentLevel = currentLevel.relations[p]
         }
       }
     }
@@ -115,23 +185,7 @@ export const actions = {
       '{',
       `${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
     ]
-    queryParts.push(...constructQueryParts([...new Set(fieldNames)], entityTypeConfig))
-    for (const side in relationSides) {
-      for (const relation in relationFieldNames[side]) {
-        if (relationFieldNames[side][relation].fields.length || Object.keys(relationFieldNames[side][relation].titles).length) {
-          queryParts.push(`${relationSides[side].graphqlPrefix}_${relation}_s {`)
-          queryParts.push(...constructQueryParts([...new Set(['id', ...relationFieldNames[side][relation].fields])], relationTypesConfig[relation]))
-          for (const linkedEntityTypeName in relationFieldNames[side][relation].titles) {
-            queryParts.push('entity {')
-            queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
-            queryParts.push(...constructQueryParts([...new Set(['id', '__typename', ...relationFieldNames[side][relation].titles[linkedEntityTypeName]])], entityTypesConfig[linkedEntityTypeName]))
-            queryParts.push('}')
-            queryParts.push('}')
-          }
-          queryParts.push('}')
-        }
-      }
-    }
+    queryParts.push(...constructQueryParts(crdbQuery, entityTypesConfig, relationTypesConfig, entityTypeName))
     queryParts.push(
       '}',
       '}'
@@ -143,7 +197,6 @@ export const actions = {
         query: queryParts.join('\n')
       }
     )
-
     commit(
       'SET_DATA',
       response.data.data[capitalizeFirstLetter(entityTypeName)]

@@ -14,43 +14,43 @@
         <dt
           :key="`field-label-${panelIndex}-${fieldIndex}`"
           class="col-sm-3 col-lg-2"
-          :class="{'text-muted': data[field.field] == null}"
+          :class="{'text-muted': constructFieldFromData(field.field, data).length === 0}"
         >
-          {{ field.label ? field.label : config.data[field.field].display_name }}
+          {{ field.label ? field.label : config.data[field.field.replace('$', '')].display_name }}
         </dt>
         <dd
           :key="`field-value-${panelIndex}-${fieldIndex}`"
           class="col-sm-9 col-lg-10"
         >
           <template
-            v-if="data[field.field] != null"
+            v-if="constructFieldFromData(field.field, data).length !== 0"
           >
             <geometry-field
               v-if="field.type === 'geometry'"
-              :geometry="data[field.field]"
+              :geometry="constructFieldFromData(field.field, data)"
             />
             <b-link
               v-else-if="field.type === 'online_identifier'"
-              :href="`${field.base_url}${data[field.field]}`"
+              :href="`${field.base_url}${constructFieldFromData(field.field, data)}`"
               target="_blank"
             >
-              {{ data[field.field] }}
+              {{ constructFieldFromData(field.field, data) }}
             </b-link>
             <template
               v-else-if="field.type === 'list'"
             >
               <ul
-                v-if="data[field.field].length > 1"
+                v-if="constructFieldFromData(field.field, data).length > 1"
               >
                 <li
-                  v-for="(item, index) in data[field.field]"
+                  v-for="(item, index) in constructFieldFromData(field.field, data)"
                   :key="index"
                 >
                   {{ item }}
                 </li>
               </ul>
               <template v-else>
-                {{ data[field.field][0] }}
+                {{ constructFieldFromData(field.field, data)[0] }}
               </template>
             </template>
             <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
@@ -59,15 +59,15 @@
             >
               <wikidata-images-field
                 v-if="field.type === 'wikidata_images'"
-                :wikidata-id="data[field.field]"
+                :wikidata-id="constructFieldFromData(field.field, data)"
               />
               <vooruit-image-field
                 v-if="field.type === 'vooruit_image'"
-                :image-url="data[field.field]"
+                :image-url="constructFieldFromData(field.field, data)"
               />
             </client-only>
             <template v-else>
-              {{ data[field.field] }}
+              {{ constructFieldFromData(field.field, data).join(', ') }}
             </template>
           </template>
         </dd>
@@ -76,6 +76,7 @@
   </b-card>
 </template>
 <script>
+import { constructFieldFromData } from '~/assets/js/utils'
 import GeometryField from '~/components/GeometryField.vue'
 import VooruitImageField from '~/components/VooruitImageField.vue'
 import WikidataImagesField from '~/components/WikidataImagesField.vue'
@@ -103,6 +104,9 @@ export default {
       type: Object,
       required: true
     }
+  },
+  methods: {
+    constructFieldFromData
   }
 }
 </script>

@@ -12,7 +12,7 @@
         }
       }"
     >
-      {{ constructTitle(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity) }}
+      {{ constructFieldFromData(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity, true).join(', ') }}
     </b-link>
 
     <layout-panel
@@ -26,7 +26,7 @@
   </b-card>
 </template>
 <script>
-import { constructTitle } from '~/assets/js/utils'
+import { constructFieldFromData } from '~/assets/js/utils'
 import LayoutPanel from '~/components/LayoutPanel.vue'
 
 export default {
@@ -58,7 +58,7 @@ export default {
     }
   },
   methods: {
-    constructTitle
+    constructFieldFromData
   }
 }
 </script>
