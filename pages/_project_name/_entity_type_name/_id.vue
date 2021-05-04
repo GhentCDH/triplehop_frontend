@@ -165,7 +165,7 @@ export default {
       return this.$store.state.config.relation_types
     },
     title () {
-      return this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData).join(', ')
+      return this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData, true).join(', ')
     }
   },
   methods: {
