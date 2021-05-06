@@ -24,6 +24,13 @@ export function compareNameUnicode (a, b) {
   return 0
 }
 
+export function stringify (input) {
+  if (typeof input === 'object' && input !== null) {
+    return JSON.stringify(input)
+  }
+  return input
+}
+
 export function constructFieldFromData (input, data, displayNA = false) {
   const matches = input.match(RE_FIELD_CONVERSION)
   if (matches == null) {
@@ -44,7 +51,7 @@ export function constructFieldFromData (input, data, displayNA = false) {
           for (const result of results) {
             for (const currentLevel of currentLevels) {
               for (const rel of currentLevel[`${relation}_s`]) {
-                newResults.push(result.replace(match, rel[rProp]))
+                newResults.push(result.replace(match, stringify(rel[rProp])))
               }
             }
           }
@@ -55,7 +62,7 @@ export function constructFieldFromData (input, data, displayNA = false) {
           for (const result of results) {
             for (const currentLevel of currentLevels) {
               if (currentLevel[p] != null) {
-                newResults.push(result.replace(match, currentLevel[p]))
+                newResults.push(result.replace(match, stringify(currentLevel[p])))
               } else if (displayNA) {
                 newResults.push(result.replace(match, 'N/A'))
               }

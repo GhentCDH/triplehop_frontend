@@ -11,6 +11,7 @@
         v-for="(field, fieldIndex) in panel.fields"
       >
         <!-- TODO: let component update text-muted class (idea: emit loaded event) -->
+        <!-- TODO: don't call constructFieldFromData multiple types -->
         <dt
           :key="`field-label-${panelIndex}-${fieldIndex}`"
           class="col-sm-3 col-lg-2"
@@ -27,7 +28,7 @@
           >
             <geometry-field
               v-if="field.type === 'geometry'"
-              :geometry="constructFieldFromData(field.field, data)"
+              :geometry="constructFieldFromData(field.field, data)[0]"
             />
             <b-link
               v-else-if="field.type === 'online_identifier'"
