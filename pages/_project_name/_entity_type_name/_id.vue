@@ -1,14 +1,15 @@
 <template>
   <div>
-    <p v-if="$fetchState.error">
-      Error while fetching data...
-    </p>
     <div
-      v-else-if="$fetchState.pending"
+      v-if="$fetchState.pending"
       class="text-center"
     >
       <b-spinner variant="primary" />
     </div>
+    <!-- TODO: style error -->
+    <p v-else-if="$fetchState.error">
+      {{ $fetchState.error.message }}
+    </p>
     <template v-else>
       <b-breadcrumb
         class="bg-light"
@@ -73,28 +74,32 @@ export default {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
     if (!(this.entityTypeName in this.entityTypesConfig)) {
-      return this.$nuxt.error({
-        statusCode: 404,
-        message: `Entity type "${this.entityTypeName}" cannot be found.`
-      })
-    }
-    await this.$store.dispatch('config/load_relation_types', this.projectName)
-
-    await this.$store.dispatch(
-      'data/load',
-      {
-        entityTypeName: this.entityTypeName,
-        entityTypesConfig: this.entityTypesConfig,
-        id: this.$route.params.id,
-        projectName: this.projectName,
-        relationTypesConfig: this.relationTypesConfig
+      if (process.server) {
+        this.$nuxt.context.res.statusCode = 404
       }
-    )
+      throw new Error(`Entity type "${this.entityTypeName}" cannot be found.`)
+    }
+    try {
+      await this.$store.dispatch('config/load_relation_types', this.projectName)
+
+      await this.$store.dispatch(
+        'data/load',
+        {
+          entityTypeName: this.entityTypeName,
+          entityTypesConfig: this.entityTypesConfig,
+          id: this.$route.params.id,
+          projectName: this.projectName,
+          relationTypesConfig: this.relationTypesConfig
+        }
+      )
+    } catch (e) {
+      throw new Error('Error while fetching data.')
+    }
     if (this.$store.state.data.data == null) {
-      return this.$nuxt.error({
-        statusCode: 404,
-        message: `Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`
-      })
+      if (process.server) {
+        this.$nuxt.context.res.statusCode = 404
+      }
+      throw new Error(`Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`)
     }
   },
   computed: {
