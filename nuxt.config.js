@@ -68,11 +68,9 @@ export default {
             propertyName: 'access_token'
           },
           logout: false,
-          user: {
-            url: '/auth/user',
-            method: 'get',
-            propertyName: false
-          }
+          // Prevent user fetching when not logged in
+          // https://github.com/nuxt-community/auth-module/blob/master/docs/schemes/local.md#autofetchuser
+          user: false
         }
       }
     }
