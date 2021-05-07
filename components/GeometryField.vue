@@ -15,7 +15,7 @@
         />
         <l-feature-group ref="feature-group">
           <!-- TODO: display other geometry types -->
-          <l-marker v-if="geometryObject.type === 'Point'" :lat-lng="[...geometryObject.coordinates].reverse()" />
+          <l-marker v-if="geometry.type === 'Point'" :lat-lng="[...geometry.coordinates].reverse()" />
         </l-feature-group>
       </l-map>
     </div>
@@ -28,11 +28,6 @@ export default {
     geometry: {
       type: String,
       required: true
-    }
-  },
-  computed: {
-    geometryObject () {
-      return JSON.parse(this.geometry)
     }
   },
   methods: {
