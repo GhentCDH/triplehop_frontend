@@ -30,7 +30,7 @@ export default {
   validate ({ $auth, $config, error, params }) {
     // TODO: validate project_name based on cached config
     if (!hasProjectAdminAccess($auth.user, $config.projectName ?? params.project_name)) {
-      return error({ statusCode: 403, message: 'Unauthorized.' })
+      return error({ statusCode: 403, message: 'Forbidden.' })
     }
     return true
   },

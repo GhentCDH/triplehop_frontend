@@ -34,8 +34,11 @@ export default {
           // manually fetch user data
           // https://github.com/nuxt-community/auth-module/blob/master/docs/schemes/local.md#autofetchuser
           // https://github.com/nuxt-community/auth-module/blob/master/docs/api/auth.md#setuseruser
-          const user = await this.$axios.get('/auth/user')
-          this.$auth.setUser(user)
+          const response = await this.$axios.get('/auth/user')
+          if (response.status !== 200) {
+            throw new Error('Could not get user data')
+          }
+          this.$auth.setUser(response.data)
 
           this.$store.dispatch(
             'notifications/create',
