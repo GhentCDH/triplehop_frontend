@@ -61,6 +61,9 @@ export default {
   auth: {
     strategies: {
       local: {
+        user: {
+          autoFetch: false
+        },
         endpoints: {
           login: {
             url: '/auth/token',
@@ -95,7 +98,7 @@ export default {
     ]
   },
   router: {
-    middleware: ['auth']
+    middleware: ['auth', 'ensure_user_when_logged_in']
   },
   server: {
     host: '0.0.0.0'
