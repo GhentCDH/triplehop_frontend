@@ -4,7 +4,12 @@
       v-if="field.mainLink"
       :to="`${projectPrefix}${entityTypeName}/${entityId}`"
     >
-      {{ value }}
+      <template v-if="value !== ''">
+        {{ value }}
+      </template>
+      <template v-else>
+        N/A
+      </template>
     </nuxt-link>
     <template
       v-else-if="field.type === 'nested'"
