@@ -13,6 +13,15 @@ export default {
         return {
           legend: {
             display: false
+          },
+          scales: {
+            yAxes: [
+              {
+                ticks: {
+                  suggestedMin: 0
+                }
+              }
+            ]
           }
         }
       }
