@@ -65,7 +65,7 @@ export const actions = {
           'aggregations' in response.data
         ) {
           const fullRangeData = {}
-          for (const [aggName, aggResult] in Object.entries(response.data.aggregations)) {
+          for (const [aggName, aggResult] of Object.entries(response.data.aggregations)) {
             fullRangeData[aggName] = aggResult.value
           }
           commit('SET_FULL_RANGE_DATA', fullRangeData)
@@ -87,7 +87,7 @@ export const actions = {
     }
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
-      constructAggsQuery(body, esFiltersDefs)
+      constructAggsQuery(body, esFiltersDefs, state.fullRangeData)
     )
     if (response.data != null) {
       commit('SET_AGGS', extractAggs(response.data, esFiltersDefs, state.nestedAggsCache))

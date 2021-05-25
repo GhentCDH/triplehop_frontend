@@ -137,7 +137,7 @@ export function constructDataQuery (body, entityTypeConfig) {
   return result
 }
 
-export function constructAggsQuery (body, esFiltersDefs) {
+export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
   const result = {
     size: 0
   }
@@ -152,11 +152,11 @@ export function constructAggsQuery (body, esFiltersDefs) {
         }
       }
       if (
-        `${systemName}_min` in body.fullRangeData &&
-        `${systemName}_max` in body.fullRangeData
+        `${systemName}_min` in fullRangeData &&
+        `${systemName}_max` in fullRangeData
       ) {
-        const min = body.fullRangeData[`${systemName}_min`]
-        const max = body.fullRangeData[`${systemName}_max`]
+        const min = fullRangeData[`${systemName}_min`]
+        const max = fullRangeData[`${systemName}_max`]
         aggs[`${filter.systemName}_hist`].histogram.extended_bounds = {
           min: min - (min % filter.interval),
           max: max - (max % filter.interval)
