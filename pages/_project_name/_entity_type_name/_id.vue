@@ -139,7 +139,10 @@ export default {
     domainRelationTypesConfig () {
       return filterObject(
         this.relationTypesConfig,
-        relationConfig => relationConfig.domain_names.includes(this.entityTypeName)
+        relationConfig => (
+          relationConfig.domain_names.includes(this.entityTypeName) &&
+          relationConfig.display != null
+        )
       )
     },
     entityData () {
@@ -163,7 +166,10 @@ export default {
     rangeRelationTypesConfig () {
       return filterObject(
         this.relationTypesConfig,
-        relationConfig => relationConfig.range_names.includes(this.entityTypeName)
+        relationConfig => (
+          relationConfig.range_names.includes(this.entityTypeName) &&
+          relationConfig.display != null
+        )
       )
     },
     relationTypesConfig () {
