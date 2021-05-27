@@ -135,7 +135,14 @@ export const actions = {
             extractDataPaths(relationTypeConfig.display).forEach(path => dataPaths.add(`${prefix}.${path}`))
           }
           for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
-            extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title).forEach(path => dataPaths.add(`${prefix}->${path}`))
+            if (
+              'display' in entityTypesConfig[linkedEntityTypeName] &&
+              entityTypesConfig[linkedEntityTypeName].display != null &&
+              'title' in entityTypesConfig[linkedEntityTypeName].display
+            ) {
+              extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
+                .forEach(path => dataPaths.add(`${prefix}->${path}`))
+            }
           }
         }
       }
