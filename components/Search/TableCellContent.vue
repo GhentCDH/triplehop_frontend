@@ -4,11 +4,11 @@
       v-if="field.mainLink"
       :to="`${projectPrefix}${entityTypeName}/${entityId}`"
     >
-      <template v-if="value !== ''">
-        {{ value }}
+      <template v-if="field.type === 'edtf'">
+        {{ nameOrNA(value.text) }}
       </template>
       <template v-else>
-        N/A
+        {{ nameOrNA(value) }}
       </template>
     </nuxt-link>
     <template
@@ -24,9 +24,7 @@
         {{ nameOrNA(value.name) }}
       </template>
     </template>
-    <template
-      v-else-if="field.type === 'edtf'"
-    >
+    <template v-else-if="field.type === 'edtf'">
       {{ nameOrNA(value.text) }}
     </template>
     <template v-else>
