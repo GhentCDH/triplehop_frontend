@@ -1,36 +1,51 @@
 <template>
-  <b-row>
-    <b-col
-      v-for="(entityTypeConfig, entityTypeName) in entityTypesConfig"
-      :key="entityTypeName"
-      sm="6"
-      md="4"
-    >
-      <b-overlay :show="busy">
-        <b-button
-          block
-          variant="secondary"
-          class="text-center"
-          @click="reindex(entityTypeName)"
-        >
-          <b-icon
-            icon="search"
-            font-scale="4"
-            class="mb-4 mt-4"
-          />
-          <h2 class="mb-4">
-            Re-index {{ entityTypeConfig.display_name }}
-          </h2>
-        </b-button>
-      </b-overlay>
-    </b-col>
-  </b-row>
+  <div v-frag>
+    <b-breadcrumb
+      class="bg-light"
+      :items="breadcrumbs"
+    />
+    <b-row>
+      <b-col
+        v-for="entityTypeName in sortedEntityTypeNames"
+        :key="entityTypeName"
+        sm="6"
+        md="4"
+      >
+        <b-overlay :show="busy">
+          <b-button
+            block
+            variant="secondary"
+            class="text-center"
+            @click="reindex(entityTypeName)"
+          >
+            <b-icon
+              icon="search"
+              font-scale="4"
+              class="mb-4 mt-4"
+            />
+            <b-icon
+              icon="arrow-clockwise"
+              font-scale="4"
+              class="mb-4 mt-4"
+            />
+            <h2 class="mb-4">
+              {{ entityTypesConfig[entityTypeName].display_name }}
+            </h2>
+          </b-button>
+        </b-overlay>
+      </b-col>
+    </b-row>
+  </div>
 </template>
 <script>
+import frag from 'vue-frag'
 import { hasEntityPermission, hasProjectPermission } from '@/assets/js/auth'
 
 // TODO: check for es_index jobs with status 'started'
 export default {
+  directives: {
+    frag
+  },
   async fetch () {
     // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
 
@@ -49,6 +64,18 @@ export default {
     return true
   },
   computed: {
+    breadcrumbs () {
+      return [
+        {
+          text: 'Admin',
+          to: `${this.projectPrefix}admin`
+        },
+        {
+          text: 'Elasticsearch',
+          active: true
+        }
+      ]
+    },
     entityTypesConfig () {
       const entityTypesConfig = JSON.parse(JSON.stringify(this.$store.state.config.entity_types))
       // Filter out entity types without elasticsearch config
@@ -64,6 +91,11 @@ export default {
         }
       }
       return entityTypesConfig
+    },
+    sortedEntityTypeNames () {
+      const sortedEntityTypeNames = Object.keys(this.entityTypesConfig)
+      sortedEntityTypeNames.sort()
+      return sortedEntityTypeNames
     },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
