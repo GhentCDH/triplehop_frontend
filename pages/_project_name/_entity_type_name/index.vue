@@ -327,7 +327,8 @@ export default {
     // TODO: make size configurable
     const size = 25
     // TODO: make default sorting configurable
-    this.sortBy = this.$route.query.sortBy == null ? keys[0] : this.$route.query.sortBy
+
+    this.sortBy = this.$route.query.sortBy == null ? this.calcSortBy(keys[0]) : this.$route.query.sortBy
     this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
 
     this.body = {
@@ -580,6 +581,15 @@ export default {
         this.autocompleteData[systemName] = []
       }
     },
+    calcSortBy (sortBy, sortDesc = false) {
+      // For edtf:
+      // * sort on lower value when sorting ascending
+      // * sort on upper value when sorting descending
+      if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
+        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
+      }
+      return sortBy
+    },
     constructRouterQuery (queryPart) {
       const query = {}
 
@@ -734,13 +744,12 @@ export default {
       }
     },
     sortingChanged ({ sortBy, sortDesc }) {
-      // For edtf:
-      // * sort on lower value when sorting ascending
-      // * sort on upper value when sorting descending
-      if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
-        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
-      }
-      this.$router.push({ query: this.constructRouterQuery({ sortBy, sortOrder: sortDesc ? 'desc' : 'asc' }) })
+      this.$router.push({
+        query: this.constructRouterQuery({
+          sortBy: this.calcSortBy(sortBy, sortDesc),
+          sortOrder: sortDesc ? 'desc' : 'asc'
+        })
+      })
     },
     sortItem (item) {
       const result = {}
