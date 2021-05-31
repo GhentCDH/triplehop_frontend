@@ -105,12 +105,27 @@ export function constructDataQuery (body, entityTypeConfig) {
   for (const sortPart of body.sort) {
     const key = Object.keys(sortPart)[0]
     const newSortPart = {}
+
+    let columnDef = {}
+    const mainKey = key.split('.')[0]
+    for (columnDef of entityTypeConfig.elasticsearch.columns) {
+      if (columnDef.subField != null) {
+        if (`${columnDef.systemName}_${columnDef.subField}` === mainKey) {
+          break
+        }
+      }
+      if (columnDef.systemName === mainKey) {
+        break
+      }
+    }
+
     if (
-      key.includes('.') &&
-      entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key.split('.')[0])[0].type === 'edtf'
+      columnDef.subFieldType === 'edtf'
     ) {
+      newSortPart[`${columnDef.systemName}.${columnDef.subField}${key.split('.')[1] != null ? '.' + key.split('.')[1] : ''}`] = sortPart[key]
+    } else if (columnDef.type === 'edtf') {
       newSortPart[key] = sortPart[key]
-    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'nested') {
+    } else if (columnDef.type === 'nested') {
       newSortPart[`${key}.name.normalized_keyword`] = {
         mode: sortPart[key] === 'desc' ? 'max' : 'min',
         order: sortPart[key],
@@ -118,7 +133,7 @@ export function constructDataQuery (body, entityTypeConfig) {
           path: key
         }
       }
-    } else if (entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === key)[0].type === 'text') {
+    } else if (columnDef.type === 'text' || columnDef.type === '[text]') {
       newSortPart[`${key}.normalized_keyword`] = sortPart[key]
     } else {
       newSortPart[key] = sortPart[key]

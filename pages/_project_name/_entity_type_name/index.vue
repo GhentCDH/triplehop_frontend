@@ -326,7 +326,7 @@ export default {
     const size = 25
     // TODO: make default sorting configurable
 
-    this.sortBy = this.$route.query.sortBy == null ? this.calcSortBy(this.esColumnsKeys[0]) : this.$route.query.sortBy
+    this.sortBy = this.$route.query.sortBy ?? this.calcSortBy(this.fields[0].key)
     this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
 
     this.body = {
