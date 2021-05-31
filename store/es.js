@@ -66,7 +66,7 @@ export const actions = {
         ) {
           const fullRangeData = {}
           for (const [aggName, aggResult] of Object.entries(response.data.aggregations)) {
-            fullRangeData[aggName] = aggResult.value
+            fullRangeData[aggName] = new Date(aggResult.value).getFullYear()
           }
           commit('SET_FULL_RANGE_DATA', fullRangeData)
         }

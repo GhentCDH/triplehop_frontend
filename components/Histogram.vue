@@ -18,7 +18,9 @@ export default {
             yAxes: [
               {
                 ticks: {
-                  suggestedMin: 0
+                  suggestedMin: 0,
+                  // Only display integer steps
+                  precision: 0
                 }
               }
             ]

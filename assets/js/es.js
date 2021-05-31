@@ -147,7 +147,7 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
     if (esFiltersDefs[systemName].type === 'histogram_slider') {
       aggs[`${systemName}_hist`] = {
         histogram: {
-          field: filter.systemName,
+          field: `${filter.systemName}.year_range`,
           interval: filter.interval
         }
       }
@@ -221,12 +221,12 @@ export function constructFullRangeAggQuery (esFiltersDefs) {
     if (filter.type === 'histogram_slider') {
       aggs[`${systemName}_min`] = {
         min: {
-          field: systemName
+          field: `${systemName}.lower`
         }
       }
       aggs[`${systemName}_max`] = {
         max: {
-          field: systemName
+          field: `${systemName}.upper`
         }
       }
     }
