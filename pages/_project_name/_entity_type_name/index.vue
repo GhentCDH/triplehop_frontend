@@ -229,7 +229,7 @@ import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 import Histogram from '~/components/Histogram'
 import TableCellContent from '~/components/Search/TableCellContent'
 
-import { MAX_INT, getFields, getFilterDefs, getColumnDefs } from '~/assets/js/es'
+import { MAX_INT, getFields, getFilterDefs, getColumnKeys } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
 import { COLOR_PRIMARY } from '~/assets/js/variables'
 
@@ -322,17 +322,15 @@ export default {
     }
 
     // Request only the data on initial request, since aggregation can be relatively slow
-
-    const keys = Object.keys(this.esColumnsDefs)
     // TODO: make size configurable
     const size = 25
     // TODO: make default sorting configurable
 
-    this.sortBy = this.$route.query.sortBy == null ? this.calcSortBy(keys[0]) : this.$route.query.sortBy
+    this.sortBy = this.$route.query.sortBy == null ? this.calcSortBy(this.esColumnsKeys[0]) : this.$route.query.sortBy
     this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
 
     this.body = {
-      keys,
+      keys: this.esColumnsKeys,
       filters: this.form,
       from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
       size,
@@ -478,8 +476,8 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    esColumnsDefs () {
-      return getColumnDefs(this.entityTypeConfig)
+    esColumnsKeys () {
+      return getColumnKeys(this.entityTypeConfig)
     },
     esFiltersDefs () {
       return getFilterDefs(this.entityTypeConfig)

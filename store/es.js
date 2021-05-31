@@ -49,7 +49,7 @@ export const actions = {
       response.status === 200 &&
       response.data != null
     ) {
-      commit('SET_ITEMS', extractItems(body.keys, response.data, entityTypeName))
+      commit('SET_ITEMS', extractItems(response.data, entityTypeConfig))
       commit('SET_TOTAL', extractTotal(response.data))
     }
   },

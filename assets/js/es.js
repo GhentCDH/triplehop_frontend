@@ -329,12 +329,16 @@ export function extractAllNestedAggs (data, esFiltersDefs) {
   return result
 }
 
-export function extractItems (keys, data, entityTypeName) {
+export function extractItems (data, entityTypeConfig) {
   const items = []
   for (const hit of data.hits.hits) {
     const item = {}
-    for (const key of keys) {
-      item[key] = hit._source[key]
+    for (const fieldConfig of entityTypeConfig.elasticsearch.columns) {
+      if (fieldConfig.subField != null) {
+        item[`${fieldConfig.systemName}_${fieldConfig.subField}`] = hit._source[fieldConfig.systemName][fieldConfig.subField]
+      } else {
+        item[fieldConfig.systemName] = hit._source[fieldConfig.systemName]
+      }
     }
     item._id = hit._id
     items.push(item)
@@ -349,14 +353,26 @@ export function extractTotal (data) {
 export function getFields (entityTypeConfig) {
   const fields = []
   for (const fieldConfig of entityTypeConfig.elasticsearch.columns) {
-    fields.push({
-      key: fieldConfig.systemName,
-      label: fieldConfig.displayName,
-      sortable: fieldConfig.sortable,
-      type: fieldConfig.type,
-      mainLink: fieldConfig.mainLink,
-      link: fieldConfig.link
-    })
+    if (fieldConfig.subField != null) {
+      fields.push({
+        key: `${fieldConfig.systemName}_${fieldConfig.subField}`,
+        label: fieldConfig.displayName,
+        sortable: fieldConfig.sortable,
+        type: fieldConfig.subFieldType ?? fieldConfig.type,
+        mainLink: fieldConfig.mainLink,
+        link: fieldConfig.link,
+        subField: fieldConfig.subField
+      })
+    } else {
+      fields.push({
+        key: fieldConfig.systemName,
+        label: fieldConfig.displayName,
+        sortable: fieldConfig.sortable,
+        type: fieldConfig.type,
+        mainLink: fieldConfig.mainLink,
+        link: fieldConfig.link
+      })
+    }
   }
   return fields
 }
@@ -371,10 +387,10 @@ export function getFilterDefs (entityTypeConfig) {
   return filterDefs
 }
 
-export function getColumnDefs (entityTypeConfig) {
-  const columnDefs = {}
+export function getColumnKeys (entityTypeConfig) {
+  const columnKeys = new Set()
   for (const columnDef of entityTypeConfig.elasticsearch.columns) {
-    columnDefs[columnDef.systemName] = columnDef
+    columnKeys.add(columnDef.systemName)
   }
-  return columnDefs
+  return [...columnKeys]
 }

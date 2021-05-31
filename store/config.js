@@ -69,6 +69,8 @@ export const actions = {
                 sortable
                 main_link
                 link
+                sub_field
+                sub_field_type
               }
               filters {
                 filters {
@@ -111,7 +113,9 @@ export const actions = {
               type: rawColumn.type,
               sortable: rawColumn.sortable,
               mainLink: rawColumn.main_link,
-              link: rawColumn.link
+              link: rawColumn.link,
+              subField: rawColumn.sub_field,
+              subFieldType: rawColumn.sub_field_type
             })
           }
         }
