@@ -11,7 +11,7 @@ import {
 
 export const state = () => ({
   aggs: {},
-  aggsInitialized: false,
+  aggsInitialized: null,
   items: [],
   fullRangeData: {},
   nestedAggsCache: {},
@@ -54,7 +54,7 @@ export const actions = {
     }
   },
   async search_aggs ({ commit, state }, { body, entityTypeName, projectName, esFiltersDefs }) {
-    if (!(state.aggsInitialized)) {
+    if (state.aggsInitialized !== entityTypeName) {
       if (Object.values(esFiltersDefs).filter((def) => { return def.type === 'histogram_slider' }).length !== 0) {
         const response = await this.$axios.post(
           `/es/${projectName}/${entityTypeName}/search`,
@@ -83,7 +83,7 @@ export const actions = {
           commit('SET_NESTED_AGGS_CACHE', extractAllNestedAggs(response.data, esFiltersDefs))
         }
       }
-      commit('SET_AGGS_INITIALIZED', true)
+      commit('SET_AGGS_INITIALIZED', entityTypeName)
     }
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
