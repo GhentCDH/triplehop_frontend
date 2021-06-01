@@ -33,6 +33,10 @@
           {{ cleanFieldValue[0] }}
         </template>
       </template>
+      <table-field
+        v-else-if="field.type === 'table'"
+        :data="cleanFieldValue"
+      />
       <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
       <client-only
         v-else-if="field.type === 'wikidata_images' || field.type === 'vooruit_image'"
@@ -55,12 +59,14 @@
 
 <script>
 import GeometryField from '~/components/GeometryField.vue'
+import TableField from '~/components/TableField.vue'
 import VooruitImageField from '~/components/VooruitImageField.vue'
 import WikidataImagesField from '~/components/WikidataImagesField.vue'
 
 export default {
   components: {
     GeometryField,
+    TableField,
     VooruitImageField,
     WikidataImagesField
   },
@@ -78,6 +84,7 @@ export default {
     cleanFieldValue () {
       switch (this.field.type) {
         case 'geometry':
+        case 'table':
           return JSON.parse(this.fieldValue[0])
         case 'online_identifier':
         case 'wikidata_images':
