@@ -29,35 +29,6 @@ export default {
         await this.$auth.loginWith('local', {
           data: formData
         })
-
-        try {
-          // manually fetch user data
-          // https://github.com/nuxt-community/auth-module/blob/master/docs/schemes/local.md#autofetchuser
-          // https://github.com/nuxt-community/auth-module/blob/master/docs/api/auth.md#setuseruser
-          const response = await this.$axios.get('/auth/user')
-          if (response.status !== 200) {
-            throw new Error('Could not get user data')
-          }
-          this.$auth.setUser(response.data)
-
-          this.$store.dispatch(
-            'notifications/create',
-            {
-              message: `Logged in as ${this.$auth.user.display_name}`,
-              title: 'Login successfull',
-              variant: 'success'
-            }
-          )
-        } catch (error) {
-          this.$store.dispatch(
-            'notifications/create',
-            {
-              message: 'There was an issue logging in.  Please try again.',
-              title: 'Login unsuccessfull',
-              variant: 'danger'
-            }
-          )
-        }
       } catch (error) {
         this.$store.dispatch(
           'notifications/create',

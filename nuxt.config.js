@@ -1,6 +1,4 @@
-
 export default {
-  mode: 'universal',
   /*
   ** Headers of the page
   */
@@ -47,7 +45,7 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     // Doc: https://auth.nuxtjs.org/
-    '@nuxtjs/auth',
+    '@nuxtjs/auth-next',
     // Doc: https://github.com/schlunsen/nuxt-leaflet
     'nuxt-leaflet'
   ],
@@ -58,22 +56,29 @@ export default {
   axios: {
     baseURL: 'https://crdb-backend.ugent.be/'
   },
+  /*
+  ** Nuxt auth module Configuration
+  ** See https://auth.nuxtjs.org/schemes/local
+  */
   auth: {
     strategies: {
       local: {
+        token: {
+          property: 'access_token'
+        },
         user: {
-          autoFetch: false
+          property: false
         },
         endpoints: {
           login: {
             url: '/auth/token',
-            method: 'post',
-            propertyName: 'access_token'
+            method: 'post'
           },
           logout: false,
-          // Prevent user fetching when not logged in
-          // https://github.com/nuxt-community/auth-module/blob/master/docs/schemes/local.md#autofetchuser
-          user: false
+          user: {
+            url: '/auth/user',
+            method: 'get'
+          }
         }
       }
     }
@@ -98,10 +103,9 @@ export default {
     ]
   },
   router: {
-    middleware: ['auth', 'ensure_user_when_logged_in']
-  },
-  server: {
-    host: '0.0.0.0'
+    middleware: [
+      'auth'
+    ]
   },
   watchers: {
     webpack: {
