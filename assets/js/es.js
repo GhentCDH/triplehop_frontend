@@ -18,12 +18,12 @@ function constructQuery (body, esFiltersDefs) {
       const queryPart = {
         range: {}
       }
-      queryPart.range[systemName] = {}
+      queryPart.range[`${systemName}.year_range`] = {}
       if (filterValues[0] != null) {
-        queryPart.range[systemName].gte = filterValues[0]
+        queryPart.range[`${systemName}.year_range`].gte = filterValues[0]
       }
       if (filterValues[1] != null) {
-        queryPart.range[systemName].lte = filterValues[1]
+        queryPart.range[`${systemName}.year_range`].lte = filterValues[1]
       }
       query.bool.must.push(queryPart)
       continue
