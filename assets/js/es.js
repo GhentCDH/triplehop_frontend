@@ -56,6 +56,22 @@ function constructQuery (body, esFiltersDefs) {
       query.bool.must.push(queryPart)
       continue
     }
+    if (esFiltersDefs[systemName].type === 'nested_present') {
+      if (filterValues == null) {
+        continue
+      }
+      const occur = filterValues.id === 1 ? 'should' : 'must_not'
+      query.bool.must.push({
+        bool: {
+          [occur]: {
+            exists: {
+              field: systemName
+            }
+          }
+        }
+      })
+      continue
+    }
     if (esFiltersDefs[systemName].type === 'dropdown') {
       if (filterValues == null || filterValues.length === 0) {
         continue
@@ -204,6 +220,16 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
         }
       }
     }
+    if (filter.type === 'nested_present') {
+      aggs[`${systemName}_global`] = {
+        global: {}
+      }
+      aggs[`${systemName}_missing`] = {
+        missing: {
+          field: systemName
+        }
+      }
+    }
     if (filter.type === 'dropdown') {
       aggs[systemName] = {
         terms: {
@@ -313,6 +339,21 @@ export function extractAggs (data, esFiltersDefs, nestedAggsCache) {
             count: bucket.doc_count
           }
         })
+      continue
+    }
+    if (filter.type === 'nested_present') {
+      result[systemName] = [
+        {
+          id: 0,
+          name: 'No',
+          count: data.aggregations[`${systemName}_missing`].doc_count
+        },
+        {
+          id: 1,
+          name: 'Yes',
+          count: data.aggregations[`${systemName}_global`].doc_count - data.aggregations[`${systemName}_missing`].doc_count
+        }
+      ]
       continue
     }
     if (filter.type === 'dropdown') {

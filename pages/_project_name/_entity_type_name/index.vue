@@ -153,6 +153,7 @@ import Autocomplete from '~/components/Search/Filters/Autocomplete'
 import Dropdown from '~/components/Search/Filters/Dropdown'
 import HistogramSlider from '~/components/Search/Filters/HistogramSlider'
 import Nested from '~/components/Search/Filters/Nested'
+import NestedPresent from '~/components/Search/Filters/NestedPresent'
 
 import { MAX_INT, getFields, getFilterDefs, getColumnKeys } from '~/assets/js/es'
 import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
@@ -164,6 +165,7 @@ export default {
     Dropdown,
     histogram_slider: HistogramSlider,
     Nested,
+    nested_present: NestedPresent,
     TableCellContent
   },
   validate ({ query }) {
@@ -378,6 +380,10 @@ export default {
           properties[systemName].aggregationData = this.aggs[systemName]
           continue
         }
+        if (filter.type === 'nested_present') {
+          properties[systemName].aggregationData = this.aggs[systemName]
+          continue
+        }
         if (filter.type === 'dropdown') {
           properties[systemName].aggregationData = this.aggs[systemName]
           continue
@@ -469,6 +475,12 @@ export default {
           }
           continue
         }
+        if (this.esFiltersDefs[systemName].type === 'nested_present') {
+          if (filterValues != null) {
+            query[`filter[${systemName}]`] = filterValues.id
+          }
+          continue
+        }
         if (this.esFiltersDefs[systemName].type === 'dropdown') {
           if (filterValues != null && filterValues.length > 0) {
             for (const [i, filterValue] of filterValues.entries()) {
@@ -545,6 +557,12 @@ export default {
           }
           continue
         }
+        if (filter.type === 'nested_present') {
+          if (this.form[systemName] != null) {
+            this.form[systemName] = this.aggs[systemName].filter(v => v.id === this.form[systemName].id)[0]
+          }
+          continue
+        }
         if (filter.type === 'dropdown') {
           if (this.form[systemName] != null) {
             this.form[systemName] = this.form[systemName].map(
@@ -589,6 +607,24 @@ export default {
               }
             )
             counter++
+          }
+          continue
+        }
+        if (filter.type === 'nested_present') {
+          if (this.$route.query[`filter[${systemName}]`] == null) {
+            this.form[systemName] = null
+            continue
+          }
+          const value = this.$route.query[`filter[${systemName}]`]
+          const intValue = parseInt(value)
+          if (Number.isNaN(intValue) || intValue > MAX_INT) {
+            return this.$nuxt.error({
+              statusCode: 400,
+              message: `Invalid value "${value}" for filter "${systemName}".`
+            })
+          }
+          this.form[systemName] = {
+            id: intValue
           }
           continue
         }
