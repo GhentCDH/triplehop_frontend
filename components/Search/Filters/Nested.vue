@@ -3,7 +3,6 @@
     v-if="aggregationData != null"
     v-model="compValue"
     :clear-on-select="false"
-    :close-on-select="false"
     :disabled="disabled"
     label="name"
     :multiple="true"
