@@ -32,11 +32,21 @@ export function stringify (input) {
 }
 
 export function constructFieldFromData (input, data, displayNA = false) {
+  let results = input.split(' $||$ ')
+  if (results.length > 1) {
+    const newresults = results
+      .map((inputPart) => {
+        return constructFieldFromData(inputPart, data, displayNA)
+      })
+      .filter((newresult) => {
+        return newresult.length > 0
+      })
+    return newresults
+  }
   const matches = input.match(RE_FIELD_CONVERSION)
   if (matches == null) {
     return input
   }
-  let results = [input]
   for (const match of matches) {
     let currentLevels = [data]
     // remove all dollar signs, split in parts
