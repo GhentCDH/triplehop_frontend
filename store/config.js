@@ -42,6 +42,7 @@ export const actions = {
           Entity_config_s {
             system_name
             display_name
+            source
             data {
               system_name
               display_name
@@ -91,6 +92,7 @@ export const actions = {
     for (const raw of rawConfig) {
       config[raw.system_name] = {
         display_name: raw.display_name,
+        source: raw.source,
         data: {},
         display: raw.display
       }
