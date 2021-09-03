@@ -77,7 +77,7 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
     for (const eProp of crdbQuery.e_props) {
       if (eProp.includes('|')) {
         if (eProp.split('|')[0] === entityTypeName) {
-          eProps.push(eProps.split('|')[1])
+          eProps.add(eProp.split('|')[1])
         }
       } else {
         eProps.add(eProp)
@@ -99,7 +99,8 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
     queryParts.push('__typename')
     queryParts.push(...constructQueryPartsForProps(eProps, entityTypesConfig[entityTypeName].data))
     for (const [relation, relationQuery] of Object.entries(relations)) {
-      queryParts.push(`${relation}_s {`)
+      const suffix = relation === '_source_' ? '' : '_s'
+      queryParts.push(`${relation}${suffix} {`)
       queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
       // relation
       queryParts.push('}')
@@ -120,8 +121,6 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
  * @return {Array}
  */
 function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
-  console.log(crdbQuery)
-  console.log(currentRelationType)
   const queryParts = []
   if (currentRelationType == null) {
     // current position = base entity
@@ -130,14 +129,8 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
 
     // Relations
     for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
-      // Sources
-      if (relation === '_source_') {
-        queryParts.push('_source_ {')
-        queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
-        queryParts.push('}')
-        continue
-      }
-      queryParts.push(`${relation}_s {`)
+      const suffix = relation === '_source_' ? '' : '_s'
+      queryParts.push(`${relation}${suffix} {`)
       queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
       queryParts.push('}')
     }
@@ -163,6 +156,7 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
       }
       queryParts.push(...constructQueryEntityQueryPart(crdbQuery, setn, entityTypesConfig, relationTypesConfig))
     }
+    return queryParts
   }
 
   // current position = relation
@@ -182,18 +176,39 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
 export const actions = {
   async load ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
-
-    // Get all fieldNames used in the title and layout
-    const dataPaths = extractDataPaths(entityTypeConfig.display)
-
-    // Get all fieldNames used in source titles
+    const sourceTypeNames = []
     for (const [etn, etc] of Object.entries(entityTypesConfig)) {
       if (
         'source' in etc &&
         etc.source
       ) {
-        extractDataPathsForField(etc.display.title)
-          .forEach(path => dataPaths.add(`_source_->${etn}|${path}`))
+        sourceTypeNames.push(etn)
+      }
+    }
+
+    // Get all fieldNames used in the title and layout
+    const dataPaths = extractDataPaths(entityTypeConfig.display)
+
+    const baseDataPaths = [...dataPaths]
+    // For all current dataPaths, request the linked source entity titles,
+    // as well as the properties for which this source is relevant.
+    for (const dataPath of baseDataPaths) {
+      if (dataPath.includes('.')) {
+        // TODO: sources of relation properties
+      } else {
+        const parts = dataPath.split('->')
+        parts.pop()
+        let prefix = ''
+        if (parts.length !== 0) {
+          prefix = `${parts.join('->')}->`
+        }
+        // Get all fieldNames used in source titles
+        for (const etn of sourceTypeNames) {
+          extractDataPathsForField(entityTypesConfig[etn].display.title)
+            .forEach(path => dataPaths.add(`${prefix}_source_->${etn}|${path}`))
+        }
+        // Get the properties relevant for a source
+        dataPaths.add(`${prefix}_source_.properties`)
       }
     }
 
@@ -217,11 +232,10 @@ export const actions = {
                 .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
             }
           }
+          // TODO: add sources for relations
         }
       }
     }
-
-    console.log(dataPaths)
 
     const crdbQuery = {
       e_props: new Set(),
@@ -263,8 +277,6 @@ export const actions = {
       }
     }
 
-    // console.log(crdbQuery)
-
     const queryParts = [
       '{',
       `${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
@@ -274,7 +286,6 @@ export const actions = {
       '}',
       '}'
     )
-    console.log(queryParts.join('\n'))
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
