@@ -68,6 +68,50 @@ function constructQueryPartsForProps (props, dataConfig) {
   return queryParts
 }
 
+function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesConfig, relationTypesConfig) {
+  const queryParts = []
+  queryParts.push('entity {')
+  for (const entityTypeName of entityTypeNames) {
+    // Filter out props not related to this entity type
+    const eProps = new Set()
+    for (const eProp of crdbQuery.e_props) {
+      if (eProp.includes('|')) {
+        if (eProp.split('|')[0] === entityTypeName) {
+          eProps.push(eProps.split('|')[1])
+        }
+      } else {
+        eProps.add(eProp)
+      }
+    }
+    // Filter out relations not related to this entity type
+    const relations = {}
+    for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+      if (relation.includes('|')) {
+        if (relation.split('|')[0] === entityTypeName) {
+          relations[relation.split('|')[1]] = relationQuery
+        }
+      } else {
+        relations[relation] = relationQuery
+      }
+    }
+    queryParts.push(`... on ${capitalizeFirstLetter(entityTypeName)} {`)
+    queryParts.push('id')
+    queryParts.push('__typename')
+    queryParts.push(...constructQueryPartsForProps(eProps, entityTypesConfig[entityTypeName].data))
+    for (const [relation, relationQuery] of Object.entries(relations)) {
+      queryParts.push(`${relation}_s {`)
+      queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
+      // relation
+      queryParts.push('}')
+    }
+    // on entity type name
+    queryParts.push('}')
+  }
+  // entity
+  queryParts.push('}')
+  return queryParts
+}
+
 /**
  * Extract GraphQL query parts
  * @param  {Object} crdbQuery
@@ -76,12 +120,23 @@ function constructQueryPartsForProps (props, dataConfig) {
  * @return {Array}
  */
 function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
+  console.log(crdbQuery)
+  console.log(currentRelationType)
   const queryParts = []
   if (currentRelationType == null) {
     // current position = base entity
+    // Entity properties
     queryParts.push(...constructQueryPartsForProps(crdbQuery.e_props, entityTypesConfig[initialEntityTypeName].data))
 
+    // Relations
     for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+      // Sources
+      if (relation === '_source_') {
+        queryParts.push('_source_ {')
+        queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
+        queryParts.push('}')
+        continue
+      }
       queryParts.push(`${relation}_s {`)
       queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
       queryParts.push('}')
@@ -89,30 +144,37 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
     return queryParts
   }
 
+  // Sources
+  if (currentRelationType === '_source_') {
+    // TODO: define config for source props and use constructQueryPartsForProps?
+    if (crdbQuery.r_props.size !== 0) {
+      queryParts.push(...crdbQuery.r_props)
+    }
+    if (crdbQuery.e_props.size || Object.keys(crdbQuery.relations).length) {
+      // Get names of all entity types that can be used as source
+      const setn = []
+      for (const [etn, etc] of Object.entries(entityTypesConfig)) {
+        if (
+          'source' in etc &&
+          etc.source
+        ) {
+          setn.push(etn)
+        }
+      }
+      queryParts.push(...constructQueryEntityQueryPart(crdbQuery, setn, entityTypesConfig, relationTypesConfig))
+    }
+  }
+
   // current position = relation
   const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
-  queryParts.push(...constructQueryPartsForProps(crdbQuery.r_props, relationTypeConfig.data))
+  if (crdbQuery.r_props.size !== 0) {
+    queryParts.push(...constructQueryPartsForProps(crdbQuery.r_props, relationTypeConfig.data))
+  }
   if (crdbQuery.e_props.size || Object.keys(crdbQuery.relations).length) {
     // Remove r_ or ri_
     const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
-    queryParts.push('entity {')
-    // TODO: check if this works with relations with multiple domains or ranges
-    for (const linkedEntityTypeName of relationTypeConfig[`${currentRelationType.split('_')[0] === 'r' ? 'range' : 'domain'}_names`]) {
-      queryParts.push(`... on ${capitalizeFirstLetter(linkedEntityTypeName)} {`)
-      queryParts.push('id')
-      queryParts.push('__typename')
-      queryParts.push(...constructQueryPartsForProps(crdbQuery.e_props, entityTypesConfig[linkedEntityTypeName].data))
-      for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
-        queryParts.push(`${relation}_s {`)
-        queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
-        // relation
-        queryParts.push('}')
-      }
-      // on entity type name
-      queryParts.push('}')
-    }
-    // entity
-    queryParts.push('}')
+    const linkedEntityTypeNames = relationTypeConfig[`${currentRelationType.split('_')[0] === 'r' ? 'range' : 'domain'}_names`]
+    queryParts.push(...constructQueryEntityQueryPart(crdbQuery, linkedEntityTypeNames, entityTypesConfig, relationTypesConfig))
   }
   return queryParts
 }
@@ -123,6 +185,17 @@ export const actions = {
 
     // Get all fieldNames used in the title and layout
     const dataPaths = extractDataPaths(entityTypeConfig.display)
+
+    // Get all fieldNames used in source titles
+    for (const [etn, etc] of Object.entries(entityTypesConfig)) {
+      if (
+        'source' in etc &&
+        etc.source
+      ) {
+        extractDataPathsForField(etc.display.title)
+          .forEach(path => dataPaths.add(`_source_->${etn}|${path}`))
+      }
+    }
 
     // Relations
     const relationSides = ['domain', 'range']
@@ -141,12 +214,14 @@ export const actions = {
               'title' in entityTypesConfig[linkedEntityTypeName].display
             ) {
               extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
-                .forEach(path => dataPaths.add(`${prefix}->${path}`))
+                .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
             }
           }
         }
       }
     }
+
+    console.log(dataPaths)
 
     const crdbQuery = {
       e_props: new Set(),
@@ -188,6 +263,8 @@ export const actions = {
       }
     }
 
+    // console.log(crdbQuery)
+
     const queryParts = [
       '{',
       `${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
@@ -197,6 +274,7 @@ export const actions = {
       '}',
       '}'
     )
+    console.log(queryParts.join('\n'))
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
