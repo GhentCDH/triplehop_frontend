@@ -51,13 +51,23 @@ export default {
     config: {
       type: Object,
       required: true
+    },
+    sourceTitlesConfig: {
+      type: Object,
+      default: () => {
+        return null
+      }
     }
   },
   computed: {
     fieldValues () {
       const fieldValues = {}
       for (const field of this.panel.fields) {
-        fieldValues[field.field] = this.constructFieldFromData(field.field, this.data)
+        if (field.field === '$r_mentioned_film_title->$title') {
+          fieldValues[field.field] = this.constructFieldFromData(field.field, this.data, this.sourceTitlesConfig)
+        } else {
+          fieldValues[field.field] = []
+        }
       }
       return fieldValues
     }

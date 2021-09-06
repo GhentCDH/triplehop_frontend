@@ -31,21 +31,109 @@ export function stringify (input) {
   return input
 }
 
-export function constructFieldFromData (input, data, displayNA = false) {
-  let results = input.split(' $||$ ')
-  if (results.length > 1) {
-    const newresults = results
+// Merge objects
+function addValuesWithSourceObjects (valuesWithSourceObjects, additionalValuesWithSourceObjects) {
+  for (const [value, sourceObjects] of Object.entries(additionalValuesWithSourceObjects)) {
+    if (!(value in valuesWithSourceObjects)) {
+      valuesWithSourceObjects[value] = {}
+    }
+    addSourceObjects(valuesWithSourceObjects[value], sourceObjects)
+  }
+}
+
+// Merge objects
+function addSourceObjects (sourceObjects, additionalSourceObjects) {
+  for (const [sourceEntityName, sourceEntities] of Object.entries(additionalSourceObjects)) {
+    if (!(sourceEntityName in sourceObjects)) {
+      sourceObjects[sourceEntityName] = {}
+    }
+    for (const [sourceEntityId, sourceEntity] of sourceEntities) {
+      if (!(sourceEntityId in sourceObjects[sourceEntityName])) {
+        sourceObjects[sourceEntityName][sourceEntityId] = sourceEntity
+      }
+      // TODO: merge other source relation values if necessary
+    }
+  }
+}
+
+function constructEntitySource (sourceTitlesConfig, entity, property) {
+  console.log('constructentitysource')
+  console.log(sourceTitlesConfig)
+  console.log(entity)
+  console.log(property)
+  if (sourceTitlesConfig == null) {
+    return {}
+  }
+  if (!('_source_' in entity)) {
+    return {}
+  }
+  if (entity._source_.length === 0) {
+    return {}
+  }
+  const sourceObjects = {}
+  for (const source of entity._source_) {
+    if (source.properties.includes(property)) {
+      addSourceObjects(
+        sourceObjects,
+        {
+          [source.entity.__typename.toLowerCase()]: {
+            [source.entity.id]: {
+              title: constructFieldFromData(
+                sourceTitlesConfig[source.entity.__typename.toLowerCase()],
+                source.entity,
+                null,
+                true
+              )
+            }
+          }
+        }
+      )
+    }
+  }
+  return sourceObjects
+}
+
+/**
+ *
+ * @param {string} input
+ * @param {object} data
+ * @param {object} sourceTitlesConfig null if sources don't need to be added (e.g., when resolving source title)
+ * @param {boolean} displayNA
+ * @returns {object} Constructed field values as keys, related sources as values. Example:
+ * 'Field value': {
+ *   source_entity_name: {
+ *     source_entity_id: {
+ *       title: 'Source title'
+ *     }
+ *   }
+ * }
+ */
+function rawConstructFieldFromData (input, data, sourceTitlesConfig, displayNA = false) {
+  console.log('data')
+  console.log(data)
+  // TODO: fix for sources
+  const inputParts = input.split(' $||$ ')
+  if (inputParts.length > 1) {
+    const resultParts = inputParts
       .map((inputPart) => {
-        return constructFieldFromData(inputPart, data, displayNA)
+        return constructFieldFromData(inputPart, data, sourceTitlesConfig, displayNA)
       })
       .filter((newresult) => {
-        return newresult.length > 0
+        return Object.keys(newresult).length > 0
       })
-    return newresults
+    const results = {}
+    for (const resultPart of resultParts) {
+      addValuesWithSourceObjects(results, resultPart)
+    }
+    return results
   }
   const matches = input.match(RE_FIELD_CONVERSION)
   if (matches == null) {
     return input
+  }
+
+  let results = {
+    [input]: []
   }
   for (const match of matches) {
     let currentLevels = [data]
@@ -57,34 +145,72 @@ export function constructFieldFromData (input, data, displayNA = false) {
         if (p.includes('.')) {
           // relation property
           const [relation, rProp] = p.split('.')
-          const newResults = []
-          for (const result of results) {
+          const newResults = {}
+          for (const result of Object.keys(results)) {
             for (const currentLevel of currentLevels) {
               for (const rel of currentLevel[`${relation}_s`]) {
-                newResults.push(result.replace(match, stringify(rel[rProp])))
+                // TODO: relation sources
+                newResults[result.replace(match, stringify(rel[rProp]))] = results[result]
               }
             }
           }
-          results = newResults
+          results = { ...newResults }
         } else {
           // entity property
-          const newResults = []
-          for (const result of results) {
+          const newResults = {}
+          for (const result of Object.keys(results)) {
             for (const currentLevel of currentLevels) {
               if (currentLevel[p] != null) {
-                newResults.push(result.replace(match, stringify(currentLevel[p])))
+                if (isArray(currentLevel[p])) {
+                  console.log('array')
+                  for (const value of currentLevel[p]) {
+                    addValuesWithSourceObjects(
+                      newResults,
+                      {
+                        [result.replace(match, stringify(value))]: constructEntitySource(
+                          sourceTitlesConfig,
+                          currentLevel,
+                          p
+                        )
+                      }
+                    )
+                  }
+                } else {
+                  console.log('single')
+                  console.log(sourceTitlesConfig)
+                  addValuesWithSourceObjects(
+                    newResults,
+                    {
+                      [result.replace(match, stringify(currentLevel[p]))]: constructEntitySource(
+                        sourceTitlesConfig,
+                        currentLevel,
+                        p
+                      )
+                    }
+                  )
+                }
               } else if (displayNA) {
-                newResults.push(result.replace(match, 'N/A'))
+                addValuesWithSourceObjects(
+                  newResults,
+                  {
+                    [result.replace(match, 'N/A')]: constructEntitySource(
+                      sourceTitlesConfig,
+                      currentLevel,
+                      p
+                    )
+                  }
+                )
               }
             }
           }
-          results = newResults
+          results = { ...newResults }
         }
       } else {
         // not last element => p = relation => travel
         const newCurrentLevels = []
         for (const currentLevel of currentLevels) {
           for (const rel of currentLevel[`${p}_s`]) {
+            // TODO: relation sources
             newCurrentLevels.push(rel.entity)
           }
         }
@@ -92,6 +218,35 @@ export function constructFieldFromData (input, data, displayNA = false) {
       }
     }
   }
+  console.log('raw constructed')
+  console.log(results)
+  return results
+}
+
+export function constructFieldFromData (input, data, sourceTitlesConfig, displayNA = false) {
+  const raw = rawConstructFieldFromData(input, data, sourceTitlesConfig, displayNA)
+  const results = []
+  for (const [value, sourceObjects] of Object.entries(raw)) {
+    const sources = []
+    for (const [sourceEntityTypeName, sourceEntities] of Object.entries(sourceObjects)) {
+      for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
+        if ('title' in sourceEntity) {
+          sources.push({
+            typeName: sourceEntityTypeName,
+            id: sourceEntityId,
+            title: sourceEntity.title
+            // TODO: other source properties / source relation properties?
+          })
+        }
+      }
+    }
+    results.push({
+      value,
+      sources
+    })
+  }
+  console.log('constructed')
+  console.log(results)
   return results
 }
 

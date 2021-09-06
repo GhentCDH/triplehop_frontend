@@ -7,35 +7,35 @@
     >
       <geometry-field
         v-if="field.type === 'geometry'"
-        :geometry="cleanFieldValue"
+        :geometry="cleanValueAndSources.value"
       />
       <b-link
         v-else-if="field.type === 'online_identifier'"
-        :href="`${field.base_url}${cleanFieldValue}`"
+        :href="`${field.base_url}${cleanValueAndSources}`"
         target="_blank"
       >
-        {{ cleanFieldValue }}
+        {{ cleanValueAndSources.value }}
       </b-link>
       <template
         v-else-if="field.type === 'list'"
       >
         <ul
-          v-if="cleanFieldValue.length > 1"
+          v-if="cleanValueAndSources.length > 1"
         >
           <li
-            v-for="(item, index) in cleanFieldValue"
+            v-for="(item, index) in cleanValueAndSources"
             :key="index"
           >
-            {{ item }}
+            {{ cleanValueAndSources.value }}
           </li>
         </ul>
         <template v-else>
-          {{ cleanFieldValue[0] }}
+          {{ cleanValueAndSources[0].value }}
         </template>
       </template>
       <table-field
         v-else-if="field.type === 'table'"
-        :data="cleanFieldValue"
+        :data="cleanValueAndSources.value"
       />
       <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
       <client-only
@@ -43,15 +43,15 @@
       >
         <wikidata-images-field
           v-if="field.type === 'wikidata_images'"
-          :wikidata-id="cleanFieldValue"
+          :wikidata-id="cleanValueAndSources.value"
         />
         <vooruit-image-field
           v-if="field.type === 'vooruit_image'"
-          :image-url="cleanFieldValue"
+          :image-url="cleanValueAndSources.value"
         />
       </client-only>
       <template v-else>
-        {{ cleanFieldValue }}
+        {{ cleanValueAndSources.value }}
       </template>
     </template>
   </dd>
@@ -81,11 +81,15 @@ export default {
     }
   },
   computed: {
-    cleanFieldValue () {
+    cleanValueAndSources () {
+      console.log(this.fieldValue)
       switch (this.field.type) {
         case 'geometry':
         case 'table':
-          return JSON.parse(this.fieldValue[0])
+          return {
+            value: JSON.parse(this.fieldValue[0].value),
+            sources: this.fieldValue[0].sources
+          }
         case 'online_identifier':
         case 'wikidata_images':
         case 'vooruit_image':
@@ -93,14 +97,12 @@ export default {
         case 'list': {
           const cleanValue = []
           for (const value of this.fieldValue) {
-            for (const dataValue of JSON.parse(value)) {
-              cleanValue.push(dataValue)
-            }
+            cleanValue.push(value)
           }
           return cleanValue
         }
       }
-      return this.fieldValue.join(', ')
+      return this.fieldValue
     }
   }
 }

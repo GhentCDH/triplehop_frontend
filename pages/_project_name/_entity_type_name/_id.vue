@@ -26,9 +26,10 @@
         :panel-index="panelIndex"
         :config="entityTypeConfig"
         :data="entityData"
+        :source-titles-config="sourceTitlesConfig"
       />
 
-      <relation-list
+      <!-- <relation-list
         v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
         :key="relationTypeName"
         :entity-types-config="entityTypesConfig"
@@ -45,7 +46,7 @@
         :data="entityData[`ri_${relationTypeName}_s`]"
         :relation-title="relationTypeConfig.display.range_title"
         :relation-type-config="relationTypeConfig"
-      />
+      /> -->
     </template>
   </div>
 </template>
@@ -53,13 +54,13 @@
 <script>
 import { constructFieldFromData, filterObject, isNumber } from '~/assets/js/utils'
 import LayoutPanel from '~/components/LayoutPanel.vue'
-import RelationList from '~/components/RelationList.vue'
+// import RelationList from '~/components/RelationList.vue'
 
 export default {
   auth: false,
   components: {
-    LayoutPanel,
-    RelationList
+    LayoutPanel//,
+    // RelationList
   },
   validate ({ params }) {
     // Make sure id is a number
@@ -178,8 +179,18 @@ export default {
     relationTypesConfig () {
       return this.$store.state.config.relation_types
     },
+    sourceTitlesConfig () {
+      const sourceTitlesConfig = {}
+      for (const [entityTypeName, entityTypeConfig] of Object.entries(this.entityTypesConfig)) {
+        if ('source' in entityTypeConfig && entityTypeConfig.source) {
+          sourceTitlesConfig[entityTypeName] = entityTypeConfig.display.title
+        }
+      }
+      return sourceTitlesConfig
+    },
     title () {
-      return this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData, true).join(', ')
+      // TODO: display source info
+      return Object.keys(this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData, true)).join(', ')
     }
   },
   methods: {
