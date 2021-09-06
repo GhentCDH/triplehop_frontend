@@ -102,6 +102,9 @@ export default {
       throw new Error(`Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`)
     }
   },
+  head () {
+    // TODO: set Meta Tags for this Page
+  },
   computed: {
     breadcrumbs () {
       const breadcrumbs = []
@@ -181,9 +184,6 @@ export default {
   },
   methods: {
     constructFieldFromData
-  },
-  head () {
-    // TODO: set Meta Tags for this Page
   }
 }
 </script>
