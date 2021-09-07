@@ -26,11 +26,13 @@
             v-for="(item, index) in cleanValueAndSources"
             :key="index"
           >
-            {{ cleanValueAndSources.value }}
+            {{ item.value }}
+            <sources :sources="item.sources" />
           </li>
         </ul>
         <template v-else>
           {{ cleanValueAndSources[0].value }}
+          <sources :sources="cleanValueAndSources[0].sources" />
         </template>
       </template>
       <table-field
@@ -52,6 +54,7 @@
       </client-only>
       <template v-else>
         {{ cleanValueAndSources.value }}
+        <sources :sources="cleanValueAndSources.sources" />
       </template>
     </template>
   </dd>
@@ -62,13 +65,15 @@ import GeometryField from '~/components/GeometryField.vue'
 import TableField from '~/components/TableField.vue'
 import VooruitImageField from '~/components/VooruitImageField.vue'
 import WikidataImagesField from '~/components/WikidataImagesField.vue'
+import Sources from '~/components/Sources.vue'
 
 export default {
   components: {
     GeometryField,
     TableField,
     VooruitImageField,
-    WikidataImagesField
+    WikidataImagesField,
+    Sources
   },
   props: {
     field: {
@@ -82,7 +87,6 @@ export default {
   },
   computed: {
     cleanValueAndSources () {
-      console.log(this.fieldValue)
       switch (this.field.type) {
         case 'geometry':
         case 'table':
@@ -102,7 +106,7 @@ export default {
           return cleanValue
         }
       }
-      return this.fieldValue
+      return this.fieldValue[0]
     }
   }
 }

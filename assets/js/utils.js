@@ -47,7 +47,7 @@ function addSourceObjects (sourceObjects, additionalSourceObjects) {
     if (!(sourceEntityName in sourceObjects)) {
       sourceObjects[sourceEntityName] = {}
     }
-    for (const [sourceEntityId, sourceEntity] of sourceEntities) {
+    for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
       if (!(sourceEntityId in sourceObjects[sourceEntityName])) {
         sourceObjects[sourceEntityName][sourceEntityId] = sourceEntity
       }
@@ -57,10 +57,6 @@ function addSourceObjects (sourceObjects, additionalSourceObjects) {
 }
 
 function constructEntitySource (sourceTitlesConfig, entity, property) {
-  console.log('constructentitysource')
-  console.log(sourceTitlesConfig)
-  console.log(entity)
-  console.log(property)
   if (sourceTitlesConfig == null) {
     return {}
   }
@@ -78,12 +74,14 @@ function constructEntitySource (sourceTitlesConfig, entity, property) {
         {
           [source.entity.__typename.toLowerCase()]: {
             [source.entity.id]: {
-              title: constructFieldFromData(
-                sourceTitlesConfig[source.entity.__typename.toLowerCase()],
-                source.entity,
-                null,
-                true
-              )
+              title: Object.keys(
+                rawConstructFieldFromData(
+                  sourceTitlesConfig[source.entity.__typename.toLowerCase()],
+                  source.entity,
+                  null,
+                  true
+                )
+              )[0]
             }
           }
         }
@@ -109,22 +107,21 @@ function constructEntitySource (sourceTitlesConfig, entity, property) {
  * }
  */
 function rawConstructFieldFromData (input, data, sourceTitlesConfig, displayNA = false) {
-  console.log('data')
-  console.log(data)
-  // TODO: fix for sources
   const inputParts = input.split(' $||$ ')
   if (inputParts.length > 1) {
     const resultParts = inputParts
       .map((inputPart) => {
-        return constructFieldFromData(inputPart, data, sourceTitlesConfig, displayNA)
+        return rawConstructFieldFromData(inputPart, data, sourceTitlesConfig, displayNA)
       })
       .filter((newresult) => {
         return Object.keys(newresult).length > 0
       })
+    // console.log(resultParts)
     const results = {}
     for (const resultPart of resultParts) {
       addValuesWithSourceObjects(results, resultPart)
     }
+    // console.log(results)
     return results
   }
   const matches = input.match(RE_FIELD_CONVERSION)
@@ -162,7 +159,6 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, displayNA =
             for (const currentLevel of currentLevels) {
               if (currentLevel[p] != null) {
                 if (isArray(currentLevel[p])) {
-                  console.log('array')
                   for (const value of currentLevel[p]) {
                     addValuesWithSourceObjects(
                       newResults,
@@ -176,8 +172,6 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, displayNA =
                     )
                   }
                 } else {
-                  console.log('single')
-                  console.log(sourceTitlesConfig)
                   addValuesWithSourceObjects(
                     newResults,
                     {
@@ -218,8 +212,6 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, displayNA =
       }
     }
   }
-  console.log('raw constructed')
-  console.log(results)
   return results
 }
 
@@ -245,8 +237,6 @@ export function constructFieldFromData (input, data, sourceTitlesConfig, display
       sources
     })
   }
-  console.log('constructed')
-  console.log(results)
   return results
 }
 
@@ -272,12 +262,6 @@ export function isObject (variable) {
 
 export function isUUID (string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(string)
-}
-
-export function filterObject (obj, predicate) {
-  return Object.keys(obj)
-    .filter(key => predicate(obj[key]))
-    .reduce((result, key) => ({ ...result, [key]: obj[key] }), {})
 }
 
 export function normalizeUnicode (string) {

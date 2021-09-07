@@ -7,10 +7,8 @@
     <relation
       v-for="relation in relations"
       :key="relation.id"
-      :project-name="projectName"
-      :entity-types-config="entityTypesConfig"
       :relation="relation"
-      :relation-type-config="relationTypeConfig"
+      :relation-type-name="relationTypeName"
     />
     <b-button
       v-if="data.length > 5"
@@ -34,20 +32,12 @@ export default {
       type: null,
       required: true
     },
-    entityTypesConfig: {
-      type: Object,
-      required: true
-    },
-    projectName: {
-      type: String,
-      required: true
-    },
     relationTitle: {
       type: String,
       required: true
     },
-    relationTypeConfig: {
-      type: Object,
+    relationTypeName: {
+      type: String,
       required: true
     }
   },

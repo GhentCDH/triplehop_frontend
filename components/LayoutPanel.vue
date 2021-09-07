@@ -63,11 +63,7 @@ export default {
     fieldValues () {
       const fieldValues = {}
       for (const field of this.panel.fields) {
-        if (field.field === '$r_mentioned_film_title->$title') {
-          fieldValues[field.field] = this.constructFieldFromData(field.field, this.data, this.sourceTitlesConfig)
-        } else {
-          fieldValues[field.field] = []
-        }
+        fieldValues[field.field] = this.constructFieldFromData(field.field, this.data, this.sourceTitlesConfig)
       }
       return fieldValues
     }

@@ -16,7 +16,7 @@
         :items="breadcrumbs"
       />
       <h1>
-        {{ title }}
+        {{ titleValue }}
       </h1>
 
       <layout-panel
@@ -29,38 +29,34 @@
         :source-titles-config="sourceTitlesConfig"
       />
 
-      <!-- <relation-list
-        v-for="(relationTypeConfig, relationTypeName) in domainRelationTypesConfig"
+      <relation-list
+        v-for="relationTypeName of domainRelationTypeNames"
         :key="relationTypeName"
-        :entity-types-config="entityTypesConfig"
-        :project-name="projectName"
         :data="entityData[`r_${relationTypeName}_s`]"
-        :relation-title="relationTypeConfig.display.domain_title"
-        :relation-type-config="relationTypeConfig"
+        :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
+        :relation-type-name="relationTypeName"
       />
       <relation-list
-        v-for="(relationTypeConfig, relationTypeName) in rangeRelationTypesConfig"
+        v-for="relationTypeName of rangeRelationTypeNames"
         :key="relationTypeName"
-        :project-name="projectName"
-        :entity-types-config="entityTypesConfig"
         :data="entityData[`ri_${relationTypeName}_s`]"
-        :relation-title="relationTypeConfig.display.range_title"
-        :relation-type-config="relationTypeConfig"
-      /> -->
+        :relation-title="relationTypesConfig[relationTypeName].display.range_title"
+        :relation-type-name="relationTypeName"
+      />
     </template>
   </div>
 </template>
 
 <script>
-import { constructFieldFromData, filterObject, isNumber } from '~/assets/js/utils'
+import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import LayoutPanel from '~/components/LayoutPanel.vue'
-// import RelationList from '~/components/RelationList.vue'
+import RelationList from '~/components/RelationList.vue'
 
 export default {
   auth: false,
   components: {
-    LayoutPanel//,
-    // RelationList
+    LayoutPanel,
+    RelationList
   },
   validate ({ params }) {
     // Make sure id is a number
@@ -135,19 +131,22 @@ export default {
       }
       // current entity
       breadcrumbs.push({
-        text: this.title,
+        text: this.titleValue,
         active: true
       })
       return breadcrumbs
     },
-    domainRelationTypesConfig () {
-      return filterObject(
-        this.relationTypesConfig,
-        relationConfig => (
-          relationConfig.domain_names.includes(this.entityTypeName) &&
-          relationConfig.display != null
+    domainRelationTypeNames () {
+      return Object.keys(this.relationTypesConfig)
+        .filter(
+          (relationTypeName) => {
+            const relationConfig = this.relationTypesConfig[relationTypeName]
+            return (
+              relationConfig.domain_names.includes(this.entityTypeName) &&
+              relationConfig.display != null
+            )
+          }
         )
-      )
     },
     entityData () {
       return this.$store.state.data.data
@@ -167,14 +166,17 @@ export default {
     projectPrefix () {
       return this.$config.projectName == null ? `/${this.projectName}/` : '/'
     },
-    rangeRelationTypesConfig () {
-      return filterObject(
-        this.relationTypesConfig,
-        relationConfig => (
-          relationConfig.range_names.includes(this.entityTypeName) &&
-          relationConfig.display != null
+    rangeRelationTypeNames () {
+      return Object.keys(this.relationTypesConfig)
+        .filter(
+          (relationTypeName) => {
+            const relationConfig = this.relationTypesConfig[relationTypeName]
+            return (
+              relationConfig.range_names.includes(this.entityTypeName) &&
+              relationConfig.display != null
+            )
+          }
         )
-      )
     },
     relationTypesConfig () {
       return this.$store.state.config.relation_types
@@ -189,8 +191,15 @@ export default {
       return sourceTitlesConfig
     },
     title () {
-      // TODO: display source info
-      return Object.keys(this.constructFieldFromData(this.entityTypeConfig.display.title, this.entityData, true)).join(', ')
+      return this.constructFieldFromData(
+        this.entityTypeConfig.display.title,
+        this.entityData,
+        this.sourceTitlesConfig,
+        true
+      )
+    },
+    titleValue () {
+      return this.title.map(title => title.value).join(', ')
     }
   },
   methods: {

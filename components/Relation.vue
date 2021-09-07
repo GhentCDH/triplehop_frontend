@@ -12,7 +12,7 @@
         }
       }"
     >
-      {{ constructFieldFromData(entityTypesConfig[relation.entity.__typename.toLowerCase()].display.title, relation.entity, true).join(', ') }}
+      {{ titleValue }}
     </b-link>
 
     <layout-panel
@@ -34,27 +34,39 @@ export default {
     LayoutPanel
   },
   props: {
-    entityTypesConfig: {
-      type: Object,
-      required: true
-    },
-    projectName: {
-      type: String,
-      required: true
-    },
     relation: {
       type: Object,
       required: true
     },
-    relationTypeConfig: {
-      type: Object,
+    relationTypeName: {
+      type: String,
       required: true
     }
   },
   computed: {
+    entityTypesConfig () {
+      return this.$store.state.config.entity_types
+    },
+    projectName () {
+      return this.$config.projectName ?? this.$route.params.project_name
+    },
     props () {
       const { id, entity, ...props } = this.relation
       return props
+    },
+    relationTypeConfig () {
+      return this.$store.state.config.relation_types[this.relationTypeName]
+    },
+    title () {
+      return constructFieldFromData(
+        this.entityTypesConfig[this.relation.entity.__typename.toLowerCase()].display.title,
+        this.relation.entity,
+        null,
+        true
+      )
+    },
+    titleValue () {
+      return this.title.map(title => title.value).join(', ')
     }
   },
   methods: {
