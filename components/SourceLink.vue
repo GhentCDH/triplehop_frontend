@@ -1,5 +1,6 @@
 <template>
   <b-link
+    class="text-white"
     :to="{
       name: 'project_name-entity_type_name-id',
       params: {

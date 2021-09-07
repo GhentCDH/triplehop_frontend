@@ -3,13 +3,15 @@
     <b-badge
       v-if="sources.length !== 0"
       :id="id"
-      variant="primary"
+      class="text-primary"
+      variant="light"
     >
       {{ `Source${sources.length === 1 ? '' : 's'}` }}
     </b-badge>
     <b-tooltip
       v-if="sources.length !== 0"
-      :target="id"
+      :target="`#${id}`"
+      variant="primary"
     >
       <ul
         v-if="sources.length > 1"
