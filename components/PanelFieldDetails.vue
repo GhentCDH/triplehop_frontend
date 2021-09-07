@@ -52,6 +52,13 @@
           :image-url="cleanValueAndSources.value"
         />
       </client-only>
+      <b-link
+        v-else-if="field.type === 'link'"
+        :href="cleanValueAndSources.value"
+        target="_blank"
+      >
+        {{ cleanValueAndSources.value }}
+      </b-link>
       <template v-else>
         {{ cleanValueAndSources.value }}
         <sources :sources="cleanValueAndSources.sources" />
@@ -97,6 +104,7 @@ export default {
         case 'online_identifier':
         case 'wikidata_images':
         case 'vooruit_image':
+        case 'link':
           return this.fieldValue[0]
         case 'list': {
           const cleanValue = []
