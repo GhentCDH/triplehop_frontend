@@ -85,13 +85,16 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
     }
     // Filter out relations not related to this entity type
     const relations = {}
-    for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
-      if (relation.includes('|')) {
-        if (relation.split('|')[0] === entityTypeName) {
-          relations[relation.split('|')[1]] = relationQuery
+    // Source relations have no relations
+    if ('relations' in crdbQuery) {
+      for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+        if (relation.includes('|')) {
+          if (relation.split('|')[0] === entityTypeName) {
+            relations[relation.split('|')[1]] = relationQuery
+          }
+        } else {
+          relations[relation] = relationQuery
         }
-      } else {
-        relations[relation] = relationQuery
       }
     }
     queryParts.push(`... on ${capitalizeFirstLetter(entityTypeName)} {`)
@@ -137,13 +140,13 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
     return queryParts
   }
 
-  // Sources
+  // Entity sources
   if (currentRelationType === '_source_') {
     // TODO: define config for source props and use constructQueryPartsForProps?
     if (crdbQuery.r_props.size !== 0) {
       queryParts.push(...crdbQuery.r_props)
     }
-    if (crdbQuery.e_props.size || Object.keys(crdbQuery.relations).length) {
+    if (crdbQuery.e_props.size !== 0 || Object.keys(crdbQuery.relations).length) {
       // Get names of all entity types that can be used as source
       const setn = []
       for (const [etn, etc] of Object.entries(entityTypesConfig)) {
@@ -164,13 +167,44 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
   if (crdbQuery.r_props.size !== 0) {
     queryParts.push(...constructQueryPartsForProps(crdbQuery.r_props, relationTypeConfig.data))
   }
-  if (crdbQuery.e_props.size || Object.keys(crdbQuery.relations).length) {
+  if (crdbQuery.e_props.size !== 0 || Object.keys(crdbQuery.relations).length) {
     // Remove r_ or ri_
     const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
     const linkedEntityTypeNames = relationTypeConfig[`${currentRelationType.split('_')[0] === 'r' ? 'range' : 'domain'}_names`]
     queryParts.push(...constructQueryEntityQueryPart(crdbQuery, linkedEntityTypeNames, entityTypesConfig, relationTypesConfig))
   }
+  if (
+    'relation_source' in crdbQuery &&
+    (
+      crdbQuery.relation_source.r_props.size !== 0 ||
+      crdbQuery.relation_source.e_props.size !== 0
+    )
+  ) {
+    // Relation source -> add _source_ and handle as entity source with relation source data
+    queryParts.push('_source_ {')
+    queryParts.push(...constructQueryParts(crdbQuery.relation_source, entityTypesConfig, relationTypesConfig, null, '_source_'))
+    queryParts.push('}')
+  }
   return queryParts
+}
+
+/**
+ * Check if there is a relation structure at the current level for a certain relation. If there is no such structure, create one.
+ * @param {Object} currentLevel
+ * @param {String} relation
+ */
+function addRelationStructureIfNeeded (currentLevel, relation) {
+  if (!(relation in currentLevel.relations)) {
+    currentLevel.relations[relation] = {
+      e_props: new Set(),
+      r_props: new Set(),
+      relations: {},
+      relation_source: {
+        e_props: new Set(),
+        r_props: new Set()
+      }
+    }
+  }
 }
 
 export const actions = {
@@ -193,23 +227,19 @@ export const actions = {
     // For all current dataPaths, request the linked source entity titles,
     // as well as the properties for which this source is relevant.
     for (const dataPath of baseDataPaths) {
-      if (dataPath.includes('.')) {
-        // TODO: sources of relation properties
-      } else {
-        const parts = dataPath.split('->')
-        parts.pop()
-        let prefix = ''
-        if (parts.length !== 0) {
-          prefix = `${parts.join('->')}->`
-        }
-        // Get all fieldNames used in source titles
-        for (const etn of sourceTypeNames) {
-          extractDataPathsForField(entityTypesConfig[etn].display.title)
-            .forEach(path => dataPaths.add(`${prefix}_source_->${etn}|${path}`))
-        }
-        // Get the properties relevant for a source
-        dataPaths.add(`${prefix}_source_.properties`)
+      const parts = dataPath.split('->')
+      parts.pop()
+      let prefix = ''
+      if (parts.length !== 0) {
+        prefix = `${parts.join('->')}->`
       }
+      // Get all fieldNames used in source titles
+      for (const etn of sourceTypeNames) {
+        extractDataPathsForField(entityTypesConfig[etn].display.title)
+          .forEach(path => dataPaths.add(`${prefix}_source_->${etn}|${path}`))
+      }
+      // Get the properties relevant for a source
+      dataPaths.add(`${prefix}_source_.properties`)
     }
 
     // Relations
@@ -220,7 +250,18 @@ export const actions = {
         if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
           if (relationTypeConfig.display != null) {
             // Add relation prefix to each path
-            extractDataPaths(relationTypeConfig.display).forEach(path => dataPaths.add(`${prefix}.${path}`))
+            const relationPaths = extractDataPaths(relationTypeConfig.display)
+            if (relationPaths.size !== 0) {
+              relationPaths.forEach(path => dataPaths.add(`${prefix}.${path}`))
+
+              // Get all fieldNames used in source titles
+              for (const etn of sourceTypeNames) {
+                extractDataPathsForField(entityTypesConfig[etn].display.title)
+                  .forEach(path => dataPaths.add(`${prefix}._source_->${etn}|${path}`))
+              }
+              // Get the properties relevant for a source
+              dataPaths.add(`${prefix}._source_.properties`)
+            }
           }
           for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
             if (
@@ -232,11 +273,14 @@ export const actions = {
                 .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
             }
           }
-          // TODO: add sources for relations
         }
       }
     }
 
+    // console.log(dataPaths)
+
+    // Entity sources are modeled using relation '_source_' with e_props
+    // relation sources are modeled using relation_source
     const crdbQuery = {
       e_props: new Set(),
       relations: {}
@@ -245,33 +289,39 @@ export const actions = {
       let currentLevel = crdbQuery
       // remove all dollar signs, split in parts
       const path = dataPath.split('$').join('').split('->')
+      let isRelationSource = false
       for (const [i, p] of path.entries()) {
         if (i === path.length - 1) {
-          // last element => p = relation.r_prop or e_prop
-          if (p.includes('.')) {
+          // last element => p = relationsource.e_prop, relation.r_prop or e_prop
+          if (isRelationSource) {
+            // relation source
+            currentLevel.relation_source.e_props.add(p)
+          } else if (p.includes('.')) {
             // relation property
-            const [relation, rProp] = p.split('.')
-            if (!(relation in currentLevel.relations)) {
-              currentLevel.relations[relation] = {
-                e_props: new Set(),
-                r_props: new Set(),
-                relations: {}
+            const [relation, ...rest] = p.split('.')
+            addRelationStructureIfNeeded(currentLevel, relation)
+
+            if (rest.length === 2) {
+              if (rest[0] !== '_source_') {
+                throw new Error('Unexpected datapath')
               }
+              currentLevel.relations[relation].relation_source.r_props.add(rest[1])
+            } else {
+              currentLevel.relations[relation].r_props.add(rest)
             }
-            currentLevel.relations[relation].r_props.add(rProp)
           } else {
             // entity property
             currentLevel.e_props.add(p)
           }
+        } else if (p.includes('.')) {
+          // relation source
+          const relation = p.split('.')[0]
+          addRelationStructureIfNeeded(currentLevel, relation)
+          isRelationSource = true
+          currentLevel = currentLevel.relations[relation]
         } else {
           // not last element => p = relation => travel
-          if (!(p in currentLevel.relations)) {
-            currentLevel.relations[p] = {
-              e_props: new Set(),
-              r_props: new Set(),
-              relations: {}
-            }
-          }
+          addRelationStructureIfNeeded(currentLevel, p)
           currentLevel = currentLevel.relations[p]
         }
       }
