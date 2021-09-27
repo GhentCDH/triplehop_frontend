@@ -22,6 +22,7 @@
       :panel="panel"
       :config="relationTypeConfig"
       :data="props"
+      :source-titles-config="sourceTitlesConfig"
     />
   </b-card>
 </template>
