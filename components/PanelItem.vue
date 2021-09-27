@@ -48,7 +48,7 @@ export default {
   },
   computed: {
     fieldValue () {
-      return this.constructFieldFromData(this.field.field, this.data, this.sourceTitlesConfig)
+      return this.constructFieldFromData(this.field.field, this.data, this.sourceTitlesConfig, {})
     }
   },
   methods: {

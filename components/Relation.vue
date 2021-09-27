@@ -14,6 +14,7 @@
     >
       {{ titleValue }}
     </b-link>
+    <sources :sources="relationAndTitleSources" />
 
     <layout-panel
       v-for="(panel, panelIndex) in relationTypeConfig.display.layout"
@@ -27,10 +28,12 @@
 <script>
 import { constructFieldFromData } from '~/assets/js/utils'
 import LayoutPanel from '~/components/LayoutPanel.vue'
+import Sources from '~/components/Sources.vue'
 
 export default {
   components: {
-    LayoutPanel
+    LayoutPanel,
+    Sources
   },
   props: {
     relation: {
@@ -40,6 +43,12 @@ export default {
     relationTypeName: {
       type: String,
       required: true
+    },
+    sourceTitlesConfig: {
+      type: Object,
+      default: () => {
+        return null
+      }
     }
   },
   computed: {
@@ -60,12 +69,22 @@ export default {
       return constructFieldFromData(
         this.entityTypesConfig[this.relation.entity.__typename.toLowerCase()].display.title,
         this.relation.entity,
-        null,
+        this.sourceTitlesConfig,
+        this.relation,
         true
       )
     },
     titleValue () {
       return this.title.map(title => title.value).join(', ')
+    },
+    relationAndTitleSources () {
+      const sources = []
+      for (const title of this.title) {
+        for (const source of title.sources) {
+          sources.push(source)
+        }
+      }
+      return sources
     }
   },
   methods: {

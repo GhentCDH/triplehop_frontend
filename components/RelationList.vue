@@ -9,6 +9,7 @@
       :key="relation.id"
       :relation="relation"
       :relation-type-name="relationTypeName"
+      :source-titles-config="sourceTitlesConfig"
     />
     <b-button
       v-if="data.length > 5"
@@ -39,6 +40,12 @@ export default {
     relationTypeName: {
       type: String,
       required: true
+    },
+    sourceTitlesConfig: {
+      type: Object,
+      default: () => {
+        return null
+      }
     }
   },
   data () {

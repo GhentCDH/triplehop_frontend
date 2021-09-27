@@ -18,6 +18,7 @@
       <h1>
         {{ titleValue }}
       </h1>
+      <!-- TODO: title sources? -->
 
       <layout-panel
         v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
@@ -34,6 +35,7 @@
         :data="entityData[`r_${relationTypeName}_s`]"
         :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
         :relation-type-name="relationTypeName"
+        :source-titles-config="sourceTitlesConfig"
       />
       <relation-list
         v-for="relationTypeName of rangeRelationTypeNames"
@@ -41,6 +43,7 @@
         :data="entityData[`ri_${relationTypeName}_s`]"
         :relation-title="relationTypesConfig[relationTypeName].display.range_title"
         :relation-type-name="relationTypeName"
+        :source-titles-config="sourceTitlesConfig"
       />
     </template>
   </div>
@@ -194,6 +197,7 @@ export default {
         this.entityTypeConfig.display.title,
         this.entityData,
         this.sourceTitlesConfig,
+        {},
         true
       )
     },
