@@ -19,7 +19,6 @@
       v-for="(panel, panelIndex) in relationTypeConfig.display.layout"
       :key="`panel-${panelIndex}`"
       :panel="panel"
-      :panel-index="panelIndex"
       :config="relationTypeConfig"
       :data="props"
     />

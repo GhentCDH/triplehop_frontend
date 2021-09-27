@@ -7,33 +7,23 @@
       v-if="'fields' in panel"
       class="row mb-0"
     >
-      <template
+      <panel-item
         v-for="(field, fieldIndex) in panel.fields"
-      >
-        <panel-field-term
-          :key="`field-term-${fieldIndex}`"
-          :config="config"
-          :field="field"
-          :field-value="fieldValues[field.field]"
-        />
-        <panel-field-details
-          :key="`field-details-${fieldIndex}`"
-          :field="field"
-          :field-value="fieldValues[field.field]"
-        />
-      </template>
+        :key="fieldIndex"
+        :config="config"
+        :data="data"
+        :field="field"
+        :source-titles-config="sourceTitlesConfig"
+      />
     </dl>
   </b-card>
 </template>
 <script>
-import { constructFieldFromData } from '~/assets/js/utils'
-import PanelFieldTerm from '~/components/PanelFieldTerm.vue'
-import PanelFieldDetails from '~/components/PanelFieldDetails.vue'
+import PanelItem from '~/components/PanelItem.vue'
 
 export default {
   components: {
-    PanelFieldTerm,
-    PanelFieldDetails
+    PanelItem
   },
   props: {
     data: {
@@ -42,10 +32,6 @@ export default {
     },
     panel: {
       type: Object,
-      required: true
-    },
-    panelIndex: {
-      type: Number,
       required: true
     },
     config: {
@@ -58,18 +44,6 @@ export default {
         return null
       }
     }
-  },
-  computed: {
-    fieldValues () {
-      const fieldValues = {}
-      for (const field of this.panel.fields) {
-        fieldValues[field.field] = this.constructFieldFromData(field.field, this.data, this.sourceTitlesConfig)
-      }
-      return fieldValues
-    }
-  },
-  methods: {
-    constructFieldFromData
   }
 }
 </script>

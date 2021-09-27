@@ -23,7 +23,6 @@
         v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
         :key="`panel-${panelIndex}`"
         :panel="panel"
-        :panel-index="panelIndex"
         :config="entityTypeConfig"
         :data="entityData"
         :source-titles-config="sourceTitlesConfig"
