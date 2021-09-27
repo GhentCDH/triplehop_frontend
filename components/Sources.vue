@@ -3,8 +3,8 @@
     <b-badge
       v-if="sources.length !== 0"
       :id="id"
-      class="text-primary"
-      variant="light"
+      pill
+      variant="primary"
     >
       {{ `Source${sources.length === 1 ? '' : 's'}` }}
     </b-badge>
