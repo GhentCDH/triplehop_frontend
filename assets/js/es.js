@@ -167,7 +167,11 @@ export function constructDataQuery (body, entityTypeConfig) {
 
   const query = constructQuery(body, getFilterDefs(entityTypeConfig))
   if (query != null) {
-    result.query = query
+    result.query = {
+      bool: {
+        filter: query
+      }
+    }
   }
 
   return result
@@ -253,7 +257,11 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
 
   const query = constructQuery(body, esFiltersDefs)
   if (query != null) {
-    result.query = query
+    result.query = {
+      bool: {
+        filter: query
+      }
+    }
   }
 
   return result
