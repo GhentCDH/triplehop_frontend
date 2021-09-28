@@ -7,8 +7,8 @@
     :show-all-results="true"
     :disabled="disabled"
     @input="autocompleteLookup"
-    @hit="$emit('changed')"
-    @keyup.enter.prevent="$emit('changed')"
+    @hit="handleHit"
+    @keyup.enter.prevent="handleEnter"
   />
 </template>
 
@@ -41,7 +41,8 @@ export default {
   },
   data () {
     return {
-      autocompleteData: []
+      autocompleteData: [],
+      enterEvent: false
     }
   },
   computed: {
@@ -88,6 +89,19 @@ export default {
         this.autocompleteData = response.data.suggest.autocomplete[0].options.map(o => o.text)
       } else {
         this.autocompleteData = []
+      }
+    },
+    handleEnter () {
+      this.enterEvent = true
+      this.$emit('changed')
+    },
+    handleHit () {
+      if (this.enterEvent) {
+        // change has already been emitted (before value was altered)
+        // undos the behaviour added by https://github.com/mattzollinhofer/vue-typeahead-bootstrap/pull/112
+        this.enterEvent = false
+      } else {
+        this.$emit('changed')
       }
     }
   }
