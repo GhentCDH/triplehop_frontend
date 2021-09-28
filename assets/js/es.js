@@ -64,8 +64,13 @@ function constructQuery (body, esFiltersDefs) {
       query.bool.must.push({
         bool: {
           [occur]: {
-            exists: {
-              field: systemName
+            nested: {
+              path: systemName,
+              query: {
+                exists: {
+                  field: systemName
+                }
+              }
             }
           }
         }
@@ -221,8 +226,10 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
       }
     }
     if (filter.type === 'nested_present') {
-      aggs[`${systemName}_global`] = {
-        global: {}
+      aggs[systemName] = {
+        nested: {
+          path: systemName
+        }
       }
       aggs[`${systemName}_missing`] = {
         missing: {
@@ -351,7 +358,7 @@ export function extractAggs (data, esFiltersDefs, nestedAggsCache) {
         {
           id: 1,
           name: 'Yes',
-          count: data.aggregations[`${systemName}_global`].doc_count - data.aggregations[`${systemName}_missing`].doc_count
+          count: data.aggregations[systemName].doc_count
         }
       ]
       continue
