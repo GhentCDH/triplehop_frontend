@@ -65,6 +65,7 @@ export default {
         },
         transformRequest: (data, headers) => {
           delete headers.common.Authorization
+          delete headers.Authorization
         }
       }
     )
