@@ -34,7 +34,7 @@
 
 export default {
   props: {
-    imageUrl: {
+    valueAndSources: {
       type: String,
       required: true
     },
@@ -49,6 +49,11 @@ export default {
       displayUrl: null,
       imageError: false,
       linkUrl: null
+    }
+  },
+  computed: {
+    imageUrl () {
+      return this.valueAndSources.value
     }
   },
   async created () {

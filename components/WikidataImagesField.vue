@@ -7,6 +7,7 @@
       <b-col md="3">
         <b-img
           v-if="!image.error"
+          fluid
           :src="image.thumbUrl"
           @error="image.error = true"
           @load="image.loaded = true"
@@ -34,14 +35,19 @@ import MD5 from 'crypto-js/md5'
 const baseURL = 'https://query.wikidata.org/sparql?query='
 export default {
   props: {
-    wikidataId: {
-      type: String,
+    valueAndSources: {
+      type: Object,
       required: true
     }
   },
   data () {
     return {
       images: []
+    }
+  },
+  computed: {
+    wikidataId () {
+      return this.valueAndSources.value
     }
   },
   async created () {

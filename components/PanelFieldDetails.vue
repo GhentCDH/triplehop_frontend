@@ -7,11 +7,11 @@
     >
       <geometry-field
         v-if="field.type === 'geometry'"
-        :geometry="cleanValueAndSources.value"
+        :value-and-sources="cleanValueAndSources.value"
       />
       <b-link
         v-else-if="field.type === 'online_identifier'"
-        :href="`${field.base_url}${cleanValueAndSources}`"
+        :href="`${field.base_url}${cleanValueAndSources.value}`"
         target="_blank"
       >
         {{ cleanValueAndSources.value }}
@@ -37,7 +37,7 @@
       </template>
       <table-field
         v-else-if="field.type === 'table'"
-        :data="cleanValueAndSources.value"
+        :value-and-sources="cleanValueAndSources"
       />
       <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
       <client-only
@@ -45,13 +45,17 @@
       >
         <wikidata-images-field
           v-if="field.type === 'wikidata_images'"
-          :wikidata-id="cleanValueAndSources.value"
+          :value-and-sources="cleanValueAndSources"
         />
         <vooruit-image-field
           v-if="field.type === 'vooruit_image'"
-          :image-url="cleanValueAndSources.value"
+          :value-and-sources="cleanValueAndSources"
         />
       </client-only>
+      <filmmagie-field
+        v-else-if="field.type === 'filmmagie'"
+        :value-and-sources="cleanValueAndSources"
+      />
       <b-link
         v-else-if="field.type === 'link'"
         :href="cleanValueAndSources.value"
@@ -68,6 +72,7 @@
 </template>
 
 <script>
+import FilmmagieField from '~/components/FilmmagieField.vue'
 import GeometryField from '~/components/GeometryField.vue'
 import TableField from '~/components/TableField.vue'
 import VooruitImageField from '~/components/VooruitImageField.vue'
@@ -76,6 +81,7 @@ import Sources from '~/components/Sources.vue'
 
 export default {
   components: {
+    FilmmagieField,
     GeometryField,
     TableField,
     VooruitImageField,
@@ -106,13 +112,9 @@ export default {
         case 'vooruit_image':
         case 'link':
           return this.fieldValue[0]
-        case 'list': {
-          const cleanValue = []
-          for (const value of this.fieldValue) {
-            cleanValue.push(value)
-          }
-          return cleanValue
-        }
+        case 'filmmagie':
+        case 'list':
+          return this.fieldValue
       }
       return this.fieldValue[0]
     }

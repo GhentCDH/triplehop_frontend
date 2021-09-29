@@ -5,8 +5,8 @@
 <script>
 export default {
   props: {
-    data: {
-      type: Array,
+    valueAndSources: {
+      type: Object,
       required: true
     }
   },
@@ -14,7 +14,7 @@ export default {
     items () {
       const items = []
       const keys = []
-      for (const row of this.data) {
+      for (const row of this.valueAndSources.value) {
         // First row contains the keys
         if (keys.length === 0) {
           for (const col of row) {

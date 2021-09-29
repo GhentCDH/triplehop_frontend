@@ -8,6 +8,7 @@
         <!-- TODO: use actual base layer (entity_data[field.base_layer]) -->
         <!-- TODO: provide a way to configure a default base layer (project / entity based) -->
         <!-- TODO: add button to display larger map? -->
+        <!-- TODO: display source -->
         <l-tile-layer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}.png"
           attribution="Tiles &copy; <a href='http://esri.com'>Esri</a>"
@@ -25,9 +26,14 @@
 <script>
 export default {
   props: {
-    geometry: {
-      type: String,
+    valueAndSources: {
+      type: Object,
       required: true
+    }
+  },
+  computed: {
+    geometry () {
+      return this.valueAndSources.value
     }
   },
   methods: {
