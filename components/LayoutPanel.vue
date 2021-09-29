@@ -7,23 +7,33 @@
       v-if="'fields' in panel"
       class="row mb-0"
     >
-      <panel-item
+      <template
         v-for="(field, fieldIndex) in panel.fields"
-        :key="fieldIndex"
-        :config="config"
-        :data="data"
-        :field="field"
-        :source-titles-config="sourceTitlesConfig"
-      />
+      >
+        <panel-field-term
+          :key="`${fieldIndex}-term`"
+          :config="config"
+          :field="field"
+          :field-value="fieldValue(field.field)"
+        />
+        <panel-field-details
+          :key="`${fieldIndex}-details`"
+          :field="field"
+          :field-value="fieldValue(field.field)"
+        />
+      </template>
     </dl>
   </b-card>
 </template>
 <script>
-import PanelItem from '~/components/PanelItem.vue'
+import { constructFieldFromData } from '~/assets/js/utils'
+import PanelFieldTerm from '~/components/PanelFieldTerm.vue'
+import PanelFieldDetails from '~/components/PanelFieldDetails.vue'
 
 export default {
   components: {
-    PanelItem
+    PanelFieldTerm,
+    PanelFieldDetails
   },
   props: {
     data: {
@@ -43,6 +53,20 @@ export default {
       default: () => {
         return null
       }
+    }
+  },
+  data () {
+    return {
+      fieldValueCache: {}
+    }
+  },
+  methods: {
+    constructFieldFromData,
+    fieldValue (field) {
+      if (!(field in this.fieldValueCache)) {
+        this.fieldValueCache[field] = this.constructFieldFromData(field, this.data, this.sourceTitlesConfig, {})
+      }
+      return this.fieldValueCache[field]
     }
   }
 }
