@@ -31,7 +31,7 @@
 
       <relation-list
         v-for="relationTypeName of domainRelationTypeNames"
-        :key="relationTypeName"
+        :key="`${relationTypeName}-domain`"
         :data="entityData[`r_${relationTypeName}_s`]"
         :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
         :relation-type-name="relationTypeName"
@@ -39,7 +39,7 @@
       />
       <relation-list
         v-for="relationTypeName of rangeRelationTypeNames"
-        :key="relationTypeName"
+        :key="`${relationTypeName}-range`"
         :data="entityData[`ri_${relationTypeName}_s`]"
         :relation-title="relationTypesConfig[relationTypeName].display.range_title"
         :relation-type-name="relationTypeName"
