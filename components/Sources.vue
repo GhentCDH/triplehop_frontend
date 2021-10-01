@@ -1,13 +1,11 @@
 <template>
-  <div v-frag>
-    <b-badge
-      v-if="sources.length !== 0"
-      :id="id"
-      pill
-      variant="primary"
-    >
-      {{ `Source${sources.length === 1 ? '' : 's'}` }}
-    </b-badge>
+  <b-badge
+    v-if="sources.length !== 0"
+    :id="id"
+    pill
+    variant="primary"
+  >
+    {{ `Source${sources.length === 1 ? '' : 's'}` }}
     <b-tooltip
       v-if="sources.length !== 0"
       :target="`#${id}`"
@@ -28,18 +26,14 @@
         :source="sources[0]"
       />
     </b-tooltip>
-  </div>
+  </b-badge>
 </template>
 <script>
-import frag from 'vue-frag'
 import { v4 as uuidv4 } from 'uuid'
 
 import SourceLink from '~/components/SourceLink.vue'
 
 export default {
-  directives: {
-    frag
-  },
   components: {
     SourceLink
   },
