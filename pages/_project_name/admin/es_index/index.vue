@@ -46,22 +46,22 @@ export default {
   directives: {
     frag
   },
-  async fetch () {
-    // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
-
-    await this.$store.dispatch('config/load_entity_types', this.projectName)
-  },
-  data () {
-    return {
-      busy: false
-    }
-  },
   validate ({ $auth, $config, error, params }) {
     // TODO: validate project_name based on cached config
     if (!hasProjectPermission($auth.user, $config.projectName ?? params.project_name, 'es_index')) {
       return error({ statusCode: 403, message: 'Unauthorized.' })
     }
     return true
+  },
+  data () {
+    return {
+      busy: false
+    }
+  },
+  async fetch () {
+    // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
+
+    await this.$store.dispatch('config/load_entity_types', this.projectName)
   },
   computed: {
     breadcrumbs () {
