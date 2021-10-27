@@ -12,6 +12,7 @@
         }
       }"
     >
+      <b-icon-link />
       {{ titleValue }}
     </b-link>
     <sources :sources="relationAndTitleSources" />
