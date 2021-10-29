@@ -15,71 +15,17 @@
         class="bg-light"
         :items="breadcrumbs"
       />
-      <div
-        class="title-wrapper"
-      >
-        <h1>
-          {{ titleValue }}
-        </h1>
-        <!-- TODO: title sources? -->
-        <b-link
-          v-if="hasEntityPermission($auth.user, projectName, entityTypeName, 'edit')"
-          class="edit-link"
-          :to="{
-            name: 'project_name-entity_type_name-id-edit',
-            params: {
-              project_name: projectName,
-              entity_type_name: entityTypeName,
-              id: id
-            }
-          }"
-        >
-          <b-icon-pencil-fill />
-          Edit
-        </b-link>
-      </div>
-
-      <layout-panel
-        v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
-        :key="`panel-${panelIndex}`"
-        :panel="panel"
-        :config="entityTypeConfig"
-        :data="entityData"
-        :source-titles-config="sourceTitlesConfig"
-      />
-
-      <relation-list
-        v-for="relationTypeName of domainRelationTypeNames"
-        :key="`${relationTypeName}-domain`"
-        :data="entityData[`r_${relationTypeName}_s`]"
-        :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
-        :relation-type-name="relationTypeName"
-        :source-titles-config="sourceTitlesConfig"
-      />
-      <relation-list
-        v-for="relationTypeName of rangeRelationTypeNames"
-        :key="`${relationTypeName}-range`"
-        :data="entityData[`ri_${relationTypeName}_s`]"
-        :relation-title="relationTypesConfig[relationTypeName].display.range_title"
-        :relation-type-name="relationTypeName"
-        :source-titles-config="sourceTitlesConfig"
-      />
+      <h1>
+        {{ titleValue }}
+      </h1>
     </template>
   </div>
 </template>
 
 <script>
-import { hasEntityPermission } from '~/assets/js/auth'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
-import LayoutPanel from '~/components/LayoutPanel.vue'
-import RelationList from '~/components/RelationList.vue'
 
 export default {
-  auth: false,
-  components: {
-    LayoutPanel,
-    RelationList
-  },
   validate ({ params }) {
     // Make sure id is a number
     if (!isNumber(params.id)) {
@@ -158,18 +104,6 @@ export default {
       })
       return breadcrumbs
     },
-    domainRelationTypeNames () {
-      return Object.keys(this.relationTypesConfig)
-        .filter(
-          (relationTypeName) => {
-            const relationConfig = this.relationTypesConfig[relationTypeName]
-            return (
-              relationConfig.domain_names.includes(this.entityTypeName) &&
-              relationConfig.display != null
-            )
-          }
-        )
-    },
     entityData () {
       return this.$store.state.data.data
     },
@@ -182,29 +116,11 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    id () {
-      return this.$route.params.id
-    },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
     },
     projectPrefix () {
       return this.$config.projectName == null ? `/${this.projectName}/` : '/'
-    },
-    rangeRelationTypeNames () {
-      return Object.keys(this.relationTypesConfig)
-        .filter(
-          (relationTypeName) => {
-            const relationConfig = this.relationTypesConfig[relationTypeName]
-            return (
-              relationConfig.range_names.includes(this.entityTypeName) &&
-              relationConfig.display != null
-            )
-          }
-        )
-    },
-    relationTypesConfig () {
-      return this.$store.state.config.relation_types
     },
     sourceTitlesConfig () {
       const sourceTitlesConfig = {}
@@ -229,8 +145,7 @@ export default {
     }
   },
   methods: {
-    constructFieldFromData,
-    hasEntityPermission
+    constructFieldFromData
   }
 }
 </script>

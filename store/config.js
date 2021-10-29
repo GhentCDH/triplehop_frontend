@@ -61,6 +61,16 @@ export const actions = {
                 }
               }
             }
+            edit {
+              layout {
+                label
+                fields {
+                  label
+                  field
+                  type
+                }
+              }
+            }
             elasticsearch {
               title
               columns {
