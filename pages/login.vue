@@ -5,7 +5,6 @@
   />
 </template>
 <script>
-// TODO redirect to originating page if user clicks 'login' from a non-auth page
 import LoginForm from '@/components/LoginForm'
 
 export default {
@@ -14,8 +13,12 @@ export default {
   },
   data () {
     return {
-      busy: false
+      busy: false,
+      prev: null
     }
+  },
+  mounted () {
+    this.prev = this.$nuxt.context.from
   },
   methods: {
     async login (userInfo) {
@@ -38,6 +41,9 @@ export default {
             variant: 'danger'
           }
         )
+      }
+      if (this.$nuxt.context.from != null) {
+        this.$router.push(this.prev)
       }
 
       this.busy = false
