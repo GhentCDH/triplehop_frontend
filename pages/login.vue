@@ -45,6 +45,13 @@ export default {
       if (this.$nuxt.context.from != null) {
         this.$router.push(this.prev)
       }
+      this.$store.dispatch(
+        'notifications/create',
+        {
+          message: 'Login successfull',
+          variant: 'success'
+        }
+      )
 
       this.busy = false
     }

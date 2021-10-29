@@ -129,7 +129,7 @@ export default {
       this.$store.dispatch(
         'notifications/create',
         {
-          title: 'Logout successfull',
+          message: 'Logout successfull',
           variant: 'success'
         }
       )
