@@ -3,6 +3,7 @@
     <b-toast
       v-for="(notification, index) in notifications"
       :key="index"
+      auto-hide-delay="3000"
       :title="notification.title"
       :variant="notification.variant"
       :visible="true"
