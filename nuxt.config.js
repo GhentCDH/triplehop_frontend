@@ -66,15 +66,15 @@ export default {
         token: {
           property: 'access_token'
         },
-        user: {
-          property: false
-        },
         endpoints: {
           login: {
-            url: '/auth/token',
+            url: '/auth/login',
             method: 'post'
           },
-          logout: false,
+          logout: {
+            url: '/auth/logout',
+            method: 'get'
+          },
           user: {
             url: '/auth/user',
             method: 'get'

@@ -124,15 +124,27 @@ export default {
   methods: {
     hasGlobalAdminAccess,
     hasProjectAdminAccess,
-    logout () {
-      this.$auth.logout()
-      this.$store.dispatch(
-        'notifications/create',
-        {
-          message: 'Logout successfull',
-          variant: 'success'
-        }
-      )
+    async logout () {
+      try {
+        await this.$auth.logout()
+        this.$store.dispatch(
+          'notifications/create',
+          {
+            message: 'Logout successfull',
+            variant: 'success'
+          }
+        )
+      } catch (error) {
+        // TODO: check why errors aren't propagated to here
+        this.$store.dispatch(
+          'notifications/create',
+          {
+            message: 'There was an issue logging out.  Please try again.',
+            title: 'Logout unsuccessfull',
+            variant: 'danger'
+          }
+        )
+      }
     }
   }
 }

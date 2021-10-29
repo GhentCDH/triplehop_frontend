@@ -24,14 +24,23 @@ export default {
     async login (userInfo) {
       this.busy = true
 
-      const formData = new FormData()
-      formData.append('username', userInfo.username)
-      formData.append('password', userInfo.password)
-
       try {
-        await this.$auth.loginWith('local', {
-          data: formData
-        })
+        await this.$auth.loginWith(
+          'local',
+          {
+            data: userInfo
+          }
+        )
+        this.$store.dispatch(
+          'notifications/create',
+          {
+            message: 'Login successfull',
+            variant: 'success'
+          }
+        )
+        if (this.$nuxt.context.from != null) {
+          this.$router.push(this.prev)
+        }
       } catch (error) {
         this.$store.dispatch(
           'notifications/create',
@@ -42,16 +51,6 @@ export default {
           }
         )
       }
-      if (this.$nuxt.context.from != null) {
-        this.$router.push(this.prev)
-      }
-      this.$store.dispatch(
-        'notifications/create',
-        {
-          message: 'Login successfull',
-          variant: 'success'
-        }
-      )
 
       this.busy = false
     }
