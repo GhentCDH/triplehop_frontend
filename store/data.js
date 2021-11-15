@@ -270,12 +270,14 @@ export const actions = {
               dataPaths.add(`${sourcePath}${relation}._source_->${sourceEProp}`)
             }
             dataPaths.add(`${sourcePath}${relation}._source_.properties`)
+            dataPaths.add(`${sourcePath}${relation}._source_.source_props`)
           } else {
             // entity property
             for (const sourceEProp of sourceEProps) {
               dataPaths.add(`${sourcePath}_source_->${sourceEProp}`)
             }
             dataPaths.add(`${sourcePath}_source_.properties`)
+            dataPaths.add(`${sourcePath}_source_.source_props`)
           }
         } else {
           // not last element => p = relation => request relation source and update sourcePath
@@ -283,6 +285,7 @@ export const actions = {
             dataPaths.add(`${sourcePath}${p}._source_->${sourceEProp}`)
           }
           dataPaths.add(`${sourcePath}${p}._source_.properties`)
+          dataPaths.add(`${sourcePath}${p}._source_.source_props`)
           sourcePath = `${sourcePath}${p}->`
         }
       }

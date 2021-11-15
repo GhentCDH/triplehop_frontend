@@ -9,6 +9,7 @@
     <b-tooltip
       v-if="sources.length !== 0"
       :target="`#${id}`"
+      custom-class="sources-tooltip"
       variant="primary"
     >
       <ul
@@ -18,7 +19,7 @@
           v-for="(item, index) in sources"
           :key="index"
         >
-          <source-link :source="source" />
+          <source-link :source="item" />
         </li>
       </ul>
       <source-link

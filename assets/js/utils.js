@@ -70,21 +70,27 @@ function constructEntitySource (sourceTitlesConfig, entity, property) {
   const sourceObjects = {}
   for (const source of entity._source_) {
     if (source.properties.includes(property)) {
+      const sourceData = {
+        title: Object.keys(
+          rawConstructFieldFromData(
+            sourceTitlesConfig[source.entity.__typename.toLowerCase()],
+            source.entity,
+            null,
+            {},
+            true
+          )
+        )[0]
+      }
+      if (source.source_props != null) {
+        if ('page_number' in source.source_props && source.source_props.page_number != null && source.source_props.page_number.length !== 0) {
+          sourceData.page_number = source.source_props.page_number
+        }
+      }
       addSourceObjects(
         sourceObjects,
         {
           [source.entity.__typename.toLowerCase()]: {
-            [source.entity.id]: {
-              title: Object.keys(
-                rawConstructFieldFromData(
-                  sourceTitlesConfig[source.entity.__typename.toLowerCase()],
-                  source.entity,
-                  null,
-                  {},
-                  true
-                )
-              )[0]
-            }
+            [source.entity.id]: sourceData
           }
         }
       )
@@ -235,12 +241,16 @@ export function constructFieldFromData (input, data, sourceTitlesConfig, rawRela
     for (const [sourceEntityTypeName, sourceEntities] of Object.entries(sourceObjects)) {
       for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
         if ('title' in sourceEntity) {
-          sources.push({
+          const sourceData = {
             typeName: sourceEntityTypeName,
             id: sourceEntityId,
             title: sourceEntity.title
-            // TODO: other source properties / source relation properties?
-          })
+          }
+          if ('page_number' in sourceEntity) {
+            sourceData.page_number = sourceEntity.page_number
+          }
+          // TODO: other source properties / source relation properties?
+          sources.push(sourceData)
         }
       }
     }
