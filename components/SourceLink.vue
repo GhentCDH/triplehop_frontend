@@ -14,7 +14,7 @@
       {{ source.title }}
     </b-link>
     <template v-if="source.page_number">
-      <br />
+      <br>
       <em>
         Page number(s): {{ source.page_number.join(', ') }}
       </em>
