@@ -56,13 +56,20 @@
         v-else-if="field.type === 'filmmagie'"
         :value-and-sources="cleanValueAndSources"
       />
-      <b-link
+      <template
         v-else-if="field.type === 'link'"
-        :href="cleanValueAndSources.value"
-        target="_blank"
       >
-        {{ cleanValueAndSources.value }}
-      </b-link>
+        <b-link
+          v-if="cleanValueAndSources.value !== 'n/a'"
+          :href="cleanValueAndSources.value"
+          target="_blank"
+        >
+          {{ cleanValueAndSources.value }}
+        </b-link>
+        <template v-else>
+          {{ cleanValueAndSources.value }}
+        </template>
+      </template>
       <template v-else>
         {{ cleanValueAndSources.value }}
         <sources :sources="cleanValueAndSources.sources" />
