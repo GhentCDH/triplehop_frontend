@@ -169,7 +169,7 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
             for (const currentLevel of currentLevels) {
               if (currentLevel[p] != null) {
                 if (isArray(currentLevel[p])) {
-                  for (const value of currentLevel[p]) {
+                  for (const [index, value] of currentLevel[p].entries()) {
                     // Add entity source
                     addValuesWithSourceObjects(
                       newResults,
@@ -177,7 +177,7 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
                         [result.replace(match, stringify(value))]: constructEntitySource(
                           sourceTitlesConfig,
                           currentLevel,
-                          p
+                          `${p}[${index}]`
                         )
                       },
                       relationSources
