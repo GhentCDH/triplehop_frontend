@@ -15,8 +15,11 @@
     </b-link>
     <template v-if="source.page_number">
       <br>
-      <em>
-        Page number(s): {{ source.page_number.join(', ') }}
+      <em v-if="source.page_number.length > 1">
+        Page numbers: {{ source.page_number.join(', ') }}
+      </em>
+      <em v-else>
+        Page number: {{ source.page_number[0] }}
       </em>
     </template>
   </div>
