@@ -1,9 +1,21 @@
 <template>
-  <b-table striped :items="items" />
+  <div v-frag>
+    <b-table striped :items="items" />
+    <sources :sources="valueAndSources.sources" />
+  </div>
 </template>
 
 <script>
+import frag from 'vue-frag'
+import Sources from '~/components/Sources.vue'
+
 export default {
+  directives: {
+    frag
+  },
+  components: {
+    Sources
+  },
   props: {
     valueAndSources: {
       type: Object,
