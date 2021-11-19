@@ -233,6 +233,28 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
   return results
 }
 
+export function constructRelationSources (sourceTitlesConfig, rawRelation) {
+  const sourceObjects = constructEntitySource(sourceTitlesConfig, rawRelation, '__rel__')
+  const sources = []
+  for (const [sourceEntityTypeName, sourceEntities] of Object.entries(sourceObjects)) {
+    for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
+      if ('title' in sourceEntity) {
+        const sourceData = {
+          typeName: sourceEntityTypeName,
+          id: sourceEntityId,
+          title: sourceEntity.title
+        }
+        if ('page_number' in sourceEntity) {
+          sourceData.page_number = sourceEntity.page_number
+        }
+        // TODO: other source properties / source relation properties?
+        sources.push(sourceData)
+      }
+    }
+  }
+  return sources
+}
+
 export function constructFieldFromData (input, data, sourceTitlesConfig, rawRelation, displayNA = false) {
   const raw = rawConstructFieldFromData(input, data, sourceTitlesConfig, rawRelation, displayNA)
   const results = []
