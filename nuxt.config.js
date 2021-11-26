@@ -61,6 +61,11 @@ export default {
   ** See https://auth.nuxtjs.org/schemes/local
   */
   auth: {
+    cookie: {
+      options: {
+        SameSite: 'Strict'
+      }
+    },
     strategies: {
       local: {
         token: {
