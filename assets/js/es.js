@@ -119,7 +119,8 @@ function constructQuery (body, esFiltersDefs) {
 export function constructDataQuery (body, entityTypeConfig) {
   const result = {
     from: body.from,
-    size: body.size
+    size: body.size,
+    track_total_hits: true
   }
 
   const sort = []

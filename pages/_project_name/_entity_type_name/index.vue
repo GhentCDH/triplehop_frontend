@@ -71,7 +71,7 @@
           spinner-variant="primary"
         >
           Displaying {{ showingStart }} to {{ showingEnd }}
-          of {{ total.relation === 'gte' ? 'more than' : '' }} {{ total.value }} results.
+          of {{ total.value }} results.
           <b-pagination
             :value="currentPage"
             :total-rows="total.value"
