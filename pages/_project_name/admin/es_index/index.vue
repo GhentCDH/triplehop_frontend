@@ -59,9 +59,11 @@ export default {
     }
   },
   async fetch () {
-    // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
-
-    await this.$store.dispatch('config/load_entity_types', this.projectName)
+    // TODO store state invalidation (websockets / subscriptions?)
+    // after login, nuxtServerInit is not called
+    if (!this.$store.state.initialized) {
+      await this.$store.dispatch('nuxtServerInit', this.$nuxt.context)
+    }
   },
   computed: {
     breadcrumbs () {

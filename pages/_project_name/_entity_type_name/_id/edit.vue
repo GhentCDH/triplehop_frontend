@@ -34,9 +34,11 @@ export default {
     return true
   },
   async fetch () {
-    // TODO (backend): allow fields to be ordered
-    // TODO (backend): allow display widget configuration
-    // TODO https://github.com/superwf/vuex-cache -> how to reset cache (subscriptions?)?
+    // TODO store state invalidation (websockets / subscriptions?)
+    // after login, nuxtServerInit is not called
+    if (!this.$store.state.initialized) {
+      await this.$store.dispatch('nuxtServerInit', this.$nuxt.context)
+    }
 
     if (!(this.entityTypeName in this.entityTypesConfig)) {
       if (process.server) {
@@ -121,6 +123,9 @@ export default {
     },
     projectPrefix () {
       return this.$config.projectName == null ? `/${this.projectName}/` : '/'
+    },
+    relationTypesConfig () {
+      return this.$store.state.config.relation_types
     },
     sourceTitlesConfig () {
       const sourceTitlesConfig = {}
