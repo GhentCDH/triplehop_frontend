@@ -27,8 +27,8 @@
 </template>
 <script>
 import { constructFieldFromData } from '~/assets/js/utils'
-import PanelFieldTerm from '~/components/PanelFieldTerm.vue'
-import PanelFieldDetails from '~/components/PanelFieldDetails.vue'
+import PanelFieldTerm from '~/components/Detail/PanelFieldTerm.vue'
+import PanelFieldDetails from '~/components/Detail/PanelFieldDetails.vue'
 
 export default {
   components: {

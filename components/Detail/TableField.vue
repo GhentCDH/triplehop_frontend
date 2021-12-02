@@ -7,7 +7,7 @@
 
 <script>
 import frag from 'vue-frag'
-import Sources from '~/components/Sources.vue'
+import Sources from '~/components/Detail/Sources.vue'
 
 export default {
   directives: {

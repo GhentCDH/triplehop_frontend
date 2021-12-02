@@ -22,7 +22,7 @@
   </b-card>
 </template>
 <script>
-import Relation from '~/components/Relation.vue'
+import Relation from '~/components/Detail/Relation.vue'
 
 export default {
   components: {

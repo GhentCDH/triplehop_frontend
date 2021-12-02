@@ -71,8 +71,8 @@
 <script>
 import { hasEntityPermission } from '~/assets/js/auth'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
-import LayoutPanel from '~/components/LayoutPanel.vue'
-import RelationList from '~/components/RelationList.vue'
+import LayoutPanel from '~/components/Detail/LayoutPanel.vue'
+import RelationList from '~/components/Detail/RelationList.vue'
 
 export default {
   auth: false,

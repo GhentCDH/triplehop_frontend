@@ -29,8 +29,8 @@
 </template>
 <script>
 import { constructFieldFromData, constructRelationSources } from '~/assets/js/utils'
-import LayoutPanel from '~/components/LayoutPanel.vue'
-import Sources from '~/components/Sources.vue'
+import LayoutPanel from '~/components/Detail/LayoutPanel.vue'
+import Sources from '~/components/Detail/Sources.vue'
 
 export default {
   components: {

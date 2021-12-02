@@ -32,7 +32,7 @@
 <script>
 import { v4 as uuidv4 } from 'uuid'
 
-import SourceLink from '~/components/SourceLink.vue'
+import SourceLink from '~/components/Detail/SourceLink.vue'
 
 export default {
   components: {

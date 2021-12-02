@@ -79,12 +79,12 @@
 </template>
 
 <script>
-import FilmmagieField from '~/components/FilmmagieField.vue'
-import GeometryField from '~/components/GeometryField.vue'
-import TableField from '~/components/TableField.vue'
-import VooruitImageField from '~/components/VooruitImageField.vue'
-import WikidataImagesField from '~/components/WikidataImagesField.vue'
-import Sources from '~/components/Sources.vue'
+import FilmmagieField from '~/components/Detail/FilmmagieField.vue'
+import GeometryField from '~/components/Detail/GeometryField.vue'
+import TableField from '~/components/Detail/TableField.vue'
+import VooruitImageField from '~/components/Detail/VooruitImageField.vue'
+import WikidataImagesField from '~/components/Detail/WikidataImagesField.vue'
+import Sources from '~/components/Detail/Sources.vue'
 
 export default {
   components: {
