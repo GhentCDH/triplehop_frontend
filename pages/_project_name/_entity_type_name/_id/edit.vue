@@ -15,23 +15,82 @@
         class="bg-light"
         :items="breadcrumbs"
       />
-      <h1>
-        {{ titleValue }}
-      </h1>
+      <div
+        class="title-wrapper"
+      >
+        <h1>
+          {{ titleValue }}
+        </h1>
+        <!-- TODO: title sources? -->
+        <b-link
+          class="title-link"
+          :to="{
+            name: 'project_name-entity_type_name-id-index',
+            params: {
+              project_name: projectName,
+              entity_type_name: entityTypeName,
+              id: id
+            }
+          }"
+        >
+          <b-icon-eye-fill />
+          View
+        </b-link>
+      </div>
+      <b-form
+        @submit="onSubmit"
+        @reset="onReset"
+      >
+        <edit-panel
+          v-for="(panel, panelIndex) in entityTypeConfig.edit.layout"
+          :key="`panel-${panelIndex}`"
+          :panel="panel"
+          :config="entityTypeConfig"
+          :form-data="formData"
+          @input="formInput"
+        />
+        <b-button
+          type="submit"
+          variant="primary"
+          :disabled="!formDataChanged"
+        >
+          Submit
+        </b-button>
+        <b-button
+          type="reset"
+          variant="danger"
+          :disabled="!formDataChanged"
+        >
+          Reset
+        </b-button>
+      </b-form>
     </template>
   </div>
 </template>
 
 <script>
+// import { validationMixin } from 'vuelidate'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
+// import { edtfYear } from '~/assets/js/validators'
+import EditPanel from '~/components/Edit/EditPanel.vue'
 
 export default {
+  components: {
+    EditPanel
+  },
+  // mixins: [validationMixin],
   validate ({ params }) {
     // Make sure id is a number
     if (!isNumber(params.id)) {
       return false
     }
     return true
+  },
+  data () {
+    return {
+      formData: {},
+      oldFormData: {}
+    }
   },
   async fetch () {
     // TODO store state invalidation (websockets / subscriptions?)
@@ -68,6 +127,14 @@ export default {
       }
       throw new Error(`Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`)
     }
+
+    for (const panel of this.entityTypeConfig.edit.layout) {
+      for (const field of panel.fields) {
+        const systemName = field.field.replace('$', '')
+        this.formData[systemName] = this.entityData[systemName]
+      }
+    }
+    this.oldFormData = JSON.parse(JSON.stringify(this.formData))
   },
   head () {
     // TODO: set Meta Tags for this Page
@@ -118,6 +185,12 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
+    formDataChanged () {
+      return JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
+    },
+    id () {
+      return this.$route.params.id
+    },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
     },
@@ -127,20 +200,11 @@ export default {
     relationTypesConfig () {
       return this.$store.state.config.relation_types
     },
-    sourceTitlesConfig () {
-      const sourceTitlesConfig = {}
-      for (const [entityTypeName, entityTypeConfig] of Object.entries(this.entityTypesConfig)) {
-        if ('source' in entityTypeConfig && entityTypeConfig.source) {
-          sourceTitlesConfig[entityTypeName] = entityTypeConfig.display.title
-        }
-      }
-      return sourceTitlesConfig
-    },
     title () {
       return this.constructFieldFromData(
         this.entityTypeConfig.display.title,
         this.entityData,
-        this.sourceTitlesConfig,
+        {},
         {},
         true
       )
@@ -150,7 +214,16 @@ export default {
     }
   },
   methods: {
-    constructFieldFromData
+    constructFieldFromData,
+    formInput ({ systemName, value }) {
+      this.formData[systemName] = value
+    },
+    onReset () {
+      console.log('reset')
+    },
+    onSubmit () {
+      console.log('reset')
+    }
   }
 }
 </script>

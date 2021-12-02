@@ -24,7 +24,7 @@
         <!-- TODO: title sources? -->
         <b-link
           v-if="hasEntityPermission($auth.user, projectName, entityTypeName, 'edit')"
-          class="edit-link"
+          class="title-link"
           :to="{
             name: 'project_name-entity_type_name-id-edit',
             params: {

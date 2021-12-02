@@ -104,7 +104,8 @@ export const actions = {
         display_name: raw.display_name,
         source: raw.source,
         data: {},
-        display: raw.display
+        display: raw.display,
+        edit: raw.edit
       }
       for (const rawField of raw.data) {
         config[raw.system_name].data[rawField.system_name] = {
