@@ -66,14 +66,21 @@ export default {
         SameSite: 'Strict'
       }
     },
+    fullPathRedirect: true,
     strategies: {
       local: {
+        // A custom refresh scheme is necessary because FastAPI JWT Auth expects the refresh token in an authorization header.
+        scheme: '~/assets/js/customRefresh.js',
         token: {
           property: 'access_token'
         },
         endpoints: {
           login: {
             url: '/auth/login',
+            method: 'post'
+          },
+          refresh: {
+            url: '/auth/refresh',
             method: 'post'
           },
           logout: {

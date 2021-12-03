@@ -148,6 +148,7 @@
 
 <script>
 import rfdc from 'rfdc'
+import { ExpiredAuthSessionError } from '~auth/runtime'
 import TableCellContent from '~/components/Search/TableCellContent'
 import Autocomplete from '~/components/Search/Filters/Autocomplete'
 import Dropdown from '~/components/Search/Filters/Dropdown'
@@ -230,15 +231,28 @@ export default {
       ]
     }
 
-    await this.$store.dispatch(
-      'es/search_data',
-      {
-        body: this.body,
-        entityTypeName: this.entityTypeName,
-        projectName: this.projectName,
-        entityTypeConfig: this.entityTypeConfig
+    let authSessionTries = 2
+    while (authSessionTries--) {
+      try {
+        await this.$store.dispatch(
+          'es/search_data',
+          {
+            body: this.body,
+            entityTypeName: this.entityTypeName,
+            projectName: this.projectName,
+            entityTypeConfig: this.entityTypeConfig
+          }
+        )
+      } catch (e) {
+        // Try fetching the data one more time if the auth session has expired
+        if (e instanceof ExpiredAuthSessionError) {
+          continue
+        }
+        throw new Error('Error while fetching data.')
       }
-    )
+      // Everything worked fine, exit loop
+      break
+    }
     // Make sure dropdowns are rendered (with no options)
     this.$store.dispatch('es/initialize_empty_aggs', { esFiltersDefs: this.esFiltersDefs })
     this.oldForm = JSON.parse(JSON.stringify(this.form))

@@ -69,6 +69,7 @@
 </template>
 
 <script>
+import { ExpiredAuthSessionError } from '~auth/runtime'
 import { hasEntityPermission } from '~/assets/js/auth'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import LayoutPanel from '~/components/Detail/LayoutPanel.vue'
@@ -98,21 +99,30 @@ export default {
       }
       throw new Error(`Entity type "${this.entityTypeName}" cannot be found.`)
     }
-    try {
-      await this.$store.dispatch('config/load_relation_types', this.projectName)
+    let authSessionTries = 2
+    while (authSessionTries--) {
+      try {
+        await this.$store.dispatch('config/load_relation_types', this.projectName)
 
-      await this.$store.dispatch(
-        'data/load',
-        {
-          entityTypeName: this.entityTypeName,
-          entityTypesConfig: this.entityTypesConfig,
-          id: this.$route.params.id,
-          projectName: this.projectName,
-          relationTypesConfig: this.relationTypesConfig
+        await this.$store.dispatch(
+          'data/load',
+          {
+            entityTypeName: this.entityTypeName,
+            entityTypesConfig: this.entityTypesConfig,
+            id: this.$route.params.id,
+            projectName: this.projectName,
+            relationTypesConfig: this.relationTypesConfig
+          }
+        )
+      } catch (e) {
+        // Try fetching the data one more time if the auth session has expired
+        if (e instanceof ExpiredAuthSessionError) {
+          continue
         }
-      )
-    } catch (e) {
-      throw new Error('Error while fetching data.')
+        throw new Error('Error while fetching data.')
+      }
+      // Everything worked fine, exit loop
+      break
     }
     if (this.$store.state.data.data == null) {
       if (process.server) {
