@@ -25,7 +25,7 @@
         <b-link
           class="title-link"
           :to="{
-            name: 'project_name-entity_type_name-id-index',
+            name: 'project_name-entity_type_name-id',
             params: {
               project_name: projectName,
               entity_type_name: entityTypeName,
