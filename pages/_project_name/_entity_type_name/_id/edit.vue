@@ -222,7 +222,7 @@ export default {
     },
     onReset () {
       for (const [key, value] of Object.entries(this.oldFormData)) {
-        this.formData[key] = value
+        this.formData[key] = JSON.parse(JSON.stringify(value))
       }
       this.formDataChanged = false
     }
