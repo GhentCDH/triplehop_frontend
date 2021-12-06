@@ -217,11 +217,14 @@ export default {
       this.formData[systemName] = value
       this.formDataChanged = JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
     },
-    onReset () {
-      console.log('reset')
-    },
     onSubmit () {
       console.log('reset')
+    },
+    onReset () {
+      for (const [key, value] of Object.entries(this.oldFormData)) {
+        this.formData[key] = value
+      }
+      this.formDataChanged = false
     }
   }
 }
