@@ -365,7 +365,7 @@ export const actions = {
 
     const queryParts = [
       '{',
-      `${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
+      `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
     ]
     queryParts.push(...constructQueryParts(crdbQuery, entityTypesConfig, relationTypesConfig, entityTypeName))
     queryParts.push(
