@@ -38,8 +38,8 @@
         </b-link>
       </div>
       <b-form
-        @submit="onSubmit"
-        @reset="onReset"
+        @submit.prevent="onSubmit"
+        @reset.prevent="onReset"
       >
         <edit-panel
           v-for="(panel, panelIndex) in entityTypeConfig.edit.layout"
