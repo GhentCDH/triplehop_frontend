@@ -89,6 +89,7 @@ export default {
   data () {
     return {
       formData: {},
+      formDataChanged: false,
       oldFormData: {}
     }
   },
@@ -185,9 +186,6 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    formDataChanged () {
-      return JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
-    },
     id () {
       return this.$route.params.id
     },
@@ -217,6 +215,7 @@ export default {
     constructFieldFromData,
     formInput ({ systemName, value }) {
       this.formData[systemName] = value
+      this.formDataChanged = JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
     },
     onReset () {
       console.log('reset')
