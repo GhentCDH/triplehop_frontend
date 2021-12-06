@@ -217,8 +217,24 @@ export default {
       this.formData[systemName] = value
       this.formDataChanged = JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
     },
-    onSubmit () {
-      console.log('reset')
+    async onSubmit () {
+      const submitData = {}
+      for (const [key, value] of Object.entries(this.formData)) {
+        if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[key])) {
+          submitData[key] = JSON.parse(JSON.stringify(value))
+        }
+      }
+      if (Object.keys(submitData).length !== 0) {
+        await this.$store.dispatch(
+          'data/save',
+          {
+            entityTypeName: this.entityTypeName,
+            id: this.$route.params.id,
+            projectName: this.projectName,
+            data: submitData
+          }
+        )
+      }
     },
     onReset () {
       for (const [key, value] of Object.entries(this.oldFormData)) {

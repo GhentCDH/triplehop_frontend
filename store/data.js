@@ -383,5 +383,31 @@ export const actions = {
       'SET_DATA',
       response.data.data[capitalizeFirstLetter(entityTypeName)]
     )
+  },
+  async save ({ commit }, { entityTypeName, id, projectName, data }) {
+    console.log(data)
+
+    const queryParts = [
+      '{',
+      `update${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
+    ]
+    for (const [key, value] of Object.entries(data)) {
+      queryParts.push(`${key}: ${JSON.stringify(value)}`)
+    }
+    queryParts.push(
+      '}',
+      '}'
+    )
+
+    console.log(queryParts.join('\n'))
+
+    const response = await this.$axios.post(
+      `/data/${projectName}`,
+      {
+        mutation: queryParts.join('\n')
+      }
+    )
+    console.log(response)
+    // TODO: check response status
   }
 }
