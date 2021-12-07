@@ -364,7 +364,7 @@ export const actions = {
     }
 
     const queryParts = [
-      '{',
+      'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
     ]
     queryParts.push(...constructQueryParts(crdbQuery, entityTypesConfig, relationTypesConfig, entityTypeName))
@@ -385,26 +385,25 @@ export const actions = {
     )
   },
   async save ({ commit }, { entityTypeName, id, projectName, data }) {
-    console.log(data)
-
     const queryParts = [
-      '{',
-      `update${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
+      'mutation {',
+      `update${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`
     ]
     for (const [key, value] of Object.entries(data)) {
       queryParts.push(`${key}: ${JSON.stringify(value)}`)
     }
     queryParts.push(
       '}',
+      '){',
+      'id',
+      '}',
       '}'
     )
-
-    console.log(queryParts.join('\n'))
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
       {
-        mutation: queryParts.join('\n')
+        query: queryParts.join('\n')
       }
     )
     console.log(response)
