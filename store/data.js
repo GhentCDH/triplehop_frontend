@@ -381,7 +381,7 @@ export const actions = {
     )
     commit(
       'SET_DATA',
-      response.data.data[capitalizeFirstLetter(entityTypeName)]
+      response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
   async save ({ commit }, { entityTypeName, id, projectName, data }) {
