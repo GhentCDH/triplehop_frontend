@@ -387,7 +387,7 @@ export const actions = {
   async save ({ commit }, { entityTypeName, id, projectName, data }) {
     const queryParts = [
       'mutation {',
-      `update${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`
+      `put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`
     ]
     for (const [key, value] of Object.entries(data)) {
       queryParts.push(`${key}: ${JSON.stringify(value)}`)
