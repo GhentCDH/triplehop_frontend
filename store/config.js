@@ -23,7 +23,7 @@ export const actions = {
       {
         query: `
         {
-          Project_config {
+          getProject_config {
             system_name
             display_name
           }
@@ -31,7 +31,7 @@ export const actions = {
         `
       }
     )
-    commit('SET_PROJECT_DEF', response.data.data.Project_config)
+    commit('SET_PROJECT_DEF', response.data.data.getProject_config)
   },
   async load_entity_types ({ commit }, projectName) {
     const response = await this.$axios.post(
@@ -39,7 +39,7 @@ export const actions = {
       {
         query: `
         {
-          Entity_config_s {
+          getEntity_config_s {
             system_name
             display_name
             source
@@ -97,7 +97,7 @@ export const actions = {
         `
       }
     )
-    const rawConfig = response.data.data.Entity_config_s
+    const rawConfig = response.data.data.getEntity_config_s
     const config = {}
     for (const raw of rawConfig) {
       config[raw.system_name] = {
@@ -162,7 +162,7 @@ export const actions = {
       {
         query: `
         {
-          Relation_config_s {
+          getRelation_config_s {
             system_name
             display_name
             data {
@@ -190,7 +190,7 @@ export const actions = {
         `
       }
     )
-    const rawConfig = response.data.data.Relation_config_s
+    const rawConfig = response.data.data.getRelation_config_s
     const config = {}
     for (const raw of rawConfig) {
       config[raw.system_name] = {
