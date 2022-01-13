@@ -39,7 +39,7 @@
 </template>
 <script>
 import frag from 'vue-frag'
-import { hasEntityPermission, hasProjectPermission } from '@/assets/js/auth'
+import { hasEntityTypePermission, hasAtLeastOneEntityTypeWithPermission } from '@/assets/js/auth'
 
 // TODO: check for es_index jobs with status 'started'
 export default {
@@ -48,7 +48,7 @@ export default {
   },
   validate ({ $auth, $config, error, params }) {
     // TODO: validate project_name based on cached config
-    if (!hasProjectPermission($auth.user, $config.projectName ?? params.project_name, 'es_index')) {
+    if (!hasAtLeastOneEntityTypeWithPermission($auth.user, $config.projectName ?? params.project_name, 'es_data', 'index')) {
       return error({ statusCode: 403, message: 'Unauthorized.' })
     }
     return true
@@ -88,7 +88,7 @@ export default {
       }
       // Filter out entity types for wich the user has no es_index permission
       for (const entityTypeName of Object.keys(entityTypesConfig)) {
-        if (!hasEntityPermission(this.$auth.user, this.projectName, entityTypeName, 'es_index')) {
+        if (!hasEntityTypePermission(this.$auth.user, this.projectName, entityTypeName, 'es_data', 'index')) {
           delete entityTypesConfig[entityTypeName]
         }
       }

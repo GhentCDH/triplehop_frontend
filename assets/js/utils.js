@@ -311,3 +311,14 @@ export function isUUID (string) {
 export function normalizeUnicode (string) {
   return string.normalize('NFKD').replace(/[^\w]/g, '')
 }
+
+export function nestedKeyExists (obj, ...props) {
+  for (const prop of props) {
+    if (prop in obj) {
+      obj = obj[prop]
+    } else {
+      return false
+    }
+  }
+  return true
+}

@@ -6,7 +6,7 @@
     />
     <b-row>
       <b-col
-        v-if="hasProjectPermission('es_index')"
+        v-if="hasAtLeastOneEntityTypeWithPermission('es_data', 'index')"
         sm="6"
         md="4"
       >
@@ -31,7 +31,7 @@
 </template>
 <script>
 import frag from 'vue-frag'
-import { hasProjectAdminAccess, hasProjectPermission } from '@/assets/js/auth'
+import { hasProjectAdminAccess, hasAtLeastOneEntityTypeWithPermission } from '@/assets/js/auth'
 
 export default {
   directives: {
@@ -63,8 +63,8 @@ export default {
     }
   },
   methods: {
-    hasProjectPermission (permission) {
-      return hasProjectPermission(this.$auth.user, this.projectName, permission)
+    hasAtLeastOneEntityTypeWithPermission (scope, permission) {
+      return hasAtLeastOneEntityTypeWithPermission(this.$auth.user, this.projectName, scope, permission)
     }
   }
 }
