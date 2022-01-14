@@ -35,15 +35,6 @@
                 {{ $auth.user.display_name }}
               </template>
               <b-dropdown-item
-                v-if="$route.params.project_name != null && hasGlobalAdminAccess($auth.user)"
-                to="/admin"
-              >
-                <b-icon
-                  icon="gear-fill"
-                />
-                Global admin dashboard
-              </b-dropdown-item>
-              <b-dropdown-item
                 v-if="hasProjectAdminAccess($auth.user, projectName)"
                 :to="`${projectPrefix}admin`"
               >
@@ -82,7 +73,7 @@
 </template>
 <script>
 import Notifications from '@/components/Notifications'
-import { hasGlobalAdminAccess, hasProjectAdminAccess } from '@/assets/js/auth'
+import { hasProjectAdminAccess } from '@/assets/js/auth'
 
 export default {
   components: {
@@ -122,7 +113,6 @@ export default {
     }
   },
   methods: {
-    hasGlobalAdminAccess,
     hasProjectAdminAccess,
     async logout () {
       try {

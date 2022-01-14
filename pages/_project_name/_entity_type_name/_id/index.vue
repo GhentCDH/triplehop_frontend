@@ -23,7 +23,7 @@
         </h1>
         <!-- TODO: title sources? -->
         <b-link
-          v-if="hasEntityPermission($auth.user, projectName, entityTypeName, 'edit')"
+          v-if="hasEntityTypePermission($auth.user, projectName, entityTypeName, 'edit', 'edit')"
           class="title-link"
           :to="{
             name: 'project_name-entity_type_name-id-edit',
@@ -70,7 +70,7 @@
 
 <script>
 import { ExpiredAuthSessionError } from '~auth/runtime'
-import { hasEntityPermission } from '~/assets/js/auth'
+import { hasEntityTypePermission } from '~/assets/js/auth'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import LayoutPanel from '~/components/Detail/LayoutPanel.vue'
 import RelationList from '~/components/Detail/RelationList.vue'
@@ -240,7 +240,7 @@ export default {
   },
   methods: {
     constructFieldFromData,
-    hasEntityPermission
+    hasEntityTypePermission
   }
 }
 </script>
