@@ -37,33 +37,39 @@
           View
         </b-link>
       </div>
-      <b-form
-        @submit.prevent="onSubmit"
-        @reset.prevent="onReset"
+      <b-overlay
+        :show="disableFormElements"
+        spinner-variant="primary"
       >
-        <edit-panel
-          v-for="(panel, panelIndex) in entityTypeConfig.edit.layout"
-          :key="`panel-${panelIndex}`"
-          :panel="panel"
-          :config="entityTypeConfig"
-          :form-data="formData"
-          @input="formInput"
-        />
-        <b-button
-          type="submit"
-          variant="primary"
-          :disabled="!formDataChanged"
+        <b-form
+          @submit.prevent="onSubmit"
+          @reset.prevent="onReset"
         >
-          Submit
-        </b-button>
-        <b-button
-          type="reset"
-          variant="danger"
-          :disabled="!formDataChanged"
-        >
-          Reset
-        </b-button>
-      </b-form>
+          <edit-panel
+            v-for="(panel, panelIndex) in entityTypeConfig.edit.layout"
+            :key="`panel-${panelIndex}`"
+            :panel="panel"
+            :config="entityTypeConfig"
+            :form-data="formData"
+            :disabled="disableFormElements"
+            @input="formInput"
+          />
+          <b-button
+            type="submit"
+            variant="primary"
+            :disabled="!formDataChanged || disableFormElements"
+          >
+            Submit
+          </b-button>
+          <b-button
+            type="reset"
+            variant="danger"
+            :disabled="!formDataChanged || disableFormElements"
+          >
+            Reset
+          </b-button>
+        </b-form>
+      </b-overlay>
     </template>
   </div>
 </template>
@@ -88,8 +94,8 @@ export default {
   },
   data () {
     return {
+      disableFormElements: false,
       formData: {},
-      formDataChanged: false,
       oldFormData: {}
     }
   },
@@ -110,7 +116,7 @@ export default {
       await this.$store.dispatch('config/load_relation_types', this.projectName)
 
       await this.$store.dispatch(
-        'data/load',
+        'data/loadEdit',
         {
           entityTypeName: this.entityTypeName,
           entityTypesConfig: this.entityTypesConfig,
@@ -129,13 +135,7 @@ export default {
       throw new Error(`Entity of type "${this.entityTypeName}" with id "${this.$route.params.id}" cannot be found.`)
     }
 
-    for (const panel of this.entityTypeConfig.edit.layout) {
-      for (const field of panel.fields) {
-        const systemName = field.field.replace('$', '')
-        this.formData[systemName] = this.entityData[systemName]
-      }
-    }
-    this.oldFormData = JSON.parse(JSON.stringify(this.formData))
+    this.setFormData()
   },
   head () {
     // TODO: set Meta Tags for this Page
@@ -186,6 +186,9 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
+    formDataChanged () {
+      return JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
+    },
     id () {
       return this.$route.params.id
     },
@@ -215,9 +218,9 @@ export default {
     constructFieldFromData,
     formInput ({ systemName, value }) {
       this.formData[systemName] = value
-      this.formDataChanged = JSON.stringify(this.formData) !== JSON.stringify(this.oldFormData)
     },
     async onSubmit () {
+      this.disableFormElements = true
       const submitData = {}
       for (const [key, value] of Object.entries(this.formData)) {
         if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[key])) {
@@ -225,22 +228,53 @@ export default {
         }
       }
       if (Object.keys(submitData).length !== 0) {
-        await this.$store.dispatch(
-          'data/save',
-          {
-            entityTypeName: this.entityTypeName,
-            id: this.$route.params.id,
-            projectName: this.projectName,
-            data: submitData
-          }
-        )
+        try {
+          await this.$store.dispatch(
+            'data/save',
+            {
+              entityTypeName: this.entityTypeName,
+              entityTypesConfig: this.entityTypesConfig,
+              id: this.$route.params.id,
+              projectName: this.projectName,
+              relationTypesConfig: this.relationTypesConfig,
+              data: submitData
+            }
+          )
+          this.setFormData()
+          this.$store.dispatch(
+            'notifications/create',
+            {
+              message: 'Changes successfully saved.',
+              variant: 'success'
+            }
+          )
+        } catch (error) {
+          this.$store.dispatch(
+            'notifications/create',
+            {
+              message: 'There was an issue saving your data.  Please verify your input.',
+              title: 'Saving unsuccessfull',
+              variant: 'danger'
+            }
+          )
+        }
       }
+      this.disableFormElements = false
     },
     onReset () {
       for (const [key, value] of Object.entries(this.oldFormData)) {
         this.formData[key] = JSON.parse(JSON.stringify(value))
       }
       this.formDataChanged = false
+    },
+    setFormData () {
+      for (const panel of this.entityTypeConfig.edit.layout) {
+        for (const field of panel.fields) {
+          const systemName = field.field.replace('$', '')
+          this.formData[systemName] = this.entityData[systemName]
+        }
+      }
+      this.oldFormData = JSON.parse(JSON.stringify(this.formData))
     }
   }
 }

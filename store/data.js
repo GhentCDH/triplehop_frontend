@@ -261,6 +261,57 @@ function addRelationStructureIfNeeded (currentLevel, relation) {
   }
 }
 
+function crdbQueryFromDataPaths (dataPaths) {
+  // Entity sources are modeled using relation '_source_' with e_props
+  // relation sources are modeled using relation_source
+  const crdbQuery = {
+    e_props: new Set(),
+    relations: {}
+  }
+  for (const dataPath of dataPaths) {
+    let currentLevel = crdbQuery
+    // remove all dollar signs, split in parts
+    const path = dataPath.split('$').join('').split('->')
+    let isRelationSource = false
+    for (const [i, p] of path.entries()) {
+      if (i === path.length - 1) {
+        // last element => p = relationsource.e_prop, relation.r_prop or e_prop
+        if (isRelationSource) {
+          // relation source
+          currentLevel.relation_source.e_props.add(p)
+        } else if (p.includes('.')) {
+          // relation property
+          const [relation, ...rest] = p.split('.')
+          addRelationStructureIfNeeded(currentLevel, relation)
+
+          if (rest.length === 2) {
+            if (rest[0] !== '_source_') {
+              throw new Error('Unexpected datapath')
+            }
+            currentLevel.relations[relation].relation_source.r_props.add(rest[1])
+          } else {
+            currentLevel.relations[relation].r_props.add(rest)
+          }
+        } else {
+          // entity property
+          currentLevel.e_props.add(p)
+        }
+      } else if (p.includes('.')) {
+        // relation source
+        const relation = p.split('.')[0]
+        addRelationStructureIfNeeded(currentLevel, relation)
+        isRelationSource = true
+        currentLevel = currentLevel.relations[relation]
+      } else {
+        // not last element => p = relation => travel
+        addRelationStructureIfNeeded(currentLevel, p)
+        currentLevel = currentLevel.relations[p]
+      }
+    }
+  }
+  return crdbQuery
+}
+
 export const actions = {
   async load ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
@@ -313,65 +364,18 @@ export const actions = {
       }
     }
 
-    // console.log(dataPaths)
-
-    // Entity sources are modeled using relation '_source_' with e_props
-    // relation sources are modeled using relation_source
-    const crdbQuery = {
-      e_props: new Set(),
-      relations: {}
-    }
-    for (const dataPath of dataPaths) {
-      let currentLevel = crdbQuery
-      // remove all dollar signs, split in parts
-      const path = dataPath.split('$').join('').split('->')
-      let isRelationSource = false
-      for (const [i, p] of path.entries()) {
-        if (i === path.length - 1) {
-          // last element => p = relationsource.e_prop, relation.r_prop or e_prop
-          if (isRelationSource) {
-            // relation source
-            currentLevel.relation_source.e_props.add(p)
-          } else if (p.includes('.')) {
-            // relation property
-            const [relation, ...rest] = p.split('.')
-            addRelationStructureIfNeeded(currentLevel, relation)
-
-            if (rest.length === 2) {
-              if (rest[0] !== '_source_') {
-                throw new Error('Unexpected datapath')
-              }
-              currentLevel.relations[relation].relation_source.r_props.add(rest[1])
-            } else {
-              currentLevel.relations[relation].r_props.add(rest)
-            }
-          } else {
-            // entity property
-            currentLevel.e_props.add(p)
-          }
-        } else if (p.includes('.')) {
-          // relation source
-          const relation = p.split('.')[0]
-          addRelationStructureIfNeeded(currentLevel, relation)
-          isRelationSource = true
-          currentLevel = currentLevel.relations[relation]
-        } else {
-          // not last element => p = relation => travel
-          addRelationStructureIfNeeded(currentLevel, p)
-          currentLevel = currentLevel.relations[p]
-        }
-      }
-    }
-
     const queryParts = [
       'query {',
-      `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`
-    ]
-    queryParts.push(...constructQueryParts(crdbQuery, entityTypesConfig, relationTypesConfig, entityTypeName))
-    queryParts.push(
+      `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
+      ...constructQueryParts(
+        crdbQueryFromDataPaths(dataPaths),
+        entityTypesConfig,
+        relationTypesConfig,
+        entityTypeName
+      ),
       '}',
       '}'
-    )
+    ]
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
@@ -384,7 +388,41 @@ export const actions = {
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
-  async save ({ commit }, { entityTypeName, id, projectName, data }) {
+  async loadEdit ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
+    const entityTypeConfig = entityTypesConfig[entityTypeName]
+
+    // Get all fieldNames used in the edit form
+    const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
+
+    const queryParts = [
+      'query {',
+      `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
+      ...constructQueryParts(
+        crdbQueryFromDataPaths(dataPaths),
+        entityTypesConfig,
+        relationTypesConfig,
+        entityTypeName
+      ),
+      '}',
+      '}'
+    ]
+
+    const response = await this.$axios.post(
+      `/data/${projectName}`,
+      {
+        query: queryParts.join('\n')
+      }
+    )
+    commit(
+      'SET_DATA',
+      response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
+    )
+  },
+  async save ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+    const entityTypeConfig = entityTypesConfig[entityTypeName]
+
+    // Get all fieldNames used in the edit form
+    const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
     const queryParts = [
       'mutation {',
       `put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`
@@ -395,7 +433,12 @@ export const actions = {
     queryParts.push(
       '}',
       '){',
-      'id',
+      ...constructQueryParts(
+        crdbQueryFromDataPaths(dataPaths),
+        entityTypesConfig,
+        relationTypesConfig,
+        entityTypeName
+      ),
       '}',
       '}'
     )
@@ -406,7 +449,10 @@ export const actions = {
         query: queryParts.join('\n')
       }
     )
-    console.log(response)
-    // TODO: check response status
+
+    commit(
+      'SET_DATA',
+      response.data.data[`put${capitalizeFirstLetter(entityTypeName)}`]
+    )
   }
 }

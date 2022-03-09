@@ -10,6 +10,7 @@
       :config="config"
       :field="field"
       :value="formData[field.field.replace('$', '')]"
+      :disabled="disabled"
       @input="$emit('input', $event)"
     />
   </b-card>
@@ -39,6 +40,10 @@ export default {
       default: () => {
         return null
       }
+    },
+    disabled: {
+      type: Boolean,
+      required: true
     }
   }
 }
