@@ -52,6 +52,7 @@
             :config="entityTypeConfig"
             :form-data="formData"
             :disabled="disableFormElements"
+            :vuelidate="$v"
             @input="formInput"
           />
           <b-button
@@ -75,16 +76,18 @@
 </template>
 
 <script>
-// import { validationMixin } from 'vuelidate'
+import { validationMixin } from 'vuelidate'
+import { required } from 'vuelidate/lib/validators'
+
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
-// import { edtfYear } from '~/assets/js/validators'
+import { edtfYear } from '~/assets/js/validators'
 import EditPanel from '~/components/Edit/EditPanel.vue'
 
 export default {
   components: {
     EditPanel
   },
-  // mixins: [validationMixin],
+  mixins: [validationMixin],
   validate ({ params }) {
     // Make sure id is a number
     if (!isNumber(params.id)) {
@@ -98,6 +101,25 @@ export default {
       formData: {},
       oldFormData: {}
     }
+  },
+  validations () {
+    const validations = {
+      formData: {}
+    }
+    for (const panel of this.entityTypeConfig.edit.layout) {
+      for (const field of panel.fields) {
+        const systemName = field.field.replace('$', '')
+        const fieldValidation = {}
+        if (field.required) {
+          fieldValidation.required = required
+        }
+        if (field.type === 'edtf_year') {
+          fieldValidation.edtfYear = edtfYear
+        }
+        validations.formData[systemName] = fieldValidation
+      }
+    }
+    return validations
   },
   async fetch () {
     // TODO store state invalidation (websockets / subscriptions?)
@@ -218,8 +240,17 @@ export default {
     constructFieldFromData,
     formInput ({ systemName, value }) {
       this.formData[systemName] = value
+      if (JSON.stringify(this.formData[systemName]) === JSON.stringify(this.oldFormData[systemName])) {
+        this.$v.formData[systemName].$reset()
+      } else {
+        this.$v.formData[systemName].$touch()
+      }
     },
     async onSubmit () {
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        return
+      }
       this.disableFormElements = true
       const submitData = {}
       for (const [key, value] of Object.entries(this.formData)) {
@@ -241,6 +272,7 @@ export default {
             }
           )
           this.setFormData()
+          this.$v.$reset()
           this.$store.dispatch(
             'notifications/create',
             {
@@ -264,8 +296,8 @@ export default {
     onReset () {
       for (const [key, value] of Object.entries(this.oldFormData)) {
         this.formData[key] = JSON.parse(JSON.stringify(value))
+        this.$v.formData[key].$reset()
       }
-      this.formDataChanged = false
     },
     setFormData () {
       for (const panel of this.entityTypeConfig.edit.layout) {

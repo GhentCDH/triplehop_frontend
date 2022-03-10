@@ -5,12 +5,12 @@
   >
     <form-element
       v-for="field in panel.fields"
-      :id="field.field"
       :key="field.field"
       :config="config"
       :field="field"
       :value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
+      :vuelidate="vuelidate"
       @input="$emit('input', $event)"
     />
   </b-card>
@@ -43,6 +43,10 @@ export default {
     },
     disabled: {
       type: Boolean,
+      required: true
+    },
+    vuelidate: {
+      type: Object,
       required: true
     }
   }

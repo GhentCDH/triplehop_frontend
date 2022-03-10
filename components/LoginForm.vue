@@ -117,8 +117,8 @@ export default {
       this.$emit('login', this.form)
     },
     validateState (formElement) {
-      const { $dirty, $error } = this.$v.form[formElement]
-      return $dirty ? !$error : null
+      const { $dirty, $invalid } = this.$v.form[formElement]
+      return $dirty ? !$invalid : null
     },
     validateBG (formElement) {
       const state = this.validateState(formElement)

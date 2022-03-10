@@ -1,22 +1,28 @@
 <template>
   <b-form-group
-    :label="field.label ? field.label : config.data[field.field.replace('$', '')].display_name"
+    :label="field.label ? field.label : config.data[id].display_name"
     :label-for="id"
   >
-    <edtfYearInput
-      v-if="field.type == 'edtf_year'"
+    <component
+      :is="component_type(field.type)"
       :id="id"
       v-model="compValue"
-      :field="field"
+      :state="validateState()"
     />
-    <b-form-input
-      v-else
-      :id="id"
-      v-model="compValue"
-    />
+    <b-form-invalid-feedback
+      v-if="vuelidate.formData[id].required === false"
+    >
+      This field is required.
+    </b-form-invalid-feedback>
+    <b-form-invalid-feedback
+      v-if="vuelidate.formData[id].edtfYear === false"
+    >
+      Please provide a valid EDTF year. For more information, please check the <a href="https://www.loc.gov/standards/datetime/" target="_blank">specification</a>.
+    </b-form-invalid-feedback>
   </b-form-group>
 </template>
 <script>
+
 export default {
   props: {
     config: {
@@ -31,8 +37,8 @@ export default {
       type: [Array, String],
       required: true
     },
-    id: {
-      type: String,
+    vuelidate: {
+      type: Object,
       required: true
     }
   },
@@ -45,11 +51,23 @@ export default {
         this.$emit(
           'input',
           {
-            systemName: this.field.field.replace('$', ''),
+            systemName: this.id,
             value
           }
         )
       }
+    },
+    id () {
+      return this.field.field.replace('$', '')
+    }
+  },
+  methods: {
+    component_type (crdbType) {
+      return 'b-form-input'
+    },
+    validateState () {
+      const { $dirty, $invalid } = this.vuelidate.formData[this.id]
+      return $dirty ? !$invalid : null
     }
   }
 }
