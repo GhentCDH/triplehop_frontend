@@ -77,7 +77,7 @@
 
 <script>
 import { validationMixin } from 'vuelidate'
-import { required } from 'vuelidate/lib/validators'
+import { helpers, required } from 'vuelidate/lib/validators'
 
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import { edtfYear } from '~/assets/js/validators'
@@ -110,11 +110,18 @@ export default {
       for (const field of panel.fields) {
         const systemName = field.field.replace('$', '')
         const fieldValidation = {}
-        if (field.required) {
-          fieldValidation.required = required
-        }
-        if (field.type === 'edtf_year') {
-          fieldValidation.edtfYear = edtfYear
+        if (field.validators) {
+          for (const validator of field.validators) {
+            if (validator.type === 'required') {
+              fieldValidation.required = required
+            }
+            if (validator.type === 'edtf_year') {
+              fieldValidation.edtfYear = edtfYear
+            }
+            if (validator.type === 'regex') {
+              fieldValidation.regex = helpers.regex('regex', new RegExp(validator.regex))
+            }
+          }
         }
         validations.formData[systemName] = fieldValidation
       }

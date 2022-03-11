@@ -68,6 +68,14 @@ export const actions = {
                   label
                   field
                   type
+                  placeholder
+                  help_message
+                  multi
+                  validators {
+                    type
+                    regex
+                    error_message
+                  }
                 }
               }
             }
