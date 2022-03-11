@@ -11,11 +11,9 @@ const edtfYear = function (value) {
     const parsed = parse(value)
     // values should only exactly 1 (year) part
     if (parsed.values.length !== 1) {
-      console.log('error')
       return false
     }
   } catch (error) {
-    console.log('error')
     return false
   }
   return true
