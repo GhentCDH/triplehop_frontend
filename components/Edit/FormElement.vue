@@ -4,30 +4,38 @@
     :label-for="id"
     :description="field.help_message"
   >
-    <component
-      :is="component_type(field.type)"
-      :id="id"
-      v-model="compValue"
-      :placeholder="field.placeholder"
-      :state="validateState()"
-    />
-    <b-form-invalid-feedback
-      v-for="validator, key in validatorsWithError"
-      :key="key"
+    <template
+      v-for="individualField, fieldKey in fields"
     >
-      <template v-if="validator.error_message">
-        {{ validator.error_message }}
-      </template>
-      <template v-else-if="key === 'required'">
-        This field is required.
-      </template>
-      <template v-else>
-        The value provided for this field is invalid.
-      </template>
-    </b-form-invalid-feedback>
+      <component
+        :is="component_type(individualField.type)"
+        :id="id"
+        :key="`${fieldKey}_component`"
+        :value="values[fieldKey]"
+        :placeholder="individualField.placeholder"
+        :state="validateState()"
+        @input="onInput(fieldKey, $event)"
+      />
+      <b-form-invalid-feedback
+        v-for="validator, validatorKey in validatorsWithError"
+        :key="`${fieldKey}_feedback_${validatorKey}`"
+      >
+        <template v-if="validator.error_message">
+          {{ validator.error_message }}
+        </template>
+        <template v-else-if="validatorKey === 'required'">
+          This field is required.
+        </template>
+        <template v-else>
+          The value provided for this field is invalid.
+        </template>
+      </b-form-invalid-feedback>
+    </template>
   </b-form-group>
 </template>
 <script>
+import { v4 as uuidv4 } from 'uuid'
+
 const VALIDATOR_TYPES_CONVERSION = {
   edtf_year: 'edtfYear',
   regex: 'regex',
@@ -54,25 +62,32 @@ export default {
     }
   },
   data () {
-    return {
+    const data = {
       id: this.field.field.replace('$', ''),
-      validatorsWithError: {}
+      validatorsWithError: {},
+      fields: {}
     }
+    if (this.field.multi) {
+      for (let i = 0; i < this.value.length; i++) {
+        data.fields[uuidv4()] = this.field
+      }
+    } else {
+      data.fields[uuidv4()] = this.field
+    }
+    return data
   },
   computed: {
-    compValue: {
-      get () {
-        return this.value
-      },
-      set (value) {
-        this.$emit(
-          'input',
-          {
-            systemName: this.id,
-            value
-          }
-        )
+    values () {
+      const values = {}
+      const fieldKeys = Object.keys(this.fields)
+      if (this.field.multi) {
+        for (let i = 0; i < this.value.length; i++) {
+          values[fieldKeys[i]] = this.value[i]
+        }
+      } else {
+        values[fieldKeys[0]] = this.value
       }
+      return values
     }
   },
   mounted () {
@@ -101,6 +116,23 @@ export default {
   methods: {
     component_type (crdbType) {
       return 'b-form-input'
+    },
+    onInput (fieldKey, $event) {
+      const values = this.values
+      values[fieldKey] = $event
+      let value
+      if (this.field.multi) {
+        value = Object.values(values)
+      } else {
+        value = Object.values(values)[0]
+      }
+      this.$emit(
+        'input',
+        {
+          systemName: this.id,
+          value
+        }
+      )
     },
     validateState () {
       const { $dirty, $invalid } = this.vuelidate.formData[this.id]
