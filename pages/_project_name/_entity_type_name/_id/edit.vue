@@ -58,7 +58,7 @@
           <b-button
             type="submit"
             variant="primary"
-            :disabled="!formDataChanged || disableFormElements"
+            :disabled="!formDataChanged || disableFormElements || $v.$invalid"
           >
             Submit
           </b-button>
@@ -123,7 +123,13 @@ export default {
             }
           }
         }
-        validations.formData[systemName] = fieldValidation
+        if (field.multi) {
+          validations.formData[systemName] = {
+            $each: fieldValidation
+          }
+        } else {
+          validations.formData[systemName] = fieldValidation
+        }
       }
     }
     return validations

@@ -13,7 +13,7 @@
         :key="`${fieldKey}_component`"
         :value="values[fieldKey]"
         :placeholder="individualField.placeholder"
-        :state="validateState()"
+        :state="validateState(fieldKey)"
         @input="onInput(fieldKey, $event)"
       />
       <b-form-invalid-feedback
@@ -65,11 +65,14 @@ export default {
     const data = {
       id: this.field.field.replace('$', ''),
       validatorsWithError: {},
-      fields: {}
+      fields: {},
+      fieldIndex: {}
     }
     if (this.field.multi) {
       for (let i = 0; i < this.value.length; i++) {
-        data.fields[uuidv4()] = this.field
+        const uuid = uuidv4()
+        data.fields[uuid] = this.field
+        data.fieldIndex[uuid] = i
       }
     } else {
       data.fields[uuidv4()] = this.field
@@ -134,8 +137,13 @@ export default {
         }
       )
     },
-    validateState () {
-      const { $dirty, $invalid } = this.vuelidate.formData[this.id]
+    validateState (fieldKey) {
+      let $dirty, $invalid
+      if (this.field.multi) {
+        ({ $dirty, $invalid } = this.vuelidate.formData[this.id].$each[this.fieldIndex[fieldKey]])
+      } else {
+        ({ $dirty, $invalid } = this.vuelidate.formData[this.id])
+      }
       return $dirty ? !$invalid : null
     }
   }
