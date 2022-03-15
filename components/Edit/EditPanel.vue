@@ -3,7 +3,7 @@
     :title="panel.label"
     class="bg-light border-0 mb-3"
   >
-    <form-element
+    <form-group
       v-for="field in panel.fields"
       :key="field.field"
       :config="config"
@@ -16,11 +16,11 @@
   </b-card>
 </template>
 <script>
-import FormElement from '~/components/Edit/FormElement.vue'
+import FormGroup from '~/components/Edit/FormGroup.vue'
 
 export default {
   components: {
-    FormElement
+    FormGroup
   },
   props: {
     formData: {
