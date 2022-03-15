@@ -1,7 +1,7 @@
 <template>
   <div v-frag>
     <template
-      v-for="individualField, fieldKey in fields"
+      v-for="fieldKey in fieldKeys"
     >
       <b-form-input
         :id="id"
@@ -12,7 +12,7 @@
       />
       <!-- TODO: add delete button (https://bootstrap-vue.org/docs/components/input-group) -->
       <b-form-invalid-feedback
-        v-for="validator, validatorKey in validatorsWithError"
+        v-for="validator, validatorKey in validatorsWithError[fieldKey]"
         :key="`${fieldKey}_feedback_${validatorKey}`"
       >
         <template v-if="validator.error_message">
@@ -26,6 +26,7 @@
         </template>
       </b-form-invalid-feedback>
     </template>
+    <!-- TODO: add add button -->
   </div>
 </template>
 <script>
@@ -58,16 +59,15 @@ export default {
   },
   data () {
     const data = {
-      fields: {},
-      fieldIndex: {},
+      fieldKeys: [],
       fieldReverseIndex: {},
       validatorsWithError: {}
     }
     for (let i = 0; i < this.value.length; i++) {
       const uuid = uuidv4()
-      data.fields[uuid] = this.field
-      data.fieldIndex[i] = uuid
+      data.fieldKeys.push(uuid)
       data.fieldReverseIndex[uuid] = i
+      data.validatorsWithError[uuid] = {}
     }
     return data
   },
@@ -75,7 +75,7 @@ export default {
     values () {
       const values = {}
       for (let i = 0; i < this.value.length; i++) {
-        values[this.fieldIndex[i]] = this.value[i]
+        values[this.fieldKeys[i]] = this.value[i]
       }
       return values
     }
@@ -86,19 +86,18 @@ export default {
     if (this.field.validators) {
       for (const validator of this.field.validators) {
         const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-        for (let i = 0; i < this.fields.length; i++) {
+        for (let i = 0; i < this.fieldKeys.length; i++) {
           this.$watch(
             function () {
               return this.vuelidateElement.$each[i][validatorType]
             },
             function (newVal, oldVal) {
               if (newVal === false && oldVal !== false) {
-                // TODO: add fieldKey to validatorsWithError, to research: set nested object
                 // Use $set since validatorWithErrors is an object
-                this.$set(this.validatorsWithError, validatorType, validator)
+                this.$set(this.validatorsWithError[this.fieldKeys[i]], validatorType, validator)
               } else if (oldVal === false && newVal !== false) {
                 // Use $delete since validatorWithErrors is an object
-                this.$delete(this.validatorsWithError, validatorType)
+                this.$delete(this.validatorsWithError[this.fieldKeys[i]], validatorType)
               }
             }
           )
