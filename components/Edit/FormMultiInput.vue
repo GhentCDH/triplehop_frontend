@@ -18,7 +18,13 @@
         :validator-type="validatorType"
       />
     </template>
-    <!-- TODO: add add button -->
+    <b-button
+      variant="primary"
+      @click="add"
+    >
+      <b-icon icon="plus" />
+      Add
+    </b-button>
   </div>
 </template>
 <script>
@@ -56,13 +62,11 @@ export default {
   data () {
     const data = {
       fieldKeys: [],
-      fieldReverseIndex: {},
       validatorsWithError: {}
     }
     for (let i = 0; i < this.value.length; i++) {
       const uuid = uuidv4()
       data.fieldKeys.push(uuid)
-      data.fieldReverseIndex[uuid] = i
       data.validatorsWithError[uuid] = {}
     }
     return data
@@ -77,31 +81,49 @@ export default {
     }
   },
   mounted () {
-    // Use a custom watcher to watch the vuelidate formData
-    // Since formData is an object, computed properties based on formData are not reactive
-    if (this.field.validators) {
-      for (const validator of this.field.validators) {
-        const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-        for (let i = 0; i < this.fieldKeys.length; i++) {
+    for (let i = 0; i < this.fieldKeys.length; i++) {
+      this.addVuelidateWatcher(i)
+    }
+  },
+  methods: {
+    add () {
+      // Add element to value array so vuelidate $each is updated
+      this.$emit(
+        'input',
+        {
+          systemName: this.id,
+          value: [...Object.values(this.values), '']
+        }
+      )
+      const uuid = uuidv4()
+      this.fieldKeys.push(uuid)
+      this.validatorsWithError[uuid] = {}
+      this.addVuelidateWatcher(this.fieldKeys.indexOf(uuid))
+    },
+    addVuelidateWatcher (index) {
+      // Use a custom watcher to watch the vuelidate formData
+      // Since formData is an object, computed properties based on formData are not reactive
+      if (this.field.validators) {
+        for (const validator of this.field.validators) {
+          const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
           this.$watch(
             function () {
-              return this.vuelidateElement.$each[i][validatorType]
+              return this.vuelidateElement.$each[index][validatorType]
             },
             function (newVal, oldVal) {
+              console.log(newVal, oldVal)
               if (newVal === false && oldVal !== false) {
                 // Use $set since validatorWithErrors is an object
-                this.$set(this.validatorsWithError[this.fieldKeys[i]], validatorType, validator)
+                this.$set(this.validatorsWithError[this.fieldKeys[index]], validatorType, validator)
               } else if (oldVal === false && newVal !== false) {
                 // Use $delete since validatorWithErrors is an object
-                this.$delete(this.validatorsWithError[this.fieldKeys[i]], validatorType)
+                this.$delete(this.validatorsWithError[this.fieldKeys[index]], validatorType)
               }
             }
           )
         }
       }
-    }
-  },
-  methods: {
+    },
     onInput (fieldKey, $event) {
       this.values[fieldKey] = $event
       this.$emit(
@@ -113,7 +135,7 @@ export default {
       )
     },
     validateState (fieldKey) {
-      const { $dirty, $invalid } = this.vuelidateElement.$each[this.fieldReverseIndex[fieldKey]]
+      const { $dirty, $invalid } = this.vuelidateElement.$each[this.fieldKeys.indexOf(fieldKey)]
       return $dirty ? !$invalid : null
     }
   }
