@@ -6,29 +6,26 @@
       :state="validateState()"
       @input="onInput"
     />
-    <b-form-invalid-feedback
-      v-for="validator, validatorKey in validatorsWithError"
-      :key="validatorKey"
-    >
-      <template v-if="validator.error_message">
-        {{ validator.error_message }}
-      </template>
-      <template v-else-if="validatorKey === 'required'">
-        This field is required.
-      </template>
-      <template v-else>
-        The value provided for this field is invalid.
-      </template>
-    </b-form-invalid-feedback>
+    <form-feedback
+      v-for="validator, validatorType in validatorsWithError"
+      :key="validatorType"
+      :validator="validator"
+      :validator-type="validatorType"
+    />
   </div>
 </template>
 <script>
 import frag from 'vue-frag'
+
+import FormFeedback from '~/components/Edit/FormFeedback.vue'
 import { VALIDATOR_TYPES_CONVERSION } from '~/components/Edit/utils.js'
 
 export default {
   directives: {
     frag
+  },
+  components: {
+    FormFeedback
   },
   props: {
     id: {

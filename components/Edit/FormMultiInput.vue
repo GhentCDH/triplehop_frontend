@@ -11,20 +11,12 @@
         @input="onInput(fieldKey, $event)"
       />
       <!-- TODO: add delete button (https://bootstrap-vue.org/docs/components/input-group) -->
-      <b-form-invalid-feedback
-        v-for="validator, validatorKey in validatorsWithError[fieldKey]"
-        :key="`${fieldKey}_feedback_${validatorKey}`"
-      >
-        <template v-if="validator.error_message">
-          {{ validator.error_message }}
-        </template>
-        <template v-else-if="validatorKey === 'required'">
-          This field is required.
-        </template>
-        <template v-else>
-          The value provided for this field is invalid.
-        </template>
-      </b-form-invalid-feedback>
+      <form-feedback
+        v-for="validator, validatorType in validatorsWithError[fieldKey]"
+        :key="`${fieldKey}_feedback_${validatorType}`"
+        :validator="validator"
+        :validator-type="validatorType"
+      />
     </template>
     <!-- TODO: add add button -->
   </div>
@@ -33,11 +25,15 @@
 import frag from 'vue-frag'
 import { v4 as uuidv4 } from 'uuid'
 
+import FormFeedback from '~/components/Edit/FormFeedback.vue'
 import { VALIDATOR_TYPES_CONVERSION } from '~/components/Edit/utils.js'
 
 export default {
   directives: {
     frag
+  },
+  components: {
+    FormFeedback
   },
   props: {
     id: {
