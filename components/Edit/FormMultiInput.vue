@@ -97,7 +97,8 @@ export default {
       )
       const uuid = uuidv4()
       this.fieldKeys.push(uuid)
-      this.validatorsWithError[uuid] = {}
+      // Use $set since validatorWithErrors is an object
+      this.$set(this.validatorsWithError, uuid, {})
       this.addVuelidateWatcher(this.fieldKeys.indexOf(uuid))
     },
     addVuelidateWatcher (index) {
@@ -111,7 +112,6 @@ export default {
               return this.vuelidateElement.$each[index][validatorType]
             },
             function (newVal, oldVal) {
-              console.log(newVal, oldVal)
               if (newVal === false && oldVal !== false) {
                 // Use $set since validatorWithErrors is an object
                 this.$set(this.validatorsWithError[this.fieldKeys[index]], validatorType, validator)
