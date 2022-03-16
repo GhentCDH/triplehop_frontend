@@ -22,7 +22,6 @@
           </b-button>
         </b-input-group-append>
       </b-input-group>
-      <!-- TODO: add delete button (https://bootstrap-vue.org/docs/components/input-group) -->
       <form-feedback
         v-for="validator, validatorType in validatorsWithError[fieldKey]"
         :key="`${fieldKey}_feedback_${validatorType}`"
