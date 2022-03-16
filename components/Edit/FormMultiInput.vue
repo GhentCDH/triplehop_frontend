@@ -1,15 +1,27 @@
 <template>
   <div v-frag>
     <template
-      v-for="fieldKey in fieldKeys"
+      v-for="fieldKey, index in fieldKeys"
     >
-      <b-form-input
-        :id="id"
+      <b-input-group
         :key="`${fieldKey}_input`"
-        :value="values[fieldKey]"
-        :state="validateState(fieldKey)"
-        @input="onInput(fieldKey, $event)"
-      />
+        :class="{'mt-3': index}"
+      >
+        <b-form-input
+          :value="values[fieldKey]"
+          :state="validateState(fieldKey)"
+          @input="onInput(fieldKey, $event)"
+        />
+        <b-input-group-append>
+          <b-button
+            variant="danger"
+            @click="del(fieldKey)"
+          >
+            <b-icon icon="trash" />
+            Delete
+          </b-button>
+        </b-input-group-append>
+      </b-input-group>
       <!-- TODO: add delete button (https://bootstrap-vue.org/docs/components/input-group) -->
       <form-feedback
         v-for="validator, validatorType in validatorsWithError[fieldKey]"
@@ -19,6 +31,7 @@
       />
     </template>
     <b-button
+      class="mt-3"
       variant="primary"
       @click="add"
     >
@@ -62,7 +75,8 @@ export default {
   data () {
     const data = {
       fieldKeys: [],
-      validatorsWithError: {}
+      validatorsWithError: {},
+      vuelidateWatchers: {}
     }
     for (let i = 0; i < this.value.length; i++) {
       const uuid = uuidv4()
@@ -101,13 +115,30 @@ export default {
       this.$set(this.validatorsWithError, uuid, {})
       this.addVuelidateWatcher(this.fieldKeys.indexOf(uuid))
     },
+    del (fieldKey) {
+      // Delete element from value array so vuelidate $each is updated
+      const values = { ...this.values }
+      delete values[fieldKey]
+      this.$emit(
+        'input',
+        {
+          systemName: this.id,
+          value: Object.values(values)
+        }
+      )
+      this.fieldKeys.splice(this.fieldKeys.indexOf(fieldKey))
+      this.$delete(this.validatorsWithError, fieldKey)
+      // Unwatch Vuelidate
+      this.vuelidateWatchers[fieldKey]()
+      delete this.vuelidateWatchers[fieldKey]
+    },
     addVuelidateWatcher (index) {
       // Use a custom watcher to watch the vuelidate formData
       // Since formData is an object, computed properties based on formData are not reactive
       if (this.field.validators) {
         for (const validator of this.field.validators) {
           const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-          this.$watch(
+          this.vuelidateWatchers[this.fieldKeys[index]] = this.$watch(
             function () {
               return this.vuelidateElement.$each[index][validatorType]
             },
