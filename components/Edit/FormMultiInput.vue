@@ -21,13 +21,13 @@
             Delete
           </b-button>
         </b-input-group-append>
+        <form-feedback
+          v-for="validator, validatorType in validatorsWithError[fieldKey]"
+          :key="`${fieldKey}_feedback_${validatorType}`"
+          :validator="validator"
+          :validator-type="validatorType"
+        />
       </b-input-group>
-      <form-feedback
-        v-for="validator, validatorType in validatorsWithError[fieldKey]"
-        :key="`${fieldKey}_feedback_${validatorType}`"
-        :validator="validator"
-        :validator-type="validatorType"
-      />
     </template>
     <b-button
       class="mt-3"
