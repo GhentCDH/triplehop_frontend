@@ -1,34 +1,44 @@
 <template>
   <div v-frag>
-    <template
-      v-for="fieldKey, index in fieldKeys"
+    <draggable
+      handle=".draggable-handle"
+      :value="value"
+      @change="orderChanged"
     >
-      <b-input-group
-        :key="`${fieldKey}_input`"
-        :class="{'mt-3': index}"
-      >
-        <b-form-input
-          :value="values[fieldKey]"
-          :state="validateState(fieldKey)"
-          @input="onInput(fieldKey, $event)"
-        />
-        <b-input-group-append>
-          <b-button
-            variant="danger"
-            @click="del(fieldKey)"
-          >
-            <b-icon icon="trash" />
-            Delete
-          </b-button>
-        </b-input-group-append>
-        <form-feedback
-          v-for="validator, validatorType in validatorsWithError[fieldKey]"
-          :key="`${fieldKey}_feedback_${validatorType}`"
-          :validator="validator"
-          :validator-type="validatorType"
-        />
-      </b-input-group>
-    </template>
+      <transition-group type="transition" name="list">
+        <b-input-group
+          v-for="fieldKey in fieldKeys"
+          :key="`${fieldKey}_input`"
+          class="mt-3"
+        >
+          <b-input-group-prepend>
+            <b-button variant="outline-default" class="draggable-handle">
+              <b-icon icon="arrows-move" />
+            </b-button>
+          </b-input-group-prepend>
+          <b-form-input
+            :value="values[fieldKey]"
+            :state="validateState(fieldKey)"
+            @input="onInput(fieldKey, $event)"
+          />
+          <b-input-group-append>
+            <b-button
+              variant="danger"
+              @click="del(fieldKey)"
+            >
+              <b-icon icon="trash" />
+              Delete
+            </b-button>
+          </b-input-group-append>
+          <form-feedback
+            v-for="validator, validatorType in validatorsWithError[fieldKey]"
+            :key="`${fieldKey}_feedback_${validatorType}`"
+            :validator="validator"
+            :validator-type="validatorType"
+          />
+        </b-input-group>
+      </transition-group>
+    </draggable>
     <b-button
       class="mt-3"
       variant="primary"
@@ -41,6 +51,7 @@
 </template>
 <script>
 import frag from 'vue-frag'
+import draggable from 'vuedraggable'
 import { v4 as uuidv4 } from 'uuid'
 
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
@@ -51,6 +62,7 @@ export default {
     frag
   },
   components: {
+    draggable,
     FormFeedback
   },
   props: {
@@ -161,6 +173,18 @@ export default {
         {
           systemName: this.id,
           value: Object.values(this.values)
+        }
+      )
+    },
+    orderChanged ($event) {
+      const values = JSON.parse(JSON.stringify(this.value))
+      const value = values.splice($event.moved.oldIndex, 1)[0]
+      values.splice($event.moved.newIndex, 0, value)
+      this.$emit(
+        'input',
+        {
+          systemName: this.id,
+          value: values
         }
       )
     },

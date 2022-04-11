@@ -33,6 +33,7 @@
     "vue-multiselect": "^2.1.6",
     "vue-slider-component": "^3.2.14",
     "vue-typeahead-bootstrap": "^2.11.1",
+    "vuedraggable": "^2.24.3",
     "vuelidate": "^0.7.6"
   },
   "devDependencies": {
