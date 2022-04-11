@@ -94,8 +94,8 @@ export default {
     }
   },
   mounted () {
-    for (let i = 0; i < this.fieldKeys.length; i++) {
-      this.addVuelidateWatcher(i)
+    for (const fieldKey of this.fieldKeys) {
+      this.addVuelidateWatcher(fieldKey)
     }
   },
   methods: {
@@ -108,11 +108,11 @@ export default {
           value: [...Object.values(this.values), '']
         }
       )
-      const uuid = uuidv4()
-      this.fieldKeys.push(uuid)
+      const fieldKey = uuidv4()
+      this.fieldKeys.push(fieldKey)
       // Use $set since validatorWithErrors is an object
-      this.$set(this.validatorsWithError, uuid, {})
-      this.addVuelidateWatcher(this.fieldKeys.indexOf(uuid))
+      this.$set(this.validatorsWithError, fieldKey, {})
+      this.addVuelidateWatcher(fieldKey)
     },
     del (fieldKey) {
       // Delete element from value array so vuelidate $each is updated
@@ -125,29 +125,29 @@ export default {
           value: Object.values(values)
         }
       )
-      this.fieldKeys.splice(this.fieldKeys.indexOf(fieldKey))
+      this.fieldKeys.splice(this.fieldKeys.indexOf(fieldKey), 1)
       this.$delete(this.validatorsWithError, fieldKey)
       // Unwatch Vuelidate
       this.vuelidateWatchers[fieldKey]()
       delete this.vuelidateWatchers[fieldKey]
     },
-    addVuelidateWatcher (index) {
+    addVuelidateWatcher (fieldKey) {
       // Use a custom watcher to watch the vuelidate formData
       // Since formData is an object, computed properties based on formData are not reactive
       if (this.field.validators) {
         for (const validator of this.field.validators) {
           const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-          this.vuelidateWatchers[this.fieldKeys[index]] = this.$watch(
+          this.vuelidateWatchers[fieldKey] = this.$watch(
             function () {
-              return this.vuelidateElement.$each[index][validatorType]
+              return this.vuelidateElement.$each[this.fieldKeys.indexOf(fieldKey)][validatorType]
             },
             function (newVal, oldVal) {
               if (newVal === false && oldVal !== false) {
                 // Use $set since validatorWithErrors is an object
-                this.$set(this.validatorsWithError[this.fieldKeys[index]], validatorType, validator)
+                this.$set(this.validatorsWithError[fieldKey], validatorType, validator)
               } else if (oldVal === false && newVal !== false) {
                 // Use $delete since validatorWithErrors is an object
-                this.$delete(this.validatorsWithError[this.fieldKeys[index]], validatorType)
+                this.$delete(this.validatorsWithError[fieldKey], validatorType)
               }
             }
           )
