@@ -47,6 +47,11 @@ export const actions = {
               system_name
               display_name
               type
+              validators {
+                type
+                regex
+                error_message
+              }
             }
             display {
               title
@@ -71,11 +76,6 @@ export const actions = {
                   placeholder
                   help_message
                   multi
-                  validators {
-                    type
-                    regex
-                    error_message
-                  }
                 }
               }
             }
@@ -118,7 +118,8 @@ export const actions = {
       for (const rawField of raw.data) {
         config[raw.system_name].data[rawField.system_name] = {
           display_name: rawField.display_name,
-          type: rawField.type
+          type: rawField.type,
+          validators: rawField.validators
         }
       }
       if (raw.elasticsearch != null) {

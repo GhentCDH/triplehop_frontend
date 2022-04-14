@@ -450,6 +450,10 @@ export const actions = {
       }
     )
 
+    if ('errors' in response.data) {
+      throw new Error(response.data.errors[0].message)
+    }
+
     commit(
       'SET_DATA',
       response.data.data[`put${capitalizeFirstLetter(entityTypeName)}`]

@@ -110,8 +110,9 @@ export default {
       for (const field of panel.fields) {
         const systemName = field.field.replace('$', '')
         const fieldValidation = {}
-        if (field.validators) {
-          for (const validator of field.validators) {
+        const validators = this.entityTypeConfig.data[systemName].validators
+        if (validators) {
+          for (const validator of validators) {
             if (validator.type === 'required') {
               fieldValidation.required = required
             }
