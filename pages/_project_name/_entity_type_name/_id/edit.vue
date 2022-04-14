@@ -46,7 +46,7 @@
           @reset.prevent="onReset"
         >
           <edit-panel
-            v-for="(panel, panelIndex) in entityTypeConfig.edit.layout"
+            v-for="(panel, panelIndex) in layout"
             :key="`panel-${panelIndex}`"
             :panel="panel"
             :config="entityTypeConfig"
@@ -227,6 +227,16 @@ export default {
     },
     id () {
       return this.$route.params.id
+    },
+    layout () {
+      const layout = this.entityTypeConfig.edit.layout
+      for (const panel of layout) {
+        for (const field of panel.fields) {
+          const systemName = field.field.replace('$', '')
+          field.validators = this.entityTypeConfig.data[systemName].validators
+        }
+      }
+      return layout
     },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
