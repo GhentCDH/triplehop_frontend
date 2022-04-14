@@ -55,6 +55,11 @@
             :vuelidate="$v"
             @input="formInput"
           />
+          <relation-edit-panel
+            v-for="domainRelationTypeName in domainRelationTypeNames"
+            :key="`panel-${domainRelationTypeName}`"
+            @input="formInput"
+          />
           <b-button
             type="submit"
             variant="primary"
@@ -82,10 +87,12 @@ import { helpers, required } from 'vuelidate/lib/validators'
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import { edtfYear } from '~/assets/js/validators'
 import EditPanel from '~/components/Edit/EditPanel.vue'
+import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
 
 export default {
   components: {
-    EditPanel
+    EditPanel,
+    RelationEditPanel
   },
   mixins: [validationMixin],
   validate ({ params }) {
@@ -209,6 +216,15 @@ export default {
         active: true
       })
       return breadcrumbs
+    },
+    domainRelationTypeNames () {
+      return Object.keys(this.relationTypesConfig)
+        .filter(
+          (relationTypeName) => {
+            const relationConfig = this.relationTypesConfig[relationTypeName]
+            return relationConfig.domain_names.includes(this.entityTypeName)
+          }
+        )
     },
     entityData () {
       return this.$store.state.data.data

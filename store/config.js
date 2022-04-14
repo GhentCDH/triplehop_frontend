@@ -42,6 +42,7 @@ export const actions = {
           getEntity_config_s {
             system_name
             display_name
+            detail
             source
             data {
               system_name

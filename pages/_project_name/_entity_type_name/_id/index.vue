@@ -99,6 +99,12 @@ export default {
       }
       throw new Error(`Entity type "${this.entityTypeName}" cannot be found.`)
     }
+    if (
+      !('detail' in this.entityTypesConfig[this.entityTypeName]) ||
+      !this.entityTypesConfig[this.entityTypeName].detail
+    ) {
+      throw new Error(`Entity type "${this.entityTypeName}" cannot be viewed in detail.`)
+    }
     let authSessionTries = 2
     while (authSessionTries--) {
       try {

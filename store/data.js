@@ -394,6 +394,33 @@ export const actions = {
     // Get all fieldNames used in the edit form
     const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
 
+    // Get all fieldNames used in the relations edit forms and title fields of related entities
+    const relationSides = ['domain', 'range']
+    for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
+      for (const side of relationSides) {
+        const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
+        if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
+          if (relationTypeConfig.edit != null) {
+            // Add relation prefix to each path
+            const relationPaths = extractDataPathsWithSources(relationTypeConfig.edit)
+            if (relationPaths.size !== 0) {
+              relationPaths.forEach(path => dataPaths.add(`${prefix}.${path}`))
+            }
+          }
+          for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
+            if (
+              'display' in entityTypesConfig[linkedEntityTypeName] &&
+              entityTypesConfig[linkedEntityTypeName].display != null &&
+              'title' in entityTypesConfig[linkedEntityTypeName].display
+            ) {
+              extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
+                .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
+            }
+          }
+        }
+      }
+    }
+
     const queryParts = [
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
