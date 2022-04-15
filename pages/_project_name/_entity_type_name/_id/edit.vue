@@ -50,14 +50,16 @@
             :key="`panel-${panelIndex}`"
             :panel="panel"
             :config="entityTypeConfig"
-            :form-data="formData"
+            :form-data="formData.entity"
             :disabled="disableFormElements"
-            :vuelidate="$v"
-            @input="formInput"
+            :vuelidate="$v.formData.entity"
+            @input="formInput('entity', $event)"
           />
           <relation-edit-panel
             v-for="domainRelationTypeName in domainRelationTypeNames"
             :key="`panel-${domainRelationTypeName}`"
+            :config="relationTypesConfig[domainRelationTypeName]"
+            side="domain"
             @input="formInput"
           />
           <b-button
@@ -105,13 +107,17 @@ export default {
   data () {
     return {
       disableFormElements: false,
-      formData: {},
+      formData: {
+        entity: {}
+      },
       oldFormData: {}
     }
   },
   validations () {
     const validations = {
-      formData: {}
+      formData: {
+        entity: {}
+      }
     }
     for (const panel of this.entityTypeConfig.edit.layout) {
       for (const field of panel.fields) {
@@ -132,11 +138,11 @@ export default {
           }
         }
         if (field.multi) {
-          validations.formData[systemName] = {
+          validations.formData.entity[systemName] = {
             $each: fieldValidation
           }
         } else {
-          validations.formData[systemName] = fieldValidation
+          validations.formData.entity[systemName] = fieldValidation
         }
       }
     }
@@ -222,7 +228,8 @@ export default {
         .filter(
           (relationTypeName) => {
             const relationConfig = this.relationTypesConfig[relationTypeName]
-            return relationConfig.domain_names.includes(this.entityTypeName)
+            return relationConfig.domain_names.includes(this.entityTypeName) &&
+              relationConfig.edit != null
           }
         )
     },
@@ -278,12 +285,25 @@ export default {
   },
   methods: {
     constructFieldFromData,
-    formInput ({ systemName, value }) {
-      this.formData[systemName] = value
-      if (JSON.stringify(this.formData[systemName]) === JSON.stringify(this.oldFormData[systemName])) {
-        this.$v.formData[systemName].$reset()
+    formInput (path, { systemName, value }) {
+      // Determine which part of the formdata and validation need to be updated
+      let formData = this.formData
+      let oldFormData = this.oldFormData
+      let vuelidate = this.$v.formData
+      for (const p of path.split('.')) {
+        formData = formData[p]
+        oldFormData = oldFormData[p]
+        vuelidate = vuelidate[p]
+      }
+
+      // Update formdata
+      formData[systemName] = value
+
+      // Revalidate
+      if (JSON.stringify(formData[systemName]) === JSON.stringify(oldFormData[systemName])) {
+        vuelidate[systemName].$reset()
       } else {
-        this.$v.formData[systemName].$touch()
+        vuelidate[systemName].$touch()
       }
     },
     async onSubmit () {
@@ -334,16 +354,16 @@ export default {
       this.disableFormElements = false
     },
     onReset () {
-      for (const [key, value] of Object.entries(this.oldFormData)) {
-        this.formData[key] = JSON.parse(JSON.stringify(value))
-        this.$v.formData[key].$reset()
+      for (const [key, value] of Object.entries(this.oldFormData.entity)) {
+        this.formData.entity[key] = JSON.parse(JSON.stringify(value))
+        this.$v.formData.entity[key].$reset()
       }
     },
     setFormData () {
       for (const panel of this.entityTypeConfig.edit.layout) {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
-          this.formData[systemName] = this.entityData[systemName]
+          this.formData.entity[systemName] = this.entityData[systemName]
         }
       }
       this.oldFormData = JSON.parse(JSON.stringify(this.formData))

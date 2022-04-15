@@ -78,7 +78,7 @@ export default {
       type: Array,
       required: true
     },
-    vuelidateElement: {
+    vuelidate: {
       type: Object,
       required: true
     }
@@ -151,7 +151,7 @@ export default {
           const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
           this.vuelidateWatchers[fieldKey] = this.$watch(
             function () {
-              return this.vuelidateElement.$each[this.fieldKeys.indexOf(fieldKey)][validatorType]
+              return this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)][validatorType]
             },
             function (newVal, oldVal) {
               if (newVal === false && oldVal !== false) {
@@ -189,7 +189,7 @@ export default {
       )
     },
     validateState (fieldKey) {
-      const { $dirty, $invalid } = this.vuelidateElement.$each[this.fieldKeys.indexOf(fieldKey)]
+      const { $dirty, $invalid } = this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)]
       return $dirty ? !$invalid : null
     }
   }

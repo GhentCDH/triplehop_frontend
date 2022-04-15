@@ -10,7 +10,7 @@
       :field="field"
       :value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
-      :vuelidate="vuelidate"
+      :vuelidate="vuelidate[field.field.replace('$', '')]"
       @input="$emit('input', $event)"
     />
   </b-card>

@@ -40,7 +40,7 @@ export default {
       type: String,
       required: true
     },
-    vuelidateElement: {
+    vuelidate: {
       type: Object,
       required: true
     }
@@ -58,7 +58,7 @@ export default {
         const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
         this.$watch(
           function () {
-            return this.vuelidateElement[validatorType]
+            return this.vuelidate[validatorType]
           },
           function (newVal, oldVal) {
             if (newVal === false && oldVal !== false) {
@@ -84,7 +84,7 @@ export default {
       )
     },
     validateState () {
-      const { $dirty, $invalid } = this.vuelidateElement
+      const { $dirty, $invalid } = this.vuelidate
       return $dirty ? !$invalid : null
     }
   }

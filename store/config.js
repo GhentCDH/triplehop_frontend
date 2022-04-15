@@ -193,6 +193,10 @@ export const actions = {
                 }
               }
             }
+            edit {
+              domain_title
+              range_title
+            }
             domain_names
             range_names
           }
@@ -206,6 +210,7 @@ export const actions = {
       config[raw.system_name] = {
         display_name: raw.display_name,
         display: raw.display,
+        edit: raw.edit,
         domain_names: raw.domain_names,
         range_names: raw.range_names
       }

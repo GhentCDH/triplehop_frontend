@@ -8,7 +8,7 @@
       :id="id"
       :field="field"
       :value="value"
-      :vuelidate-element="vuelidate.formData[id]"
+      :vuelidate="vuelidate"
       @input="$emit('input', $event)"
     />
     <slot
