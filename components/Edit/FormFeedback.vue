@@ -1,18 +1,26 @@
 <template>
-  <b-form-invalid-feedback>
-    <template v-if="validator.error_message">
-      {{ validator.error_message }}
-    </template>
-    <template v-else-if="validatorType === 'required'">
+  <div v-frag>
+    <b-form-invalid-feedback
+      v-if="validator.error_message"
+      v-html="marked(validator.error_message)"
+    />
+    <b-form-invalid-feedback v-else-if="validatorType === 'required'">
       This field is required.
-    </template>
-    <template v-else>
+    </b-form-invalid-feedback>
+    <b-form-invalid-feedback v-else>
       The value provided for this field is invalid.
-    </template>
-  </b-form-invalid-feedback>
+    </b-form-invalid-feedback>
+    </b-form-invalid-feedback>
+  </div>
 </template>
 <script>
+import frag from 'vue-frag'
+import { marked } from 'marked'
+
 export default {
+  directives: {
+    frag
+  },
   props: {
     validator: {
       type: Object,
@@ -21,6 +29,11 @@ export default {
     validatorType: {
       type: String,
       required: true
+    }
+  },
+  methods: {
+    marked (markdown) {
+      return marked(markdown)
     }
   }
 }
