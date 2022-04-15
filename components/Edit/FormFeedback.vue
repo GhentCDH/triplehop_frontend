@@ -16,6 +16,7 @@
 <script>
 import frag from 'vue-frag'
 import { marked } from 'marked'
+import sanitizeHtml from 'sanitize-html'
 
 export default {
   directives: {
@@ -33,7 +34,7 @@ export default {
   },
   methods: {
     marked (markdown) {
-      return marked(markdown)
+      return sanitizeHtml(marked(markdown))
     }
   }
 }

@@ -15,12 +15,13 @@
       v-if="field.help_message"
       name="description"
     >
-      <b-form-text v-html="marked(field.help_message)"/>
+      <b-form-text v-html="marked(field.help_message)" />
     </slot>
   </b-form-group>
 </template>
 <script>
 import { marked } from 'marked'
+import sanitizeHtml from 'sanitize-html'
 
 import FormInput from '~/components/Edit/FormInput.vue'
 import FormMultiInput from '~/components/Edit/FormMultiInput.vue'
@@ -61,7 +62,7 @@ export default {
       return 'form-input'
     },
     marked (markdown) {
-      return marked(markdown)
+      return sanitizeHtml(marked(markdown))
     }
   }
 }

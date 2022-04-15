@@ -28,6 +28,7 @@
     "nuxt": "^2.15.7",
     "nuxt-leaflet": "^0.0.25",
     "rfdc": "^1.3.0",
+    "sanitize-html": "^2.7.0",
     "uuid": "^8.3.2",
     "vue-chartjs": "^3.5.1",
     "vue-frag": "^1.2.0",
