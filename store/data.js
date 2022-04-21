@@ -404,6 +404,7 @@ export const actions = {
       for (const side of relationSides) {
         const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
         if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
+          dataPaths.add(`${prefix}.id`)
           if (relationTypeConfig.edit != null) {
             // Add relation prefix to each path
             const relationPaths = extractDataPathsWithSources(relationTypeConfig.edit)
