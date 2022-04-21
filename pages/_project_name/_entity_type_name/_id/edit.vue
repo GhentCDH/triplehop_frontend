@@ -71,6 +71,7 @@
                 v-for="domainRelationTypeName in domainRelationTypeNames"
                 :key="`panel-${domainRelationTypeName}`"
                 :config="relationTypesConfig[domainRelationTypeName]"
+                :form-data="formData[domainRelationTypeName]"
                 side="domain"
                 @input="formInput"
               />
@@ -349,9 +350,13 @@ export default {
       }
       this.disableFormElements = true
       const submitData = {}
-      for (const [key, value] of Object.entries(this.formData)) {
-        if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[key])) {
-          submitData[key] = JSON.parse(JSON.stringify(value))
+      // Entity
+      for (const [key, value] of Object.entries(this.formData.entity)) {
+        if (JSON.stringify(value) !== JSON.stringify(this.oldFormData.entity[key])) {
+          if (!('entity' in submitData)) {
+            submitData.entity = {}
+          }
+          submitData.entity[key] = JSON.parse(JSON.stringify(value))
         }
       }
       if (Object.keys(submitData).length !== 0) {
@@ -406,32 +411,46 @@ export default {
         }
       }
       // Relations
-      // for (const [relationTypeName, relationConfig] of Object.entries(this.relationTypesConfig)) {
-      //   if (
-      //     (
-      //       relationConfig.domain_names.includes(this.entityTypeName) ||
-      //       relationConfig.range_names.includes(this.entityTypeName)
-      //     ) &&
-      //     relationConfig.edit != null
-      //   ) {
-      //     // const relationDataName = `${relationConfig.domain_names.includes(this.entityTypeName) ? 'r' : 'ri'}_${relationTypeName}_s`
-      //     // for (const relationData of this.entityData[relationDataName]) {
-      //     //   const relationFormData = {
-      //     //     entity:
-      //     //   }
-      //     //   // TODO: fix relation data
-      //     //   if ('layout' in relationConfig.edit) {
-      //     //     for (const panel of relationConfig.edit.layout) {
-      //     //       for (const field of panel.fields) {
-      //     //         const systemName = field.field.replace('$', '')
-
-      //     //       }
-      //     //     }
-      //     //   }
-      //     //   this.formData[relationTypeName]
-      //     // }
-      //   }
-      // }
+      for (const [relationTypeName, relationConfig] of Object.entries(this.relationTypesConfig)) {
+        if (
+          (
+            relationConfig.domain_names.includes(this.entityTypeName) ||
+            relationConfig.range_names.includes(this.entityTypeName)
+          ) &&
+          relationConfig.edit != null
+        ) {
+          this.formData[relationTypeName] = []
+          const relationDataName = `${relationConfig.domain_names.includes(this.entityTypeName) ? 'r' : 'ri'}_${relationTypeName}_s`
+          for (const relationData of this.entityData[relationDataName]) {
+            const relationFormData = {
+              entity: {
+                id: relationData.entity.id,
+                title: this.constructFieldFromData(
+                  this.entityTypesConfig[relationData.entity.__typename.toLowerCase()].display.title,
+                  relationData.entity,
+                  {},
+                  {},
+                  true
+                )[0].value,
+                entityTypeName: relationData.entity.__typename.toLowerCase()
+              }
+            }
+            // TODO: test if code below works
+            if ('layout' in relationConfig.edit) {
+              for (const panel of relationConfig.edit.layout) {
+                for (const field of panel.fields) {
+                  const systemName = field.field.replace('$', '')
+                  if (!('relation' in relationFormData)) {
+                    relationFormData.relation = {}
+                  }
+                  relationFormData.relation[systemName] = relationData[systemName]
+                }
+              }
+            }
+            this.formData[relationTypeName].push(relationFormData)
+          }
+        }
+      }
       // Set oldFormData
       this.oldFormData = JSON.parse(JSON.stringify(this.formData))
     }
