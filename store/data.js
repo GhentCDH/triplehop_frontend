@@ -294,7 +294,7 @@ function crdbQueryFromDataPaths (dataPaths) {
             }
             currentLevel.relations[relation].relation_source.r_props.add(rest[1])
           } else {
-            currentLevel.relations[relation].r_props.add(rest)
+            currentLevel.relations[relation].r_props.add(rest[0])
           }
         } else {
           // entity property
