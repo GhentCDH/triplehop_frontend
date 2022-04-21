@@ -104,14 +104,18 @@ function extractDataPathsWithSources (display, sourceEProps) {
 function constructQueryPartsForProps (props, dataConfig) {
   const queryParts = []
   for (const prop of props) {
+    if (prop === 'id') {
+      queryParts.push('id')
+      continue
+    }
     if (dataConfig[prop].type === 'Geometry') {
       queryParts.push(`${prop} {`)
       queryParts.push('type')
       queryParts.push('coordinates')
       queryParts.push('}')
-    } else {
-      queryParts.push(prop)
+      continue
     }
+    queryParts.push(prop)
   }
   return queryParts
 }
