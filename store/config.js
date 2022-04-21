@@ -111,6 +111,7 @@ export const actions = {
     for (const raw of rawConfig) {
       config[raw.system_name] = {
         display_name: raw.display_name,
+        detail: raw.detail,
         source: raw.source,
         data: {},
         display: raw.display,
