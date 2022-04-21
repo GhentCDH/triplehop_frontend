@@ -354,18 +354,49 @@ export default {
       this.disableFormElements = false
     },
     onReset () {
+      // Entity
       for (const [key, value] of Object.entries(this.oldFormData.entity)) {
         this.formData.entity[key] = JSON.parse(JSON.stringify(value))
         this.$v.formData.entity[key].$reset()
       }
+      // Relations
     },
     setFormData () {
+      // Entity
       for (const panel of this.entityTypeConfig.edit.layout) {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
           this.formData.entity[systemName] = this.entityData[systemName]
         }
       }
+      // Relations
+      // for (const [relationTypeName, relationConfig] of Object.entries(this.relationTypesConfig)) {
+      //   if (
+      //     (
+      //       relationConfig.domain_names.includes(this.entityTypeName) ||
+      //       relationConfig.range_names.includes(this.entityTypeName)
+      //     ) &&
+      //     relationConfig.edit != null
+      //   ) {
+      //     // const relationDataName = `${relationConfig.domain_names.includes(this.entityTypeName) ? 'r' : 'ri'}_${relationTypeName}_s`
+      //     // for (const relationData of this.entityData[relationDataName]) {
+      //     //   const relationFormData = {
+      //     //     entity:
+      //     //   }
+      //     //   // TODO: fix relation data
+      //     //   if ('layout' in relationConfig.edit) {
+      //     //     for (const panel of relationConfig.edit.layout) {
+      //     //       for (const field of panel.fields) {
+      //     //         const systemName = field.field.replace('$', '')
+
+      //     //       }
+      //     //     }
+      //     //   }
+      //     //   this.formData[relationTypeName]
+      //     // }
+      //   }
+      // }
+      // Set oldFormData
       this.oldFormData = JSON.parse(JSON.stringify(this.formData))
     }
   }
