@@ -35,7 +35,7 @@
 export default {
   props: {
     valueAndSources: {
-      type: String,
+      type: Object,
       required: true
     },
     size: {
