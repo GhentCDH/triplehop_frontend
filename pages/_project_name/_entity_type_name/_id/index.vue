@@ -100,8 +100,8 @@ export default {
       throw new Error(`Entity type "${this.entityTypeName}" cannot be found.`)
     }
     if (
-      !('detail' in this.entityTypesConfig[this.entityTypeName]) ||
-      !this.entityTypesConfig[this.entityTypeName].detail
+      !('detail' in this.entityTypeConfig) ||
+      !this.entityTypeConfig.detail
     ) {
       throw new Error(`Entity type "${this.entityTypeName}" cannot be viewed in detail.`)
     }
