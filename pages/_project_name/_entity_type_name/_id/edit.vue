@@ -41,42 +41,78 @@
         :show="disableFormElements"
         spinner-variant="primary"
       >
-        <b-form
-          @submit.prevent="onSubmit"
-          @reset.prevent="onReset"
-        >
-          <edit-panel
-            v-for="(panel, panelIndex) in layout"
-            :key="`panel-${panelIndex}`"
-            :panel="panel"
-            :config="entityTypeConfig"
-            :form-data="formData.entity"
-            :disabled="disableFormElements"
-            :vuelidate="$v.formData.entity"
-            @input="formInput('entity', $event)"
-          />
-          <relation-edit-panel
-            v-for="domainRelationTypeName in domainRelationTypeNames"
-            :key="`panel-${domainRelationTypeName}`"
-            :config="relationTypesConfig[domainRelationTypeName]"
-            side="domain"
-            @input="formInput"
-          />
-          <b-button
-            type="submit"
-            variant="primary"
-            :disabled="!formDataChanged || disableFormElements || $v.$invalid"
+        <b-row>
+          <b-col
+            id="edit"
+            sm="9"
+            class="mb-3"
           >
-            Submit
-          </b-button>
-          <b-button
-            type="reset"
-            variant="danger"
-            :disabled="!formDataChanged || disableFormElements"
+            <b-form
+              @submit.prevent="onSubmit"
+              @reset.prevent="onReset"
+            >
+              <h2 id="entity">
+                Entity
+              </h2>
+              <edit-panel
+                v-for="(panel, panelIndex) in layout"
+                :key="`panel-${panelIndex}`"
+                :panel="panel"
+                :config="entityTypeConfig"
+                :form-data="formData.entity"
+                :disabled="disableFormElements"
+                :vuelidate="$v.formData.entity"
+                @input="formInput('entity', $event)"
+              />
+              <h2 id="relations">
+                Relations
+              </h2>
+              <relation-edit-panel
+                v-for="domainRelationTypeName in domainRelationTypeNames"
+                :key="`panel-${domainRelationTypeName}`"
+                :config="relationTypesConfig[domainRelationTypeName]"
+                side="domain"
+                @input="formInput"
+              />
+              <b-button
+                id="actions"
+                type="submit"
+                variant="primary"
+                :disabled="!formDataChanged || disableFormElements || $v.$invalid"
+              >
+                Submit
+              </b-button>
+              <b-button
+                type="reset"
+                variant="danger"
+                :disabled="!formDataChanged || disableFormElements"
+              >
+                Reset
+              </b-button>
+            </b-form>
+          </b-col>
+          <b-navbar
+            v-b-scrollspy:edit
+            class="d-none d-sm-block col-sm-3 sticky-top border-left border-secondary toc"
           >
-            Reset
-          </b-button>
-        </b-form>
+            <b-navbar-brand href="#">
+              Quick navigation
+            </b-navbar-brand>
+            <b-nav
+              vertical
+            >
+              <b-nav-item href="#entity">
+                Entity
+              </b-nav-item>
+              <b-nav-item href="#relations">
+                Relations
+              </b-nav-item>
+              <b-nav-item href="#actions">
+                Actions
+              </b-nav-item>
+            </b-nav>
+          </b-navbar>
+        </b-row>
       </b-overlay>
     </template>
   </div>
