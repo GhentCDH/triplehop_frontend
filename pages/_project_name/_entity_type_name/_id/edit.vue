@@ -51,7 +51,7 @@
               @submit.prevent="onSubmit"
               @reset.prevent="onReset"
             >
-              <h2 id="entity">
+              <h2 id="entity" class="text-primary">
                 Entity
               </h2>
               <edit-panel
@@ -64,7 +64,7 @@
                 :vuelidate="$v.formData.entity"
                 @input="formInput('entity', $event)"
               />
-              <h2 id="relations">
+              <h2 id="relations" class="text-primary">
                 Relations
               </h2>
               <relation-edit-panel
@@ -75,8 +75,10 @@
                 side="domain"
                 @input="formInput"
               />
+              <h2 id="actions" class="text-primary">
+                Actions
+              </h2>
               <b-button
-                id="actions"
                 type="submit"
                 variant="primary"
                 :disabled="!formDataChanged || disableFormElements || $v.$invalid"
