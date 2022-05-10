@@ -2,7 +2,7 @@
   <div v-frag>
     <draggable
       handle=".draggable-handle"
-      :value="value"
+      :value="initialValue"
       @change="orderChanged"
     >
       <transition-group type="transition" name="list">
@@ -74,7 +74,7 @@ export default {
       type: Object,
       required: true
     },
-    value: {
+    initialValue: {
       type: Array,
       required: true
     }
@@ -89,8 +89,8 @@ export default {
   computed: {
     values () {
       const values = {}
-      for (let i = 0; i < this.value.length; i++) {
-        values[this.fieldKeys[i]] = this.value[i]
+      for (let i = 0; i < this.initialValue.length; i++) {
+        values[this.fieldKeys[i]] = this.initialValue[i]
       }
       return values
     }
@@ -160,7 +160,7 @@ export default {
         delete this.vuelidateWatchers[fieldKey]
       }
       this.fieldKeys = []
-      for (let i = 0; i < this.value.length; i++) {
+      for (let i = 0; i < this.initialValue.length; i++) {
         const uuid = uuidv4()
         this.fieldKeys.push(uuid)
         this.validatorsWithError[uuid] = {}
@@ -178,7 +178,7 @@ export default {
       )
     },
     orderChanged ($event) {
-      const values = JSON.parse(JSON.stringify(this.value))
+      const values = JSON.parse(JSON.stringify(this.initialValue))
       const value = values.splice($event.moved.oldIndex, 1)[0]
       values.splice($event.moved.newIndex, 0, value)
       this.$emit(

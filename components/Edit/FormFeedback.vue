@@ -4,7 +4,7 @@
       v-if="validator.error_message"
       v-html="marked(validator.error_message)"
     />
-    <b-form-invalid-feedback v-else-if="validatorType === 'required'">
+    <b-form-invalid-feedback v-else-if="validator.type === 'required'">
       This field is required.
     </b-form-invalid-feedback>
     <b-form-invalid-feedback v-else>
@@ -25,10 +25,6 @@ export default {
   props: {
     validator: {
       type: Object,
-      required: true
-    },
-    validatorType: {
-      type: String,
       required: true
     }
   },

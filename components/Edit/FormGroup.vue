@@ -7,7 +7,7 @@
       :is="component_type(field)"
       :id="id"
       :field="field"
-      :value="value"
+      :initial-value="initialValue"
       @input="$emit('input', $event)"
     />
     <slot
@@ -39,7 +39,7 @@ export default {
       type: Object,
       required: true
     },
-    value: {
+    initialValue: {
       type: [Array, String],
       required: true
     }

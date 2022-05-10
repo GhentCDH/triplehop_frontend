@@ -7,10 +7,9 @@
       @input="onInput"
     />
     <form-feedback
-      v-for="validator, validatorType in validatorsWithError"
-      :key="validatorType"
+      v-for="validator of field.validators"
+      :key="validator.type"
       :validator="validator"
-      :validator-type="validatorType"
     />
   </div>
 </template>
@@ -20,7 +19,6 @@ import { validationMixin } from 'vuelidate'
 import { helpers, required } from 'vuelidate/lib/validators'
 
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-// import { VALIDATOR_TYPES_CONVERSION } from '~/components/Edit/utils.js'
 import { edtfYear } from '~/assets/js/validators'
 
 export default {
@@ -42,72 +40,62 @@ export default {
       type: Object,
       required: true
     },
-    value: {
+    initialValue: {
       type: String,
       required: true
     }
   },
   data () {
     return {
+      value: this.initialValue,
       validatorsWithError: {}
     }
   },
   validations () {
-    const validations = {}
-    const fieldValidation = {}
+    const validations = {
+      value: {}
+    }
     const validators = this.field.validators
     if (validators) {
       for (const validator of validators) {
         if (validator.type === 'required') {
-          fieldValidation.required = required
+          validations.value.required = required
         }
         if (validator.type === 'edtf_year') {
-          fieldValidation.edtfYear = edtfYear
+          validations.value.edtfYear = edtfYear
         }
         if (validator.type === 'regex') {
-          fieldValidation.regex = helpers.regex('regex', new RegExp(validator.regex))
+          validations.value.regex = helpers.regex('regex', new RegExp(validator.regex))
         }
       }
     }
-    console.log(validations)
     return validations
   },
-  mounted () {
-    // Use a custom watcher to watch the vuelidate formData
-    // Since formData is an object, computed properties based on formData are not reactive
-    // if (this.field.validators) {
-    //   for (const validator of this.field.validators) {
-    //     const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-    //     this.$watch(
-    //       function () {
-    //         return this.vuelidate[validatorType]
-    //       },
-    //       function (newVal, oldVal) {
-    //         if (newVal === false && oldVal !== false) {
-    //           // Use $set since validatorWithErrors is an object
-    //           this.$set(this.validatorsWithError, validatorType, validator)
-    //         } else if (oldVal === false && newVal !== false) {
-    //           // Use $delete since validatorWithErrors is an object
-    //           this.$delete(this.validatorsWithError, validatorType)
-    //         }
-    //       }
-    //     )
-    //   }
-    // }
+  watch: {
+    initialValue () {
+      if (this.initialValue !== this.value) {
+        // Reset
+        this.value = this.initialValue
+        this.$v.$reset()
+      }
+    }
   },
   methods: {
     onInput (value) {
+      this.value = value
+      this.$v.value.$touch()
       this.$emit(
         'input',
         {
           systemName: this.id,
-          value
+          value: this.value
         }
       )
     },
     validateState () {
-      // const { $dirty, $invalid } = this.vuelidate
-      // return $dirty ? !$invalid : null
+      // Only markup touched fields as correct or incorrect
+      const { $dirty, $invalid } = this.$v.value
+      return $dirty ? !$invalid : null
     }
   }
 }

@@ -10,7 +10,7 @@
       :ref="field.field"
       :config="config"
       :field="field"
-      :value="formData[field.field.replace('$', '')]"
+      :initial-value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
       @input="$emit('input', $event)"
     />
@@ -46,10 +46,6 @@ export default {
       type: Boolean,
       required: true
     }
-    // vuelidate: {
-    //   type: Object,
-    //   required: true
-    // }
   },
   methods: {
     reset () {
