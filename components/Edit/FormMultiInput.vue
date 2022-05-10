@@ -77,24 +77,14 @@ export default {
     value: {
       type: Array,
       required: true
-    },
-    vuelidate: {
-      type: Object,
-      required: true
     }
   },
   data () {
-    const data = {
+    return {
       fieldKeys: [],
       validatorsWithError: {},
       vuelidateWatchers: {}
     }
-    for (let i = 0; i < this.value.length; i++) {
-      const uuid = uuidv4()
-      data.fieldKeys.push(uuid)
-      data.validatorsWithError[uuid] = {}
-    }
-    return data
   },
   computed: {
     values () {
@@ -106,9 +96,7 @@ export default {
     }
   },
   mounted () {
-    for (const fieldKey of this.fieldKeys) {
-      this.addVuelidateWatcher(fieldKey)
-    }
+    this.initialize()
   },
   methods: {
     add () {
@@ -151,7 +139,7 @@ export default {
           const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
           this.vuelidateWatchers[fieldKey] = this.$watch(
             function () {
-              return this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)][validatorType]
+              // return this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)][validatorType]
             },
             function (newVal, oldVal) {
               if (newVal === false && oldVal !== false) {
@@ -164,6 +152,19 @@ export default {
             }
           )
         }
+      }
+    },
+    initialize () {
+      for (const fieldKey of this.fieldKeys) {
+        this.$delete(this.validatorsWithError, fieldKey)
+        delete this.vuelidateWatchers[fieldKey]
+      }
+      this.fieldKeys = []
+      for (let i = 0; i < this.value.length; i++) {
+        const uuid = uuidv4()
+        this.fieldKeys.push(uuid)
+        this.validatorsWithError[uuid] = {}
+        this.addVuelidateWatcher(uuid)
       }
     },
     onInput (fieldKey, $event) {
@@ -188,9 +189,12 @@ export default {
         }
       )
     },
+    reset () {
+      this.initialize()
+    },
     validateState (fieldKey) {
-      const { $dirty, $invalid } = this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)]
-      return $dirty ? !$invalid : null
+      // const { $dirty, $invalid } = this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)]
+      // return $dirty ? !$invalid : null
     }
   }
 }

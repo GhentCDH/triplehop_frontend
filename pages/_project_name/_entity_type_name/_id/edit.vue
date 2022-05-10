@@ -61,10 +61,9 @@
                 :config="entityTypeConfig"
                 :form-data="formData.entity"
                 :disabled="disableFormElements"
-                :vuelidate="$v.formData.entity"
                 @input="formInput('entity', $event)"
               />
-              <h2 id="relations" class="text-primary">
+              <!-- <h2 id="relations" class="text-primary">
                 Relations
               </h2>
               <relation-edit-panel
@@ -72,10 +71,11 @@
                 :key="`panel-${domainRelationTypeName}`"
                 :config="relationTypesConfig[domainRelationTypeName]"
                 :form-data="formData[domainRelationTypeName]"
+                :project-name="projectName"
                 :relation-type-name="domainRelationTypeName"
                 side="domain"
                 @input="formInput"
-              />
+              /> -->
               <h2 id="actions" class="text-primary">
                 Actions
               </h2>
@@ -161,20 +161,20 @@
 </template>
 
 <script>
-import { validationMixin } from 'vuelidate'
-import { helpers, required } from 'vuelidate/lib/validators'
+// import { validationMixin } from 'vuelidate'
+// import { helpers, required } from 'vuelidate/lib/validators'
 
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
-import { edtfYear } from '~/assets/js/validators'
+// import { edtfYear } from '~/assets/js/validators'
 import EditPanel from '~/components/Edit/EditPanel.vue'
-import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
+// import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
 
 export default {
   components: {
-    EditPanel,
-    RelationEditPanel
+    EditPanel
+    // RelationEditPanel
   },
-  mixins: [validationMixin],
+  // mixins: [validationMixin],
   validate ({ params }) {
     // Make sure id is a number
     if (!isNumber(params.id)) {
@@ -191,41 +191,41 @@ export default {
       oldFormData: {}
     }
   },
-  validations () {
-    const validations = {
-      formData: {
-        entity: {}
-      }
-    }
-    for (const panel of this.entityTypeConfig.edit.layout) {
-      for (const field of panel.fields) {
-        const systemName = field.field.replace('$', '')
-        const fieldValidation = {}
-        const validators = this.entityTypeConfig.data[systemName].validators
-        if (validators) {
-          for (const validator of validators) {
-            if (validator.type === 'required') {
-              fieldValidation.required = required
-            }
-            if (validator.type === 'edtf_year') {
-              fieldValidation.edtfYear = edtfYear
-            }
-            if (validator.type === 'regex') {
-              fieldValidation.regex = helpers.regex('regex', new RegExp(validator.regex))
-            }
-          }
-        }
-        if (field.multi) {
-          validations.formData.entity[systemName] = {
-            $each: fieldValidation
-          }
-        } else {
-          validations.formData.entity[systemName] = fieldValidation
-        }
-      }
-    }
-    return validations
-  },
+  // validations () {
+  //   const validations = {
+  //     formData: {
+  //       entity: {}
+  //     }
+  //   }
+  //   for (const panel of this.entityTypeConfig.edit.layout) {
+  //     for (const field of panel.fields) {
+  //       const systemName = field.field.replace('$', '')
+  //       const fieldValidation = {}
+  //       const validators = this.entityTypeConfig.data[systemName].validators
+  //       if (validators) {
+  //         for (const validator of validators) {
+  //           if (validator.type === 'required') {
+  //             fieldValidation.required = required
+  //           }
+  //           if (validator.type === 'edtf_year') {
+  //             fieldValidation.edtfYear = edtfYear
+  //           }
+  //           if (validator.type === 'regex') {
+  //             fieldValidation.regex = helpers.regex('regex', new RegExp(validator.regex))
+  //           }
+  //         }
+  //       }
+  //       if (field.multi) {
+  //         validations.formData.entity[systemName] = {
+  //           $each: fieldValidation
+  //         }
+  //       } else {
+  //         validations.formData.entity[systemName] = fieldValidation
+  //       }
+  //     }
+  //   }
+  //   return validations
+  // },
   async fetch () {
     // TODO store state invalidation (websockets / subscriptions?)
     // after login, nuxtServerInit is not called
@@ -365,30 +365,30 @@ export default {
     constructFieldFromData,
     formInput (path, { systemName, value }) {
       // Determine which part of the formdata and validation need to be updated
-      let formData = this.formData
-      let oldFormData = this.oldFormData
-      let vuelidate = this.$v.formData
-      for (const p of path.split('.')) {
-        formData = formData[p]
-        oldFormData = oldFormData[p]
-        vuelidate = vuelidate[p]
-      }
+      // let formData = this.formData
+      // let oldFormData = this.oldFormData
+      // let vuelidate = this.$v.formData
+      // for (const p of path.split('.')) {
+      //   formData = formData[p]
+      //   oldFormData = oldFormData[p]
+      //   vuelidate = vuelidate[p]
+      // }
 
-      // Update formdata
-      formData[systemName] = value
+      // // Update formdata
+      // formData[systemName] = value
 
-      // Revalidate
-      if (JSON.stringify(formData[systemName]) === JSON.stringify(oldFormData[systemName])) {
-        vuelidate[systemName].$reset()
-      } else {
-        vuelidate[systemName].$touch()
-      }
+      // // Revalidate
+      // if (JSON.stringify(formData[systemName]) === JSON.stringify(oldFormData[systemName])) {
+      //   vuelidate[systemName].$reset()
+      // } else {
+      //   vuelidate[systemName].$touch()
+      // }
     },
     async onSubmit () {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
-        return
-      }
+      // this.$v.$touch()
+      // if (this.$v.$invalid) {
+      //   return
+      // }
       this.disableFormElements = true
       const submitData = {}
       // Entity
@@ -414,7 +414,7 @@ export default {
             }
           )
           this.setFormData()
-          this.$v.$reset()
+          // this.$v.$reset()
           this.$store.dispatch(
             'notifications/create',
             {
@@ -439,9 +439,10 @@ export default {
       // Entity
       for (const [key, value] of Object.entries(this.oldFormData.entity)) {
         this.formData.entity[key] = JSON.parse(JSON.stringify(value))
-        this.$v.formData.entity[key].$reset()
+        // this.$v.formData.entity[key].$reset()
       }
       // Relations
+      // for (const [key, value] of Object.entries(this.oldFormData.relation)
     },
     setFormData () {
       // Entity
@@ -460,8 +461,8 @@ export default {
           ) &&
           relationConfig.edit != null
         ) {
-          this.formData[relationTypeName] = []
           const relationDataName = `${relationConfig.domain_names.includes(this.entityTypeName) ? 'r' : 'ri'}_${relationTypeName}_s`
+          this.formData[relationDataName] = []
           for (const relationData of this.entityData[relationDataName]) {
             const relationFormData = {
               entity: {
@@ -488,7 +489,7 @@ export default {
                 }
               }
             }
-            this.formData[relationTypeName].push(relationFormData)
+            this.formData[relationDataName].push(relationFormData)
           }
         }
       }

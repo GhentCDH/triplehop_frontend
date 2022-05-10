@@ -18,6 +18,15 @@
         <b-col sm="3">
           <b-link
             class="float-right"
+            target="_blank"
+            :to="{
+              name: 'project_name-entity_type_name-id-edit',
+              params: {
+                project_name: projectName,
+                entity_type_name: fd.entity.entityTypeName,
+                id: fd.entity.id
+              }
+            }"
           >
             <b-icon-pencil-fill />
             Edit entity
@@ -43,6 +52,10 @@ export default {
     },
     formData: {
       type: Array,
+      required: true
+    },
+    projectName: {
+      type: String,
       required: true
     },
     relationTypeName: {

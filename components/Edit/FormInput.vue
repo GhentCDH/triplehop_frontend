@@ -16,9 +16,12 @@
 </template>
 <script>
 import frag from 'vue-frag'
+import { validationMixin } from 'vuelidate'
+import { helpers, required } from 'vuelidate/lib/validators'
 
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { VALIDATOR_TYPES_CONVERSION } from '~/components/Edit/utils.js'
+// import { VALIDATOR_TYPES_CONVERSION } from '~/components/Edit/utils.js'
+import { edtfYear } from '~/assets/js/validators'
 
 export default {
   directives: {
@@ -27,6 +30,9 @@ export default {
   components: {
     FormFeedback
   },
+  mixins: [
+    validationMixin
+  ],
   props: {
     id: {
       type: String,
@@ -39,10 +45,6 @@ export default {
     value: {
       type: String,
       required: true
-    },
-    vuelidate: {
-      type: Object,
-      required: true
     }
   },
   data () {
@@ -50,28 +52,48 @@ export default {
       validatorsWithError: {}
     }
   },
+  validations () {
+    const validations = {}
+    const fieldValidation = {}
+    const validators = this.field.validators
+    if (validators) {
+      for (const validator of validators) {
+        if (validator.type === 'required') {
+          fieldValidation.required = required
+        }
+        if (validator.type === 'edtf_year') {
+          fieldValidation.edtfYear = edtfYear
+        }
+        if (validator.type === 'regex') {
+          fieldValidation.regex = helpers.regex('regex', new RegExp(validator.regex))
+        }
+      }
+    }
+    console.log(validations)
+    return validations
+  },
   mounted () {
     // Use a custom watcher to watch the vuelidate formData
     // Since formData is an object, computed properties based on formData are not reactive
-    if (this.field.validators) {
-      for (const validator of this.field.validators) {
-        const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
-        this.$watch(
-          function () {
-            return this.vuelidate[validatorType]
-          },
-          function (newVal, oldVal) {
-            if (newVal === false && oldVal !== false) {
-              // Use $set since validatorWithErrors is an object
-              this.$set(this.validatorsWithError, validatorType, validator)
-            } else if (oldVal === false && newVal !== false) {
-              // Use $delete since validatorWithErrors is an object
-              this.$delete(this.validatorsWithError, validatorType)
-            }
-          }
-        )
-      }
-    }
+    // if (this.field.validators) {
+    //   for (const validator of this.field.validators) {
+    //     const validatorType = VALIDATOR_TYPES_CONVERSION[validator.type]
+    //     this.$watch(
+    //       function () {
+    //         return this.vuelidate[validatorType]
+    //       },
+    //       function (newVal, oldVal) {
+    //         if (newVal === false && oldVal !== false) {
+    //           // Use $set since validatorWithErrors is an object
+    //           this.$set(this.validatorsWithError, validatorType, validator)
+    //         } else if (oldVal === false && newVal !== false) {
+    //           // Use $delete since validatorWithErrors is an object
+    //           this.$delete(this.validatorsWithError, validatorType)
+    //         }
+    //       }
+    //     )
+    //   }
+    // }
   },
   methods: {
     onInput (value) {
@@ -84,8 +106,8 @@ export default {
       )
     },
     validateState () {
-      const { $dirty, $invalid } = this.vuelidate
-      return $dirty ? !$invalid : null
+      // const { $dirty, $invalid } = this.vuelidate
+      // return $dirty ? !$invalid : null
     }
   }
 }

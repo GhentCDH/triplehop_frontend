@@ -8,7 +8,6 @@
       :id="id"
       :field="field"
       :value="value"
-      :vuelidate="vuelidate"
       @input="$emit('input', $event)"
     />
     <slot
@@ -42,10 +41,6 @@ export default {
     },
     value: {
       type: [Array, String],
-      required: true
-    },
-    vuelidate: {
-      type: Object,
       required: true
     }
   },

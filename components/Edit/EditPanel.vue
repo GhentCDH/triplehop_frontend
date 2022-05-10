@@ -7,11 +7,11 @@
     <form-group
       v-for="field in panel.fields"
       :key="field.field"
+      :ref="field.field"
       :config="config"
       :field="field"
       :value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
-      :vuelidate="vuelidate[field.field.replace('$', '')]"
       @input="$emit('input', $event)"
     />
   </b-card>
@@ -45,10 +45,18 @@ export default {
     disabled: {
       type: Boolean,
       required: true
-    },
-    vuelidate: {
-      type: Object,
-      required: true
+    }
+    // vuelidate: {
+    //   type: Object,
+    //   required: true
+    // }
+  },
+  methods: {
+    reset () {
+      for (const field of this.panel.fields) {
+        console.log(field.field)
+        this.$refs[field.field].reset()
+      }
     }
   }
 }
