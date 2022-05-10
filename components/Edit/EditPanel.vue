@@ -1,5 +1,6 @@
 <template>
   <b-card
+    :id="`entity-${panel.label}`"
     :title="panel.label"
     class="bg-light border-0 mb-3"
   >

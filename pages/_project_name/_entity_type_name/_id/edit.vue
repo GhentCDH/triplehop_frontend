@@ -72,6 +72,7 @@
                 :key="`panel-${domainRelationTypeName}`"
                 :config="relationTypesConfig[domainRelationTypeName]"
                 :form-data="formData[domainRelationTypeName]"
+                :relation-type-name="domainRelationTypeName"
                 side="domain"
                 @input="formInput"
               />
@@ -104,12 +105,50 @@
             <b-nav
               vertical
             >
-              <b-nav-item href="#entity">
-                Entity
-              </b-nav-item>
-              <b-nav-item href="#relations">
-                Relations
-              </b-nav-item>
+              <li class="nav-item">
+                <b-link href="#entity" class="nav-link">
+                  Entity
+                </b-link>
+                <b-nav>
+                  <template
+                    v-for="(panel, panelIndex) in layout"
+                  >
+                    <b-icon-arrow-90deg-down
+                      :key="`icon-entity-${panelIndex}`"
+                      rotate="270"
+                      shift-v="-8"
+                    />
+                    <b-nav-item
+                      :key="`nav-entity-${panelIndex}`"
+                      :href="`#entity-${panel.label}`"
+                    >
+                      {{ panel.label }}
+                    </b-nav-item>
+                  </template>
+                </b-nav>
+              </li>
+              <li class="nav-item">
+                <b-link href="#relations" class="nav-link">
+                  Relations
+                </b-link>
+                <b-nav>
+                  <template
+                    v-for="domainRelationTypeName in domainRelationTypeNames"
+                  >
+                    <b-icon-arrow-90deg-down
+                      :key="`icon-relation-${domainRelationTypeName}`"
+                      rotate="270"
+                      shift-v="-8"
+                    />
+                    <b-nav-item
+                      :key="`nav-relation-${domainRelationTypeName}`"
+                      :href="`#relation-domain-${domainRelationTypeName}`"
+                    >
+                      {{ relationTypesConfig[domainRelationTypeName].edit.domain_title }}
+                    </b-nav-item>
+                  </template>
+                </b-nav>
+              </li>
               <b-nav-item href="#actions">
                 Actions
               </b-nav-item>

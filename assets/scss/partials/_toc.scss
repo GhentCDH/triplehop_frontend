@@ -1,3 +1,11 @@
 .toc {
   height: 100vh;
+
+  .nav-item .nav {
+    margin-left: 1em;
+
+    .nav-link {
+      padding-left: .5em;
+    }
+  }
 }

@@ -1,5 +1,6 @@
 <template>
   <b-card
+    :id="`relation-${side}-${relationTypeName}`"
     :title="panelTitle"
     class="bg-light border-0 mb-3"
   >
@@ -27,7 +28,7 @@
         class="float-right"
         variant="danger"
       >
-        <b-icon icon="trash" />
+        <b-icon-trash />
         Delete relation
       </b-button>
     </b-card>
@@ -42,6 +43,10 @@ export default {
     },
     formData: {
       type: Array,
+      required: true
+    },
+    relationTypeName: {
+      type: String,
       required: true
     },
     side: {
