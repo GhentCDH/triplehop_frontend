@@ -7,7 +7,7 @@
     <form-group
       v-for="field in panel.fields"
       :key="field.field"
-      :ref="field.field"
+      ref="formGroups"
       :config="config"
       :field="field"
       :initial-value="formData[field.field.replace('$', '')]"
@@ -47,12 +47,14 @@ export default {
       required: true
     }
   },
-  methods: {
-    reset () {
-      for (const field of this.panel.fields) {
-        console.log(field.field)
-        this.$refs[field.field].reset()
+  computed: {
+    invalid () {
+      for (const formGroup of this.$refs.formGroups) {
+        if (formGroup.invalid) {
+          return true
+        }
       }
+      return false
     }
   }
 }

@@ -7,7 +7,7 @@
       @input="onInput"
     />
     <form-feedback
-      v-for="validator of field.validators"
+      v-for="validator of validatorsWithError"
       :key="validator.type"
       :validator="validator"
     />
@@ -47,8 +47,7 @@ export default {
   },
   data () {
     return {
-      value: this.initialValue,
-      validatorsWithError: {}
+      value: this.initialValue
     }
   },
   validations () {
@@ -70,6 +69,14 @@ export default {
       }
     }
     return validations
+  },
+  computed: {
+    validatorsWithError () {
+      if (this.field.validators == null) {
+        return []
+      }
+      return this.field.validators.filter(v => !this.$v.value[v.type])
+    }
   },
   watch: {
     initialValue () {

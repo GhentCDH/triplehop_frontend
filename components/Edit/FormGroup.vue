@@ -6,6 +6,7 @@
     <component
       :is="component_type(field)"
       :id="id"
+      ref="input"
       :field="field"
       :initial-value="initialValue"
       @input="$emit('input', $event)"
@@ -47,6 +48,11 @@ export default {
   data () {
     return {
       id: this.field.field.replace('$', '')
+    }
+  },
+  computed: {
+    invalid () {
+      return this.$refs.input.$v.$invalid
     }
   },
   methods: {

@@ -57,6 +57,7 @@
               <edit-panel
                 v-for="(panel, panelIndex) in layout"
                 :key="`panel-${panelIndex}`"
+                ref="entityPanels"
                 :panel="panel"
                 :config="entityTypeConfig"
                 :form-data="formData.entity"
@@ -82,7 +83,7 @@
               <b-button
                 type="submit"
                 variant="primary"
-                :disabled="!formDataChanged || disableFormElements"
+                :disabled="!formDataChanged || disableFormElements || invalid"
               >
                 Submit
               </b-button>
@@ -320,6 +321,14 @@ export default {
     },
     titleValue () {
       return this.title.map(title => title.value).join(', ')
+    },
+    invalid () {
+      for (const entityPanel of this.$refs.entityPanels) {
+        if (entityPanel.invalid) {
+          return true
+        }
+      }
+      return false
     }
   },
   methods: {
@@ -391,7 +400,6 @@ export default {
       // Entity
       for (const [key, value] of Object.entries(this.oldFormData.entity)) {
         this.formData.entity[key] = JSON.parse(JSON.stringify(value))
-        // this.$v.formData.entity[key].$reset()
       }
       // Relations
       // for (const [key, value] of Object.entries(this.oldFormData.relation)
