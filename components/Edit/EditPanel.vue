@@ -4,6 +4,7 @@
     :title="panel.label"
     class="bg-light border-0 mb-3"
   >
+    <!-- TODO: sources edit (collapsible) -->
     <form-group
       v-for="field in panel.fields"
       :key="field.field"
@@ -55,6 +56,13 @@ export default {
         }
       }
       return false
+    }
+  },
+  methods: {
+    touch () {
+      for (const formGroup of this.$refs.formGroups) {
+        formGroup.touch()
+      }
     }
   }
 }

@@ -346,10 +346,12 @@ export default {
       formData[systemName] = value
     },
     async onSubmit () {
-      // this.$v.$touch()
-      // if (this.$v.$invalid) {
-      //   return
-      // }
+      for (const entityPanel of this.$refs.entityPanels) {
+        entityPanel.touch()
+      }
+      if (this.invalid) {
+        return
+      }
       this.disableFormElements = true
       const submitData = {}
       // Entity

@@ -64,6 +64,9 @@ export default {
     },
     marked (markdown) {
       return sanitizeHtml(marked(markdown))
+    },
+    touch () {
+      this.$refs.input.$v.$touch()
     }
   }
 }
