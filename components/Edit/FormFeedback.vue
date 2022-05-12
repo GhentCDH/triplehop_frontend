@@ -10,7 +10,6 @@
     <b-form-invalid-feedback v-else>
       The value provided for this field is invalid.
     </b-form-invalid-feedback>
-    </b-form-invalid-feedback>
   </div>
 </template>
 <script>

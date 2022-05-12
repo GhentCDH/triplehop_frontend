@@ -6,36 +6,40 @@
       @change="orderChanged"
     >
       <transition-group type="transition" name="list">
-        <b-input-group
+        <template
           v-for="fieldKey in fieldKeys"
-          :key="`${fieldKey}_input`"
-          class="mt-3"
         >
-          <b-input-group-prepend>
-            <b-button variant="outline-default" class="draggable-handle">
-              <b-icon icon="arrows-move" />
-            </b-button>
-          </b-input-group-prepend>
-          <b-form-input
-            :value="keyedValues[fieldKey]"
-            :state="validateState(fieldKey)"
-            @input="onInput(fieldKey, $event)"
-          />
-          <b-input-group-append>
-            <b-button
-              variant="danger"
-              @click="del(fieldKey)"
-            >
-              <b-icon icon="trash" />
-              Delete
-            </b-button>
-          </b-input-group-append>
+          <!-- is-invalid class is needed for form-feedback to be displayed -->
+          <b-input-group
+            :key="`${fieldKey}_input`"
+            :class="[{'is-invalid' : !validateState(fieldKey)}, 'mt-3']"
+          >
+            <b-input-group-prepend>
+              <b-button variant="outline-default" class="draggable-handle">
+                <b-icon icon="arrows-move" />
+              </b-button>
+            </b-input-group-prepend>
+            <b-form-input
+              :value="keyedValues[fieldKey]"
+              :state="validateState(fieldKey)"
+              @input="onInput(fieldKey, $event)"
+            />
+            <b-input-group-append>
+              <b-button
+                variant="danger"
+                @click="del(fieldKey)"
+              >
+                <b-icon icon="trash" />
+                Delete
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
           <form-feedback
             v-for="validator of keyedValidatorsWithError[fieldKey]"
             :key="`${fieldKey}_feedback_${validator.type}`"
             :validator="validator"
           />
-        </b-input-group>
+        </template>
       </transition-group>
     </draggable>
     <b-button
@@ -163,6 +167,7 @@ export default {
     onInput (fieldKey, $event) {
       // use $set so vuelidate revalidates
       this.$set(this.values, this.fieldKeys.indexOf(fieldKey), $event)
+      this.$v.values.$each[this.fieldKeys.indexOf(fieldKey)].$touch()
       this.$emit(
         'input',
         {
@@ -184,8 +189,8 @@ export default {
       )
     },
     validateState (fieldKey) {
-      // const { $dirty, $invalid } = this.vuelidate.$each[this.fieldKeys.indexOf(fieldKey)]
-      // return $dirty ? !$invalid : null
+      const { $dirty, $invalid } = this.$v.values.$each[this.fieldKeys.indexOf(fieldKey)]
+      return $dirty ? !$invalid : null
     }
   }
 }
