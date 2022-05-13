@@ -98,7 +98,7 @@
             </b-form>
           </b-col>
           <b-navbar
-            v-if="isLoaded"
+            v-if="refsLoaded"
             v-b-scrollspy:edit
             class="d-none d-sm-block col-sm-3 sticky-top border-left border-secondary toc"
           >
@@ -195,7 +195,7 @@ export default {
       formData: {
         entity: {}
       },
-      isLoaded: false,
+      refsLoaded: false,
       oldFormData: {}
     }
   },
@@ -354,9 +354,15 @@ export default {
     }
   },
   mounted () {
-    this.$nextTick(() => {
-      this.isLoaded = true
-    })
+    const interval = setInterval(() => {
+      if (
+        this.$refs.entityPanels != null &&
+        this.$refs.relationPanels != null
+      ) {
+        this.refsLoaded = true
+        clearInterval(interval)
+      }
+    }, 50)
   },
   methods: {
     constructFieldFromData,
