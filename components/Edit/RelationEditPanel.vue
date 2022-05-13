@@ -61,15 +61,14 @@ export default {
     relationTypeName: {
       type: String,
       required: true
-    },
-    side: {
-      type: String,
-      required: true
     }
   },
   computed: {
     panelTitle () {
       return this.config.edit[`${this.side}_title`]
+    },
+    side () {
+      return this.relationTypeName.split('_')[0] === 'r' ? 'domain' : 'range'
     }
   }
 }

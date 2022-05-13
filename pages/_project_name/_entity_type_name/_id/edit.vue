@@ -54,6 +54,7 @@
               <h2 id="entity" class="text-primary">
                 Entity
               </h2>
+              <!-- TODO: add uuid to panel so it can be used as key? -->
               <edit-panel
                 v-for="(panel, panelIndex) in layout"
                 :key="`panel-${panelIndex}`"
@@ -64,19 +65,19 @@
                 :disabled="disableFormElements"
                 @input="formInput('entity', $event)"
               />
-              <!-- <h2 id="relations" class="text-primary">
+              <h2 id="relations" class="text-primary">
                 Relations
               </h2>
               <relation-edit-panel
-                v-for="domainRelationTypeName in domainRelationTypeNames"
-                :key="`panel-${domainRelationTypeName}`"
-                :config="relationTypesConfig[domainRelationTypeName]"
-                :form-data="formData[domainRelationTypeName]"
+                v-for="relationTypeName in editableRelationTypeNames"
+                :key="`panel-${relationTypeName}`"
+                ref="relationPanels"
+                :config="getRelationConfig(relationTypeName)"
+                :form-data="formData[relationTypeName]"
                 :project-name="projectName"
-                :relation-type-name="domainRelationTypeName"
-                side="domain"
+                :relation-type-name="relationTypeName"
                 @input="formInput"
-              /> -->
+              />
               <h2 id="actions" class="text-primary">
                 Actions
               </h2>
@@ -143,18 +144,18 @@
                 </b-link>
                 <b-nav>
                   <template
-                    v-for="domainRelationTypeName in domainRelationTypeNames"
+                    v-for="relationTypeName in editableRelationTypeNames"
                   >
                     <b-icon-arrow-90deg-down
-                      :key="`icon-relation-${domainRelationTypeName}`"
+                      :key="`icon-relation-${relationTypeName}`"
                       rotate="270"
                       shift-v="-8"
                     />
                     <b-nav-item
-                      :key="`nav-relation-${domainRelationTypeName}`"
-                      :href="`#relation-domain-${domainRelationTypeName}`"
+                      :key="`nav-relation-${relationTypeName}`"
+                      :href="`#${relationTypeName}`"
                     >
-                      {{ relationTypesConfig[domainRelationTypeName].edit.domain_title }}
+                      {{ getRelationConfig(relationTypeName).edit.domain_title }}
                     </b-nav-item>
                   </template>
                 </b-nav>
@@ -174,12 +175,12 @@
 
 import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import EditPanel from '~/components/Edit/EditPanel.vue'
-// import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
+import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
 
 export default {
   components: {
-    EditPanel
-    // RelationEditPanel
+    EditPanel,
+    RelationEditPanel
   },
   validate ({ params }) {
     // Make sure id is a number
@@ -281,15 +282,20 @@ export default {
       })
       return breadcrumbs
     },
-    domainRelationTypeNames () {
-      return Object.keys(this.relationTypesConfig)
-        .filter(
-          (relationTypeName) => {
-            const relationConfig = this.relationTypesConfig[relationTypeName]
-            return relationConfig.domain_names.includes(this.entityTypeName) &&
-              relationConfig.edit != null
-          }
-        )
+    editableRelationTypeNames () {
+      const editableRelationTypeNames = []
+      for (const [relationTypeName, relationConfig] of Object.entries(this.relationTypesConfig)) {
+        if (relationConfig.edit == null) {
+          continue
+        }
+        if (relationConfig.domain_names.includes(this.entityTypeName)) {
+          editableRelationTypeNames.push(`r_${relationTypeName}_s`)
+        }
+        if (relationConfig.range_names.includes(this.entityTypeName)) {
+          editableRelationTypeNames.push(`ri_${relationTypeName}_s`)
+        }
+      }
+      return editableRelationTypeNames
     },
     entityData () {
       return this.$store.state.data.data
@@ -366,6 +372,10 @@ export default {
       // Update formdata
       formData[systemName] = value
     },
+    getRelationConfig (relationTypeName) {
+      // Remove r(i)_ and _s from relationTypeName
+      return this.relationTypesConfig[relationTypeName.split('_').slice(1, -1).join('_')]
+    },
     async onSubmit () {
       for (const entityPanel of this.$refs.entityPanels) {
         entityPanel.touch()
@@ -436,44 +446,37 @@ export default {
         }
       }
       // Relations
-      for (const [relationTypeName, relationConfig] of Object.entries(this.relationTypesConfig)) {
-        if (
-          (
-            relationConfig.domain_names.includes(this.entityTypeName) ||
-            relationConfig.range_names.includes(this.entityTypeName)
-          ) &&
-          relationConfig.edit != null
-        ) {
-          const relationDataName = `${relationConfig.domain_names.includes(this.entityTypeName) ? 'r' : 'ri'}_${relationTypeName}_s`
-          this.formData[relationDataName] = []
-          for (const relationData of this.entityData[relationDataName]) {
-            const relationFormData = {
-              entity: {
-                id: relationData.entity.id,
-                title: this.constructFieldFromData(
-                  this.entityTypesConfig[relationData.entity.__typename.toLowerCase()].display.title,
-                  relationData.entity,
-                  {},
-                  {},
-                  true
-                )[0].value,
-                entityTypeName: relationData.entity.__typename.toLowerCase()
-              }
+      for (const relationTypeName of this.editableRelationTypeNames) {
+        this.formData[relationTypeName] = []
+        for (const relationData of this.entityData[relationTypeName]) {
+          const relationFormData = {
+            entity: {
+              id: relationData.entity.id,
+              title: this.constructFieldFromData(
+                this.entityTypesConfig[relationData.entity.__typename.toLowerCase()].display.title,
+                relationData.entity,
+                {},
+                {},
+                true
+              )[0].value,
+              entityTypeName: relationData.entity.__typename.toLowerCase()
             }
-            // TODO: test if code below works
-            if ('layout' in relationConfig.edit) {
-              for (const panel of relationConfig.edit.layout) {
-                for (const field of panel.fields) {
-                  const systemName = field.field.replace('$', '')
-                  if (!('relation' in relationFormData)) {
-                    relationFormData.relation = {}
-                  }
-                  relationFormData.relation[systemName] = relationData[systemName]
-                }
-              }
-            }
-            this.formData[relationDataName].push(relationFormData)
           }
+          // TODO: test if code below works
+          const relationConfig = this.getRelationConfig(relationTypeName)
+          if ('layout' in relationConfig.edit) {
+            for (const panel of relationConfig.edit.layout) {
+              for (const field of panel.fields) {
+                const systemName = field.field.replace('$', '')
+                if (!('relation' in relationFormData)) {
+                  relationFormData.relation = {}
+                }
+                relationFormData.relation[systemName] = relationData[systemName]
+              }
+            }
+          }
+          console.log(JSON.stringify(relationFormData))
+          this.formData[relationTypeName].push(relationFormData)
         }
       }
       // Set oldFormData
