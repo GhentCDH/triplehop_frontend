@@ -1,6 +1,6 @@
 <template>
   <b-card
-    :id="`entity-${panel.label}`"
+    :id="`relation-${panel.label}`"
     :title="panel.label"
     class="bg-light border-0 mb-3"
   >
@@ -9,7 +9,7 @@
       v-for="field in panel.fields"
       :key="field.field"
       ref="formGroups"
-      :config="entityTypeConfig"
+      :config="relationTypeConfig"
       :field="field"
       :initial-value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
@@ -29,15 +29,15 @@ export default {
       type: Boolean,
       required: true
     },
-    entityTypeConfig: {
-      type: Object,
-      required: true
-    },
     formData: {
       type: Object,
       required: true
     },
     panel: {
+      type: Object,
+      required: true
+    },
+    relationTypeConfig: {
       type: Object,
       required: true
     },

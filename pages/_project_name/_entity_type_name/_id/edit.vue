@@ -59,10 +59,10 @@
                 v-for="(panel, panelIndex) in layout"
                 :key="`panel-${panelIndex}`"
                 ref="entityPanels"
-                :panel="panel"
-                :config="entityTypeConfig"
-                :form-data="formData.entity"
                 :disabled="disableFormElements"
+                :entity-type-config="entityTypeConfig"
+                :form-data="formData.entity"
+                :panel="panel"
                 @input="formInput('entity', $event)"
               />
               <h2 id="relations" class="text-primary">
@@ -72,11 +72,12 @@
                 v-for="relationTypeName in editableRelationTypeNames"
                 :key="`panel-${relationTypeName}`"
                 ref="relationPanels"
-                :config="getRelationConfig(relationTypeName)"
+                :disabled="disableFormElements"
                 :form-data="formData[relationTypeName]"
                 :project-name="projectName"
+                :relation-type-config="getRelationConfig(relationTypeName)"
                 :relation-type-name="relationTypeName"
-                @input="formInput"
+                @input="formInput(relationTypeName, $event)"
               />
               <h2 id="actions" class="text-primary">
                 Actions
@@ -366,7 +367,7 @@ export default {
   },
   methods: {
     constructFieldFromData,
-    formInput (path, { systemName, value }) {
+    formInput (path, { index, systemName, value }) {
       // Determine which part of the formdata needs to be updated
       let formData = this.formData
       let oldFormData = this.oldFormData
@@ -376,7 +377,12 @@ export default {
       }
 
       // Update formdata
-      formData[systemName] = value
+      if (index == null) {
+        formData[systemName] = value
+      } else {
+        // Relation data
+        formData[index].relation[systemName] = value
+      }
     },
     getRelationConfig (relationTypeName) {
       // Remove r(i)_ and _s from relationTypeName
@@ -470,7 +476,7 @@ export default {
           }
           // TODO: test if code below works
           const relationConfig = this.getRelationConfig(relationTypeName)
-          if ('layout' in relationConfig.edit) {
+          if (relationConfig.edit.layout != null) {
             for (const panel of relationConfig.edit.layout) {
               for (const field of panel.fields) {
                 const systemName = field.field.replace('$', '')
@@ -481,7 +487,6 @@ export default {
               }
             }
           }
-          console.log(JSON.stringify(relationFormData))
           this.formData[relationTypeName].push(relationFormData)
         }
       }

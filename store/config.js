@@ -197,6 +197,17 @@ export const actions = {
             edit {
               domain_title
               range_title
+              layout {
+                label
+                fields {
+                  label
+                  field
+                  type
+                  placeholder
+                  help_message
+                  multi
+                }
+              }
             }
             domain_names
             range_names

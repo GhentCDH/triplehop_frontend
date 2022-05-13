@@ -1,10 +1,10 @@
 <template>
   <b-card
-    :id="`relation-${side}-${relationTypeName}`"
+    :id="`${relationTypeName}`"
     :title="panelTitle"
     class="bg-light border-0 mb-3"
   >
-    <!-- todo: use relation type and relation id as key below -->
+    <!-- todo: use relation type and relation id as key below (what to do with new relations?) -->
     <b-card
       v-for="(fd, index) in formData"
       :key="index"
@@ -33,6 +33,16 @@
           </b-link>
         </b-col>
       </b-row>
+      <relation-edit-panel-panel
+        v-for="(panel, panelIndex) in layout"
+        :key="`${relationTypeName}-panel-${panelIndex}`"
+        :ref="relationTypeName"
+        :panel="panel"
+        :relation-type-config="relationTypeConfig"
+        :form-data="formData[index].relation"
+        :disabled="disabled"
+        @input="onInput(index, $event)"
+      />
       <b-button
         class="float-right"
         variant="danger"
@@ -44,10 +54,15 @@
   </b-card>
 </template>
 <script>
+import RelationEditPanelPanel from '~/components/Edit/RelationEditPanelPanel.vue'
+
 export default {
+  components: {
+    RelationEditPanelPanel
+  },
   props: {
-    config: {
-      type: Object,
+    disabled: {
+      type: Boolean,
       required: true
     },
     formData: {
@@ -58,17 +73,45 @@ export default {
       type: String,
       required: true
     },
+    relationTypeConfig: {
+      type: Object,
+      required: true
+    },
     relationTypeName: {
       type: String,
       required: true
     }
   },
   computed: {
+    layout () {
+      const layout = this.relationTypeConfig.edit.layout
+      if (layout == null) {
+        return []
+      }
+      for (const panel of layout) {
+        for (const field of panel.fields) {
+          const systemName = field.field.replace('$', '')
+          field.validators = this.relationTypeConfig.data[systemName].validators
+        }
+      }
+      return layout
+    },
     panelTitle () {
-      return this.config.edit[`${this.side}_title`]
+      return this.relationTypeConfig.edit[`${this.side}_title`]
     },
     side () {
       return this.relationTypeName.split('_')[0] === 'r' ? 'domain' : 'range'
+    }
+  },
+  methods: {
+    onInput (index, event) {
+      this.$emit(
+        'input',
+        {
+          ...event,
+          index
+        }
+      )
     }
   }
 }
