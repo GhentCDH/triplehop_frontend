@@ -12,7 +12,7 @@
           <!-- is-invalid class is needed for form-feedback to be displayed -->
           <b-input-group
             :key="`${fieldKey}_input`"
-            :class="[{'is-invalid' : !validateState(fieldKey)}, 'mt-3']"
+            :class="['mt-3', {'is-invalid' : !validateState(fieldKey)}]"
           >
             <b-input-group-prepend>
               <b-button variant="outline-default" class="draggable-handle">

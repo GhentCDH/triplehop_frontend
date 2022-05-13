@@ -97,6 +97,7 @@
             </b-form>
           </b-col>
           <b-navbar
+            v-if="isLoaded"
             v-b-scrollspy:edit
             class="d-none d-sm-block col-sm-3 sticky-top border-left border-secondary toc"
           >
@@ -107,7 +108,10 @@
               vertical
             >
               <li class="nav-item">
-                <b-link href="#entity" class="nav-link">
+                <b-link
+                  href="#entity"
+                  :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
+                >
                   Entity
                 </b-link>
                 <b-nav>
@@ -119,12 +123,17 @@
                       rotate="270"
                       shift-v="-8"
                     />
-                    <b-nav-item
+                    <li
                       :key="`nav-entity-${panelIndex}`"
-                      :href="`#entity-${panel.label}`"
+                      class="nav-item"
                     >
-                      {{ panel.label }}
-                    </b-nav-item>
+                      <b-link
+                        :href="`#entity-${panel.label}`"
+                        :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
+                      >
+                        {{ panel.label }}
+                      </b-link>
+                    </li>
                   </template>
                 </b-nav>
               </li>
@@ -185,6 +194,7 @@ export default {
       formData: {
         entity: {}
       },
+      isLoaded: false,
       oldFormData: {}
     }
   },
@@ -230,6 +240,14 @@ export default {
     // TODO: set Meta Tags for this Page
   },
   computed: {
+    anyEntityPanelInvalid () {
+      for (const entityPanel of this.$refs.entityPanels) {
+        if (entityPanel.invalid) {
+          return true
+        }
+      }
+      return false
+    },
     breadcrumbs () {
       const breadcrumbs = []
       // project home
@@ -291,6 +309,12 @@ export default {
     id () {
       return this.$route.params.id
     },
+    invalid () {
+      if (this.anyEntityPanelInvalid) {
+        return true
+      }
+      return false
+    },
     layout () {
       const layout = this.entityTypeConfig.edit.layout
       for (const panel of layout) {
@@ -321,15 +345,12 @@ export default {
     },
     titleValue () {
       return this.title.map(title => title.value).join(', ')
-    },
-    invalid () {
-      for (const entityPanel of this.$refs.entityPanels) {
-        if (entityPanel.invalid) {
-          return true
-        }
-      }
-      return false
     }
+  },
+  mounted () {
+    this.$nextTick(() => {
+      this.isLoaded = true
+    })
   },
   methods: {
     constructFieldFromData,
