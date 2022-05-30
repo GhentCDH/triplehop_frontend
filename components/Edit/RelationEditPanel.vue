@@ -2,7 +2,7 @@
   <b-card
     :id="`${relationTypeName}`"
     :title="panelTitle"
-    class="bg-light border-0 mb-3"
+    class="bg-light border-0"
   >
     <!-- todo: use relation type and relation id as key below (what to do with new relations?) -->
     <b-card
@@ -11,14 +11,15 @@
       class="border-0 bg-white mb-1"
     >
       <b-row>
-        <b-col sm="9">
+        <b-col
+          sm="12"
+          class="mb-1"
+        >
           [{{ fd.entity.id }}] {{ fd.entity.title }}
           <!-- TODO: check edit permission on entity type -->
-        </b-col>
-        <b-col sm="3">
           <b-link
-            class="float-right"
             target="_blank"
+            title="Edit entity"
             :to="{
               name: 'project_name-entity_type_name-id-edit',
               params: {
@@ -29,8 +30,14 @@
             }"
           >
             <b-icon-pencil-fill />
-            Edit entity
           </b-link>
+          <b-button
+            class="float-right"
+            variant="danger"
+            title="Delete this relation"
+          >
+            <b-icon-trash />
+          </b-button>
         </b-col>
       </b-row>
       <relation-edit-panel-panel
@@ -43,13 +50,6 @@
         :disabled="disabled"
         @input="onInput(index, $event)"
       />
-      <b-button
-        class="float-right"
-        variant="danger"
-      >
-        <b-icon-trash />
-        Delete relation
-      </b-button>
     </b-card>
   </b-card>
 </template>

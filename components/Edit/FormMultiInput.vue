@@ -27,10 +27,10 @@
             <b-input-group-append>
               <b-button
                 variant="danger"
+                title="Remove this value"
                 @click="del(fieldKey)"
               >
                 <b-icon icon="trash" />
-                Delete
               </b-button>
             </b-input-group-append>
           </b-input-group>
