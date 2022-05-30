@@ -1,11 +1,16 @@
 .toc {
   height: 100vh;
 
+  .nav-border-left {
+    margin-left: -1rem;
+    padding-left: 1rem;
+  }
+
   .nav-item .nav {
-    margin-left: 1em;
+    margin-left: 1rem;
 
     .nav-link {
-      padding-left: .5em;
+      padding-left: .5rem;
     }
   }
 }

@@ -101,70 +101,79 @@
           <b-navbar
             v-if="refsLoaded"
             v-b-scrollspy:edit
-            class="d-none d-sm-block col-sm-3 sticky-top border-left border-secondary toc"
+            class="d-none d-sm-block col-sm-3 sticky-top toc"
           >
-            <b-navbar-brand href="#">
-              Quick navigation
-            </b-navbar-brand>
-            <b-nav
-              vertical
-            >
-              <li class="nav-item">
-                <b-link
-                  href="#entity"
-                  :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
-                >
-                  Entity
-                </b-link>
-                <b-nav>
-                  <template
-                    v-for="(panel, panelIndex) in layout"
+            <div class="border-left border-secondary nav-border-left">
+              <b-navbar-brand href="#">
+                Quick navigation
+              </b-navbar-brand>
+              <b-nav
+                vertical
+              >
+                <li class="nav-item">
+                  <b-link
+                    href="#entity"
+                    :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
                   >
-                    <b-icon-arrow-90deg-down
-                      :key="`icon-entity-${panelIndex}`"
-                      rotate="270"
-                      shift-v="-8"
-                    />
-                    <li
-                      :key="`nav-entity-${panelIndex}`"
-                      class="nav-item"
+                    Entity
+                  </b-link>
+                  <b-nav>
+                    <template
+                      v-for="(panel, panelIndex) in layout"
                     >
-                      <b-link
-                        :href="`#entity-${panel.label}`"
-                        :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
+                      <li
+                        :key="`nav-entity-${panelIndex}`"
+                        :class="['nav-item', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
                       >
-                        {{ panel.label }}
-                      </b-link>
-                    </li>
-                  </template>
-                </b-nav>
-              </li>
-              <li class="nav-item">
-                <b-link href="#relations" class="nav-link">
-                  Relations
-                </b-link>
-                <b-nav>
-                  <template
-                    v-for="relationTypeName in editableRelationTypeNames"
+                        <b-link
+                          :href="`#entity-${panel.label}`"
+                          :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
+                        >
+                          <b-icon-arrow-90deg-down
+                            rotate="270"
+                            shift-v="4"
+                          />
+                          {{ panel.label }}
+                        </b-link>
+                      </li>
+                    </template>
+                  </b-nav>
+                </li>
+                <li class="nav-item">
+                  <b-link
+                    href="#relations"
+                    :class="['nav-link']"
                   >
-                    <b-icon-arrow-90deg-down
-                      :key="`icon-relation-${relationTypeName}`"
-                      rotate="270"
-                      shift-v="-8"
-                    />
-                    <b-nav-item
-                      :key="`nav-relation-${relationTypeName}`"
-                      :href="`#${relationTypeName}`"
+                    Relations
+                  </b-link>
+                  <b-nav>
+                    <template
+                      v-for="relationTypeName in editableRelationTypeNames"
                     >
-                      {{ getRelationConfig(relationTypeName).edit.domain_title }}
-                    </b-nav-item>
-                  </template>
-                </b-nav>
-              </li>
-              <b-nav-item href="#actions">
-                Actions
-              </b-nav-item>
-            </b-nav>
+                      <li
+                        :key="`nav-relation-${relationTypeName}`"
+                        :class="['nav-item']"
+                      >
+                        <b-link
+                          :href="`#${relationTypeName}`"
+                          :class="['nav-link']"
+                        >
+                          <b-icon-arrow-90deg-down
+                            :key="`icon-relation-${relationTypeName}`"
+                            rotate="270"
+                            shift-v="4"
+                          />
+                          {{ getRelationConfig(relationTypeName).edit.domain_title }}
+                        </b-link>
+                      </li>
+                    </template>
+                  </b-nav>
+                </li>
+                <b-nav-item href="#actions">
+                  Actions
+                </b-nav-item>
+              </b-nav>
+            </div>
           </b-navbar>
         </b-row>
       </b-overlay>
