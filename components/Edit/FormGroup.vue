@@ -23,11 +23,13 @@
 import { marked } from 'marked'
 import sanitizeHtml from 'sanitize-html'
 
+import FormDropdown from '~/components/Edit/FormDropdown.vue'
 import FormInput from '~/components/Edit/FormInput.vue'
 import FormMultiInput from '~/components/Edit/FormMultiInput.vue'
 
 export default {
   components: {
+    FormDropdown,
     FormInput,
     FormMultiInput
   },
@@ -57,6 +59,9 @@ export default {
   },
   methods: {
     component_type (field) {
+      if (field.type === 'dropdown') {
+        return 'form-dropdown'
+      }
       if (field.multi) {
         return 'form-multi-input'
       }
