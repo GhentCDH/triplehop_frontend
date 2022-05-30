@@ -148,11 +148,11 @@
                   </b-link>
                   <b-nav>
                     <template
-                      v-for="relationTypeName in editableRelationTypeNames"
+                      v-for="(relationTypeName, panelIndex) in editableRelationTypeNames"
                     >
                       <li
                         :key="`nav-relation-${relationTypeName}`"
-                        :class="['nav-item']"
+                        :class="['nav-item', {'text-danger': $refs.relationPanels[panelIndex].invalid}]"
                       >
                         <b-link
                           :href="`#${relationTypeName}`"

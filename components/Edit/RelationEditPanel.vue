@@ -36,7 +36,7 @@
       <relation-edit-panel-panel
         v-for="(panel, panelIndex) in layout"
         :key="`${relationTypeName}-panel-${panelIndex}`"
-        :ref="relationTypeName"
+        ref="panels"
         :panel="panel"
         :relation-type-config="relationTypeConfig"
         :form-data="formData[index].relation"
@@ -83,6 +83,17 @@ export default {
     }
   },
   computed: {
+    invalid () {
+      if (this.layout.length === 0) {
+        return false
+      }
+      for (const panel of this.$refs.panels) {
+        if (panel.invalid) {
+          return true
+        }
+      }
+      return false
+    },
     layout () {
       const layout = this.relationTypeConfig.edit.layout
       if (layout == null) {
