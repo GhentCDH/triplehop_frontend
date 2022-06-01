@@ -6,8 +6,8 @@
   >
     <!-- todo: use relation type and relation id as key below (what to do with new relations?) -->
     <b-card
-      v-for="(fd, index) in formData"
-      :key="index"
+      v-for="(relationData, relationId) in formData"
+      :key="relationId"
       class="border-0 bg-white mb-1"
     >
       <b-row>
@@ -15,7 +15,7 @@
           sm="12"
           class="mb-1"
         >
-          [{{ fd.entity.id }}] {{ fd.entity.title }}
+          [{{ relationData.entity.id }}] {{ relationData.entity.title }}
           <!-- TODO: check edit permission on entity type -->
           <b-link
             target="_blank"
@@ -24,8 +24,8 @@
               name: 'project_name-entity_type_name-id-edit',
               params: {
                 project_name: projectName,
-                entity_type_name: fd.entity.entityTypeName,
-                id: fd.entity.id
+                entity_type_name: relationData.entity.entityTypeName,
+                id: relationData.entity.id
               }
             }"
           >
@@ -46,9 +46,9 @@
         ref="panels"
         :panel="panel"
         :relation-type-config="relationTypeConfig"
-        :form-data="formData[index].relation"
+        :form-data="formData[relationId].relation"
         :disabled="disabled"
-        @input="onInput(index, $event)"
+        @input="onInput(relationId, $event)"
       />
     </b-card>
   </b-card>
@@ -66,7 +66,7 @@ export default {
       required: true
     },
     formData: {
-      type: Array,
+      type: Object,
       required: true
     },
     projectName: {
@@ -115,14 +115,28 @@ export default {
     }
   },
   methods: {
-    onInput (index, event) {
+    onInput (relationId, event) {
       this.$emit(
         'input',
         {
           ...event,
-          index
+          relationId
         }
       )
+    },
+    reset () {
+      if (this.layout.length !== 0) {
+        for (const panel of this.$refs.panels) {
+          panel.reset()
+        }
+      }
+    },
+    touch () {
+      if (this.layout.length !== 0) {
+        for (const panel of this.$refs.panels) {
+          panel.touch()
+        }
+      }
     }
   }
 }

@@ -308,6 +308,7 @@ export default {
       return editableRelationTypeNames
     },
     entityData () {
+      console.log('new entitydata')
       return this.$store.state.data.data
     },
     entityTypeConfig () {
@@ -376,7 +377,7 @@ export default {
   },
   methods: {
     constructFieldFromData,
-    formInput (path, { index, systemName, value }) {
+    formInput (path, { relationId, systemName, value }) {
       // Determine which part of the formdata needs to be updated
       let formData = this.formData
       let oldFormData = this.oldFormData
@@ -386,11 +387,11 @@ export default {
       }
 
       // Update formdata
-      if (index == null) {
+      if (relationId == null) {
         formData[systemName] = value
       } else {
         // Relation data
-        formData[index].relation[systemName] = value
+        formData[relationId].relation[systemName] = value
       }
     },
     getRelationConfig (relationTypeName) {
@@ -400,6 +401,9 @@ export default {
     async onSubmit () {
       for (const entityPanel of this.$refs.entityPanels) {
         entityPanel.touch()
+      }
+      for (const relationPanel of this.$refs.relationPanels) {
+        relationPanel.touch()
       }
       if (this.invalid) {
         return
@@ -413,6 +417,23 @@ export default {
             submitData.entity = {}
           }
           submitData.entity[key] = JSON.parse(JSON.stringify(value))
+        }
+      }
+      // Relations
+      // TODO: add or delete relations
+      for (const relationTypeName of this.editableRelationTypeNames) {
+        for (const [relationId, relationData] of Object.entries(this.formData[relationTypeName])) {
+          for (const [key, value] of Object.entries(relationData)) {
+            if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[relationTypeName][relationId][key])) {
+              if (!(relationTypeName in submitData)) {
+                submitData[relationTypeName] = {}
+              }
+              if (!(relationId in submitData[relationTypeName])) {
+                submitData[relationTypeName][relationId] = {}
+              }
+              submitData[relationTypeName][relationId][key] = JSON.parse(JSON.stringify(value))
+            }
+          }
         }
       }
       if (Object.keys(submitData).length !== 0) {
@@ -429,7 +450,6 @@ export default {
             }
           )
           this.setFormData()
-          // this.$v.$reset()
           this.$store.dispatch(
             'notifications/create',
             {
@@ -438,6 +458,7 @@ export default {
             }
           )
         } catch (error) {
+          console.error(error)
           this.$store.dispatch(
             'notifications/create',
             {
@@ -456,19 +477,41 @@ export default {
         this.formData.entity[key] = JSON.parse(JSON.stringify(value))
       }
       // Relations
-      // for (const [key, value] of Object.entries(this.oldFormData.relation)
+      for (const relationTypeName of this.editableRelationTypeNames) {
+        this.formData[relationTypeName] = {}
+        for (const [relationId, relationFormData] of Object.entries(this.oldFormData[relationTypeName])) {
+          this.formData[relationTypeName][relationId] = {
+            entity: {}
+          }
+          for (const [key, value] of Object.entries(relationFormData.entity)) {
+            this.formData[relationTypeName][relationId].entity[key] = JSON.parse(JSON.stringify(value))
+          }
+          if ('relation' in relationFormData) {
+            this.formData[relationTypeName][relationId].relation = {}
+            for (const [key, value] of Object.entries(relationFormData.relation)) {
+              this.formData[relationTypeName][relationId].relation[key] = JSON.parse(JSON.stringify(value))
+            }
+          }
+        }
+      }
+      for (const entityPanel of this.$refs.entityPanels) {
+        entityPanel.reset()
+      }
+      for (const relationPanel of this.$refs.relationPanels) {
+        relationPanel.reset()
+      }
     },
     setFormData () {
       // Entity
       for (const panel of this.entityTypeConfig.edit.layout) {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
-          this.formData.entity[systemName] = this.entityData[systemName]
+          this.$set(this.formData.entity, systemName, this.entityData[systemName])
         }
       }
       // Relations
       for (const relationTypeName of this.editableRelationTypeNames) {
-        this.formData[relationTypeName] = []
+        this.$set(this.formData, relationTypeName, {})
         for (const relationData of this.entityData[relationTypeName]) {
           const relationFormData = {
             entity: {
@@ -483,7 +526,6 @@ export default {
               entityTypeName: relationData.entity.__typename.toLowerCase()
             }
           }
-          // TODO: test if code below works
           const relationConfig = this.getRelationConfig(relationTypeName)
           if (relationConfig.edit.layout != null) {
             for (const panel of relationConfig.edit.layout) {
@@ -496,7 +538,7 @@ export default {
               }
             }
           }
-          this.formData[relationTypeName].push(relationFormData)
+          this.$set(this.formData[relationTypeName], relationData.id, relationFormData)
         }
       }
       // Set oldFormData

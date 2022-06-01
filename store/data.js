@@ -450,60 +450,40 @@ export const actions = {
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
-  async save ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
-    const entityTypeConfig = entityTypesConfig[entityTypeName]
-
-    // Get all fieldNames used in the edit form
-    const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
-
-    // Get all fieldNames used in the relations edit forms and title fields of related entities
-    const relationSides = ['domain', 'range']
-    for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
-      for (const side of relationSides) {
-        const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
-        if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
-          dataPaths.add(`${prefix}.id`)
-          if (relationTypeConfig.edit != null) {
-            // Add relation prefix to each path
-            const relationPaths = extractDataPathsWithSources(relationTypeConfig.edit)
-            if (relationPaths.size !== 0) {
-              relationPaths.forEach(path => dataPaths.add(`${prefix}.${path}`))
-            }
-          }
-          for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
-            if (
-              'display' in entityTypesConfig[linkedEntityTypeName] &&
-              entityTypesConfig[linkedEntityTypeName].display != null &&
-              'title' in entityTypesConfig[linkedEntityTypeName].display
-            ) {
-              extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
-                .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
-            }
-          }
+  async save ({ commit, dispatch }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+    const queryParts = [
+      'mutation {'
+    ]
+    // Entity
+    if ('entity' in data) {
+      queryParts.push(`put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
+      for (const [key, value] of Object.entries(data.entity)) {
+        queryParts.push(`${key}: ${JSON.stringify(value)}`)
+      }
+      queryParts.push(
+        '})',
+        '{',
+        '  id',
+        '}'
+      )
+    }
+    // Relations
+    for (const relationTypeName in relationTypesConfig) {
+      if (!(relationTypeName in data)) {
+        continue
+      }
+      // TODO: POST, DELETE
+      for (const [relationId, relationData] of Object.entries(data[relationTypeName])) {
+        queryParts.push(`put${capitalizeFirstLetter(relationTypeName)}(id: ${relationId}, input: {`)
+        for (const [key, value] of Object.entries(relationData)) {
+          queryParts.push(`${key}: ${JSON.stringify(value)}`)
         }
+        queryParts.push(
+          '})'
+        )
       }
     }
-
-    // TODO: check if entity in data
-    const queryParts = [
-      'mutation {',
-      `put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`
-    ]
-    for (const [key, value] of Object.entries(data.entity)) {
-      queryParts.push(`${key}: ${JSON.stringify(value)}`)
-    }
-    queryParts.push(
-      '}',
-      '){',
-      ...constructQueryParts(
-        crdbQueryFromDataPaths(dataPaths),
-        entityTypesConfig,
-        relationTypesConfig,
-        entityTypeName
-      ),
-      '}',
-      '}'
-    )
+    queryParts.push('}')
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
@@ -516,9 +496,15 @@ export const actions = {
       throw new Error(response.data.errors[0].message)
     }
 
-    commit(
-      'SET_DATA',
-      response.data.data[`put${capitalizeFirstLetter(entityTypeName)}`]
+    await dispatch(
+      'loadEdit',
+      {
+        entityTypeName,
+        entityTypesConfig,
+        id,
+        projectName,
+        relationTypesConfig
+      }
     )
   }
 }

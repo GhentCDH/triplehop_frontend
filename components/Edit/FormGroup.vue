@@ -70,6 +70,11 @@ export default {
     marked (markdown) {
       return sanitizeHtml(marked(markdown))
     },
+    reset () {
+      this.$nextTick(() => {
+        this.$refs.input.$v.$reset()
+      })
+    },
     touch () {
       this.$refs.input.$v.$touch()
     }

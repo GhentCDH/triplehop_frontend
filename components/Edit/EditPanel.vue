@@ -59,6 +59,11 @@ export default {
     }
   },
   methods: {
+    reset () {
+      for (const formGroup of this.$refs.formGroups) {
+        formGroup.reset()
+      }
+    },
     touch () {
       for (const formGroup of this.$refs.formGroups) {
         formGroup.touch()
