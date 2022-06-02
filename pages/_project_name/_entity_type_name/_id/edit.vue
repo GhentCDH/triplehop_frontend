@@ -308,7 +308,6 @@ export default {
       return editableRelationTypeNames
     },
     entityData () {
-      console.log('new entitydata')
       return this.$store.state.data.data
     },
     entityTypeConfig () {
@@ -450,6 +449,7 @@ export default {
             }
           )
           this.setFormData()
+          this.resetValidation()
           this.$store.dispatch(
             'notifications/create',
             {
@@ -494,6 +494,9 @@ export default {
           }
         }
       }
+      this.resetValidation()
+    },
+    resetValidation () {
       for (const entityPanel of this.$refs.entityPanels) {
         entityPanel.reset()
       }

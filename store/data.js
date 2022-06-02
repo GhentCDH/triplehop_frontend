@@ -450,7 +450,7 @@ export const actions = {
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
-  async save ({ commit, dispatch }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+  async save ({ dispatch }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
     const queryParts = [
       'mutation {'
     ]
@@ -468,18 +468,21 @@ export const actions = {
       )
     }
     // Relations
-    for (const relationTypeName in relationTypesConfig) {
-      if (!(relationTypeName in data)) {
+    for (const relationTypeName in data) {
+      if (relationTypeName === 'entity') {
         continue
       }
       // TODO: POST, DELETE
       for (const [relationId, relationData] of Object.entries(data[relationTypeName])) {
-        queryParts.push(`put${capitalizeFirstLetter(relationTypeName)}(id: ${relationId}, input: {`)
-        for (const [key, value] of Object.entries(relationData)) {
+        queryParts.push(`put${capitalizeFirstLetter(relationTypeName.slice(0, -2))}(id: ${relationId}, input: {`)
+        for (const [key, value] of Object.entries(relationData.relation)) {
           queryParts.push(`${key}: ${JSON.stringify(value)}`)
         }
         queryParts.push(
-          '})'
+          '})',
+          '{',
+          '  id',
+          '}'
         )
       }
     }
