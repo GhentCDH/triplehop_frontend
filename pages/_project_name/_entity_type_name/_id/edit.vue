@@ -376,7 +376,7 @@ export default {
   },
   methods: {
     constructFieldFromData,
-    formInput (path, { relationId, systemName, value }) {
+    formInput (path, { action, relationId, systemName, value }) {
       // Determine which part of the formdata needs to be updated
       let formData = this.formData
       let oldFormData = this.oldFormData
@@ -387,7 +387,10 @@ export default {
 
       // Update formdata
       if (relationId == null) {
+        // entity
         formData[systemName] = value
+      } else if (action === 'delete') {
+        this.$delete(formData, relationId)
       } else {
         // Relation data
         formData[relationId].relation[systemName] = value
@@ -421,16 +424,23 @@ export default {
       // Relations
       // TODO: add or delete relations
       for (const relationTypeName of this.editableRelationTypeNames) {
+        submitData[relationTypeName] = {
+          delete: [],
+          post: {},
+          put: {}
+        }
+        for (const relationId in this.oldFormData[relationTypeName]) {
+          if (!(relationId in this.formData[relationTypeName])) {
+            submitData[relationTypeName].delete.push(relationId)
+          }
+        }
         for (const [relationId, relationData] of Object.entries(this.formData[relationTypeName])) {
           for (const [key, value] of Object.entries(relationData)) {
             if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[relationTypeName][relationId][key])) {
-              if (!(relationTypeName in submitData)) {
-                submitData[relationTypeName] = {}
-              }
               if (!(relationId in submitData[relationTypeName])) {
-                submitData[relationTypeName][relationId] = {}
+                submitData[relationTypeName].put[relationId] = {}
               }
-              submitData[relationTypeName][relationId][key] = JSON.parse(JSON.stringify(value))
+              submitData[relationTypeName].put[relationId][key] = JSON.parse(JSON.stringify(value))
             }
           }
         }

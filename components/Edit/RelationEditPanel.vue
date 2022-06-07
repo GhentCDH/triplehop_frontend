@@ -35,6 +35,7 @@
             class="float-right"
             variant="danger"
             title="Delete this relation"
+            @click="onDelete(relationId)"
           >
             <b-icon-trash />
           </b-button>
@@ -115,7 +116,17 @@ export default {
     }
   },
   methods: {
+    onDelete (relationId) {
+      this.$emit(
+        'input',
+        {
+          action: 'delete',
+          relationId
+        }
+      )
+    },
     onInput (relationId, event) {
+      console.log(event)
       this.$emit(
         'input',
         {

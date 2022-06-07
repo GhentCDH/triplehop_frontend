@@ -472,8 +472,18 @@ export const actions = {
       if (relationTypeName === 'entity') {
         continue
       }
-      // TODO: POST, DELETE
-      for (const [relationId, relationData] of Object.entries(data[relationTypeName])) {
+      // TODO: POST
+      // delete
+      for (const relationId of data[relationTypeName].delete) {
+        queryParts.push(
+          `delete${capitalizeFirstLetter(relationTypeName.slice(0, -2))}(id: ${relationId})`,
+          '{',
+          '  id',
+          '}'
+        )
+      }
+      // put
+      for (const [relationId, relationData] of Object.entries(data[relationTypeName].put)) {
         queryParts.push(`put${capitalizeFirstLetter(relationTypeName.slice(0, -2))}(id: ${relationId}, input: {`)
         for (const [key, value] of Object.entries(relationData.relation)) {
           queryParts.push(`${key}: ${JSON.stringify(value)}`)
