@@ -85,7 +85,7 @@ export default {
   },
   computed: {
     invalid () {
-      if (this.layout.length === 0) {
+      if (this.$refs.panels == null) {
         return false
       }
       for (const panel of this.$refs.panels) {
