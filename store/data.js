@@ -472,11 +472,14 @@ export const actions = {
       if (relationTypeName === 'entity') {
         continue
       }
+
+      // strip end "_s"
+      const graphqlRelationTypeName = capitalizeFirstLetter(relationTypeName.slice(0, -2))
       // TODO: POST
       // delete
       for (const relationId of data[relationTypeName].delete) {
         queryParts.push(
-          `delete${capitalizeFirstLetter(relationTypeName.slice(0, -2))}(id: ${relationId})`,
+          `delete${graphqlRelationTypeName}__${relationId}: delete${graphqlRelationTypeName}(id: ${relationId})`,
           '{',
           '  id',
           '}'
@@ -484,7 +487,7 @@ export const actions = {
       }
       // put
       for (const [relationId, relationData] of Object.entries(data[relationTypeName].put)) {
-        queryParts.push(`put${capitalizeFirstLetter(relationTypeName.slice(0, -2))}(id: ${relationId}, input: {`)
+        queryParts.push(`put${graphqlRelationTypeName}__${relationId}: put${graphqlRelationTypeName}(id: ${relationId}, input: {`)
         for (const [key, value] of Object.entries(relationData.relation)) {
           queryParts.push(`${key}: ${JSON.stringify(value)}`)
         }
