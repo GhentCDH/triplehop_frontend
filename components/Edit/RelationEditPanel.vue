@@ -126,7 +126,6 @@ export default {
       )
     },
     onInput (relationId, event) {
-      console.log(event)
       this.$emit(
         'input',
         {
