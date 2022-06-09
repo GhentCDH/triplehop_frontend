@@ -2,16 +2,6 @@
   opacity: 0.5;
 }
 
-.list-move {
-  transition: transform 0.5s;
-}
-
-.list-enter,
-.list-leave-to {
-  opacity: 0;
-}
-
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s;
+.flip-list-move {
+  transition: all 1s ease;
 }

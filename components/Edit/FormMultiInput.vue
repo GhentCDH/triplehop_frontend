@@ -3,43 +3,39 @@
     <draggable
       handle=".draggable-handle"
       :value="initialValue"
-      @change="orderChanged"
+      @end="onDragEnd"
     >
-      <transition-group type="transition" name="list">
-        <template
+      <transition-group type="transition" name="flip-list">
+        <b-input-group
           v-for="fieldKey in fieldKeys"
+          :key="fieldKey"
+          class="mt-3"
         >
-          <!-- is-invalid class is needed for form-feedback to be displayed -->
-          <b-input-group
-            :key="`${fieldKey}_input`"
-            :class="['mt-3', {'is-invalid' : !validateState(fieldKey)}]"
-          >
-            <b-input-group-prepend>
-              <b-button variant="outline-default" class="draggable-handle">
-                <b-icon icon="arrows-move" />
-              </b-button>
-            </b-input-group-prepend>
-            <b-form-input
-              :value="keyedValues[fieldKey]"
-              :state="validateState(fieldKey)"
-              @input="onInput(fieldKey, $event)"
-            />
-            <b-input-group-append>
-              <b-button
-                variant="danger"
-                title="Remove this value"
-                @click="del(fieldKey)"
-              >
-                <b-icon icon="trash" />
-              </b-button>
-            </b-input-group-append>
-          </b-input-group>
+          <b-input-group-prepend>
+            <b-button variant="outline-default" class="draggable-handle">
+              <b-icon icon="arrows-move" />
+            </b-button>
+          </b-input-group-prepend>
+          <b-form-input
+            :value="keyedValues[fieldKey]"
+            :state="validateState(fieldKey)"
+            @input="onInput(fieldKey, $event)"
+          />
+          <b-input-group-append>
+            <b-button
+              variant="danger"
+              title="Remove this value"
+              @click="del(fieldKey)"
+            >
+              <b-icon icon="trash" />
+            </b-button>
+          </b-input-group-append>
           <form-feedback
             v-for="validator of keyedValidatorsWithError[fieldKey]"
-            :key="`${fieldKey}_feedback_${validator.type}`"
+            :key="`${fieldKey}_${validator.type}`"
             :validator="validator"
           />
-        </template>
+        </b-input-group>
       </transition-group>
     </draggable>
     <b-button
@@ -176,15 +172,17 @@ export default {
         }
       )
     },
-    orderChanged ($event) {
-      const values = JSON.parse(JSON.stringify(this.initialValue))
-      const value = values.splice($event.moved.oldIndex, 1)[0]
-      values.splice($event.moved.newIndex, 0, value)
+    onDragEnd ($event) {
+      // Use the end event instead of changed event to workaround a bug on the first change
+      // https://github.com/SortableJS/Vue.Draggable/issues/603
+      // https://github.com/SortableJS/Vue.Draggable/issues/909
+      this.fieldKeys.splice($event.newIndex, 0, this.fieldKeys.splice($event.oldIndex, 1)[0])
+      this.values.splice($event.newIndex, 0, this.values.splice($event.oldIndex, 1)[0])
       this.$emit(
         'input',
         {
           systemName: this.id,
-          value: values
+          value: this.values
         }
       )
     },
