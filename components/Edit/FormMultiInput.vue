@@ -1,11 +1,11 @@
 <template>
-  <div v-frag>
+  <div>
     <draggable
       handle=".draggable-handle"
-      :value="initialValue"
-      @end="onDragEnd"
+      :list="values"
+      @change="orderChanged"
     >
-      <transition-group type="transition" name="flip-list">
+      <transition-group type="transition" tag="div" name="flip-list">
         <b-input-group
           v-for="fieldKey in fieldKeys"
           :key="fieldKey"
@@ -49,7 +49,6 @@
   </div>
 </template>
 <script>
-import frag from 'vue-frag'
 import draggable from 'vuedraggable'
 import { v4 as uuidv4 } from 'uuid'
 import { validationMixin } from 'vuelidate'
@@ -59,9 +58,6 @@ import FormFeedback from '~/components/Edit/FormFeedback.vue'
 import { edtfYear } from '~/assets/js/validators'
 
 export default {
-  directives: {
-    frag
-  },
   components: {
     draggable,
     FormFeedback
@@ -79,15 +75,23 @@ export default {
       required: true
     },
     initialValue: {
-      type: Array,
+      // JSON representation
+      type: String,
       required: true
     }
   },
   data () {
-    return {
-      values: JSON.parse(JSON.stringify(this.initialValue)),
-      fieldKeys: []
+    const data = {
+      fieldKeys: [],
+      values: []
     }
+    if (this.initialValue !== 'null') {
+      for (const value of JSON.parse(this.initialValue)) {
+        data.values.push(value)
+        data.fieldKeys.push(uuidv4())
+      }
+    }
+    return data
   },
   validations () {
     const validations = {
@@ -133,16 +137,15 @@ export default {
   },
   watch: {
     initialValue () {
-      if (JSON.stringify(this.initialValue) !== JSON.stringify(this.values)) {
+      if (
+        (this.initialValue === 'null' && this.values.length !== 0) ||
+        (this.initialValue !== 'null' && this.initialValue !== JSON.stringify(this.values))
+      ) {
         // Reset
-        this.values = JSON.parse(JSON.stringify(this.initialValue))
+        this.reKey()
         this.$v.$reset()
-        this.createKeys()
       }
     }
-  },
-  mounted () {
-    this.createKeys()
   },
   methods: {
     add () {
@@ -152,13 +155,27 @@ export default {
     del (fieldKey) {
       this.values.splice(this.fieldKeys.indexOf(fieldKey), 1)
       this.fieldKeys.splice(this.fieldKeys.indexOf(fieldKey), 1)
+      this.$emit(
+        'input',
+        {
+          systemName: this.id,
+          value: JSON.parse(JSON.stringify(this.values))
+        }
+      )
     },
-    createKeys () {
-      this.fieldKeys = []
-      for (let i = 0; i < this.values.length; i++) {
-        const uuid = uuidv4()
-        this.fieldKeys.push(uuid)
+    reKey () {
+      const values = []
+      const fieldKeys = []
+
+      if (this.initialValue !== 'null') {
+        for (const value of JSON.parse(this.initialValue)) {
+          values.push(value)
+          fieldKeys.push(uuidv4())
+        }
       }
+
+      this.values = values
+      this.fieldKeys = fieldKeys
     },
     onInput (fieldKey, $event) {
       // use $set so vuelidate revalidates
@@ -172,12 +189,9 @@ export default {
         }
       )
     },
-    onDragEnd ($event) {
-      // Use the end event instead of changed event to workaround a bug on the first change
-      // https://github.com/SortableJS/Vue.Draggable/issues/603
-      // https://github.com/SortableJS/Vue.Draggable/issues/909
-      this.fieldKeys.splice($event.newIndex, 0, this.fieldKeys.splice($event.oldIndex, 1)[0])
-      this.values.splice($event.newIndex, 0, this.values.splice($event.oldIndex, 1)[0])
+    orderChanged ($event) {
+      this.fieldKeys.splice($event.moved.newIndex, 0, this.fieldKeys.splice($event.moved.oldIndex, 1)[0])
+
       this.$emit(
         'input',
         {

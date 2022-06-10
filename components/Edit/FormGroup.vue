@@ -43,7 +43,8 @@ export default {
       required: true
     },
     initialValue: {
-      type: [Array, String],
+      // JSON representation
+      type: String,
       required: true
     }
   },
