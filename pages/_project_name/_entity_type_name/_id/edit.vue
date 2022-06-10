@@ -187,6 +187,32 @@ import { constructFieldFromData, isNumber } from '~/assets/js/utils'
 import EditPanel from '~/components/Edit/EditPanel.vue'
 import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
 
+function addToStructure (element, structure, value) {
+  const lastStructurePart = structure.pop()
+
+  let currentElement = element
+  for (const structurePart of structure) {
+    if (!(structurePart in currentElement)) {
+      currentElement[structurePart] = {}
+    }
+    currentElement = currentElement[structurePart]
+  }
+
+  if (Array.isArray(value)) {
+    // Object; value = [key, value]
+    if (!(lastStructurePart in currentElement)) {
+      currentElement[lastStructurePart] = {}
+    }
+    currentElement[lastStructurePart][value[0]] = value[1]
+  } else {
+  // Array
+    if (!(lastStructurePart in currentElement)) {
+      currentElement[lastStructurePart] = []
+    }
+    currentElement[lastStructurePart].push(value)
+  }
+}
+
 export default {
   components: {
     EditPanel,
@@ -424,23 +450,23 @@ export default {
       // Relations
       // TODO: add or delete relations
       for (const relationTypeName of this.editableRelationTypeNames) {
-        submitData[relationTypeName] = {
-          delete: [],
-          post: {},
-          put: {}
-        }
         for (const relationId in this.oldFormData[relationTypeName]) {
           if (!(relationId in this.formData[relationTypeName])) {
-            submitData[relationTypeName].delete.push(relationId)
+            addToStructure(
+              submitData,
+              [relationTypeName, 'delete'],
+              relationId
+            )
           }
         }
         for (const [relationId, relationData] of Object.entries(this.formData[relationTypeName])) {
           for (const [key, value] of Object.entries(relationData)) {
             if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[relationTypeName][relationId][key])) {
-              if (!(relationId in submitData[relationTypeName])) {
-                submitData[relationTypeName].put[relationId] = {}
-              }
-              submitData[relationTypeName].put[relationId][key] = JSON.parse(JSON.stringify(value))
+              addToStructure(
+                submitData,
+                [relationTypeName, 'put', relationId],
+                [key, JSON.parse(JSON.stringify(value))]
+              )
             }
           }
         }

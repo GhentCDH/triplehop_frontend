@@ -316,6 +316,48 @@ function crdbQueryFromDataPaths (dataPaths) {
   return crdbQuery
 }
 
+function constructEditQueryParts (entityTypesConfig, relationTypesConfig, entityTypeName) {
+  const entityTypeConfig = entityTypesConfig[entityTypeName]
+
+  // Get all fieldNames used in the edit form
+  const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
+
+  // Get all fieldNames used in the relations edit forms and title fields of related entities
+  const relationSides = ['domain', 'range']
+  for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
+    for (const side of relationSides) {
+      const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
+      if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
+        dataPaths.add(`${prefix}.id`)
+        if (relationTypeConfig.edit != null) {
+          // Add relation prefix to each path
+          const relationPaths = extractDataPathsWithSources(relationTypeConfig.edit)
+          if (relationPaths.size !== 0) {
+            relationPaths.forEach(path => dataPaths.add(`${prefix}.${path}`))
+          }
+        }
+        for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
+          if (
+            'display' in entityTypesConfig[linkedEntityTypeName] &&
+            entityTypesConfig[linkedEntityTypeName].display != null &&
+            'title' in entityTypesConfig[linkedEntityTypeName].display
+          ) {
+            extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
+              .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
+          }
+        }
+      }
+    }
+  }
+
+  return constructQueryParts(
+    crdbQueryFromDataPaths(dataPaths),
+    entityTypesConfig,
+    relationTypesConfig,
+    entityTypeName
+  )
+}
+
 export const actions = {
   async load ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
@@ -371,12 +413,7 @@ export const actions = {
     const queryParts = [
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
-      ...constructQueryParts(
-        crdbQueryFromDataPaths(dataPaths),
-        entityTypesConfig,
-        relationTypesConfig,
-        entityTypeName
-      ),
+      ...constructEditQueryParts,
       '}',
       '}'
     ]
@@ -393,44 +430,10 @@ export const actions = {
     )
   },
   async loadEdit ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
-    const entityTypeConfig = entityTypesConfig[entityTypeName]
-
-    // Get all fieldNames used in the edit form
-    const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
-
-    // Get all fieldNames used in the relations edit forms and title fields of related entities
-    const relationSides = ['domain', 'range']
-    for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
-      for (const side of relationSides) {
-        const prefix = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
-        if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
-          dataPaths.add(`${prefix}.id`)
-          if (relationTypeConfig.edit != null) {
-            // Add relation prefix to each path
-            const relationPaths = extractDataPathsWithSources(relationTypeConfig.edit)
-            if (relationPaths.size !== 0) {
-              relationPaths.forEach(path => dataPaths.add(`${prefix}.${path}`))
-            }
-          }
-          for (const linkedEntityTypeName of relationTypeConfig[`${side === 'domain' ? 'range' : 'domain'}_names`]) {
-            if (
-              'display' in entityTypesConfig[linkedEntityTypeName] &&
-              entityTypesConfig[linkedEntityTypeName].display != null &&
-              'title' in entityTypesConfig[linkedEntityTypeName].display
-            ) {
-              extractDataPathsForField(entityTypesConfig[linkedEntityTypeName].display.title)
-                .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
-            }
-          }
-        }
-      }
-    }
-
     const queryParts = [
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
-      ...constructQueryParts(
-        crdbQueryFromDataPaths(dataPaths),
+      ...constructEditQueryParts(
         entityTypesConfig,
         relationTypesConfig,
         entityTypeName
@@ -450,56 +453,56 @@ export const actions = {
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
-  async save ({ dispatch }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+  async save ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+    console.log(data)
     const queryParts = [
       'mutation {'
     ]
-    // Entity
-    if ('entity' in data) {
-      queryParts.push(`put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
-      for (const [key, value] of Object.entries(data.entity)) {
-        queryParts.push(`${key}: ${JSON.stringify(value)}`)
-      }
-      queryParts.push(
-        '})',
-        '{',
-        '  id',
-        '}'
-      )
-    }
-    // Relations
+    // TODO: post
+    queryParts.push(`put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
+
     for (const relationTypeName in data) {
+      // Entity
       if (relationTypeName === 'entity') {
+        for (const [key, value] of Object.entries(data.entity)) {
+          queryParts.push(`${key}: ${JSON.stringify(value)}`)
+        }
         continue
       }
 
-      // strip end "_s"
-      const graphqlRelationTypeName = capitalizeFirstLetter(relationTypeName.slice(0, -2))
-      // TODO: POST
-      // delete
-      for (const relationId of data[relationTypeName].delete) {
-        queryParts.push(
-          `delete${graphqlRelationTypeName}__${relationId}: delete${graphqlRelationTypeName}(id: ${relationId})`,
-          '{',
-          '  id',
-          '}'
-        )
-      }
-      // put
-      for (const [relationId, relationData] of Object.entries(data[relationTypeName].put)) {
-        queryParts.push(`put${graphqlRelationTypeName}__${relationId}: put${graphqlRelationTypeName}(id: ${relationId}, input: {`)
-        for (const [key, value] of Object.entries(relationData.relation)) {
-          queryParts.push(`${key}: ${JSON.stringify(value)}`)
+      // Relations
+      queryParts.push(`${relationTypeName} {`)
+      for (const action in data[relationTypeName]) {
+        queryParts.push(`${action} {`)
+        // TODO: put, post
+        if (action === 'put') {
+          for (const relationId in data[relationTypeName][action]) {
+            queryParts.push(`${relationId} {`)
+            for (const relationEntity in data[relationTypeName][action][relationId]) {
+              queryParts.push(`${relationEntity} {`)
+              for (const [key, value] of Object.entries(data[relationTypeName][action][relationId][relationEntity])) {
+                queryParts.push(`${key}: ${JSON.stringify(value)}`)
+              }
+              queryParts.push('}')
+            }
+            queryParts.push('}')
+          }
         }
-        queryParts.push(
-          '})',
-          '{',
-          '  id',
-          '}'
-        )
+        queryParts.push('}')
       }
+      queryParts.push('}')
     }
-    queryParts.push('}')
+
+    queryParts.push(
+      '})',
+      '{',
+      ...constructEditQueryParts(
+        entityTypesConfig,
+        relationTypesConfig,
+        entityTypeName
+      ),
+      '}'
+    )
 
     const response = await this.$axios.post(
       `/data/${projectName}`,
@@ -511,16 +514,9 @@ export const actions = {
     if ('errors' in response.data) {
       throw new Error(response.data.errors[0].message)
     }
-
-    await dispatch(
-      'loadEdit',
-      {
-        entityTypeName,
-        entityTypesConfig,
-        id,
-        projectName,
-        relationTypesConfig
-      }
+    commit(
+      'SET_DATA',
+      response.data.data[`put${capitalizeFirstLetter(entityTypeName)}`]
     )
   }
 }
