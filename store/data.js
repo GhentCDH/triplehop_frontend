@@ -413,7 +413,12 @@ export const actions = {
     const queryParts = [
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
-      ...constructEditQueryParts,
+      ...constructQueryParts(
+        crdbQueryFromDataPaths(dataPaths),
+        entityTypesConfig,
+        relationTypesConfig,
+        entityTypeName
+      ),
       '}',
       '}'
     ]
@@ -424,6 +429,7 @@ export const actions = {
         query: queryParts.join('\n')
       }
     )
+
     commit(
       'SET_DATA',
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
@@ -454,7 +460,6 @@ export const actions = {
     )
   },
   async save ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
-    console.log(data)
     const queryParts = [
       'mutation {'
     ]
@@ -462,35 +467,8 @@ export const actions = {
     queryParts.push(`put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
 
     for (const relationTypeName in data) {
-      // Entity
-      if (relationTypeName === 'entity') {
-        for (const [key, value] of Object.entries(data.entity)) {
-          queryParts.push(`${key}: ${JSON.stringify(value)}`)
-        }
-        continue
-      }
-
-      // Relations
-      queryParts.push(`${relationTypeName} {`)
-      for (const action in data[relationTypeName]) {
-        queryParts.push(`${action} {`)
-        // TODO: put, post
-        if (action === 'put') {
-          for (const relationId in data[relationTypeName][action]) {
-            queryParts.push(`${relationId} {`)
-            for (const relationEntity in data[relationTypeName][action][relationId]) {
-              queryParts.push(`${relationEntity} {`)
-              for (const [key, value] of Object.entries(data[relationTypeName][action][relationId][relationEntity])) {
-                queryParts.push(`${key}: ${JSON.stringify(value)}`)
-              }
-              queryParts.push('}')
-            }
-            queryParts.push('}')
-          }
-        }
-        queryParts.push('}')
-      }
-      queryParts.push('}')
+      // TODO: don't do JSON.stringify, use detailed GraphQL schema
+      queryParts.push(`${relationTypeName}: "${JSON.stringify(data[relationTypeName]).replaceAll('"', '\\"')}"`)
     }
 
     queryParts.push(
@@ -501,6 +479,7 @@ export const actions = {
         relationTypesConfig,
         entityTypeName
       ),
+      '}',
       '}'
     )
 
