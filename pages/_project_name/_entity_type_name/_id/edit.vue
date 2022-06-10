@@ -98,6 +98,7 @@
               </b-button>
             </b-form>
           </b-col>
+          <!-- TODO: display navbar before refs are loaded -->
           <b-navbar
             v-if="refsLoaded"
             v-b-scrollspy:edit
