@@ -449,7 +449,7 @@ export default {
         }
       }
       // Relations
-      // TODO: add or delete relations
+      // TODO: add relations
       for (const relationTypeName of this.editableRelationTypeNames) {
         for (const relationId in this.oldFormData[relationTypeName]) {
           if (!(relationId in this.formData[relationTypeName])) {
