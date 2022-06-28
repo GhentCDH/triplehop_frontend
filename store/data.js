@@ -120,13 +120,13 @@ function constructQueryPartsForProps (props, dataConfig) {
   return queryParts
 }
 
-function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesConfig, relationTypesConfig) {
+function constructQueryEntityQueryPart (triplehopQuery, entityTypeNames, entityTypesConfig, relationTypesConfig) {
   const queryParts = []
   queryParts.push('entity {')
   for (const entityTypeName of entityTypeNames) {
     // Filter out props not related to this entity type
     const eProps = new Set()
-    for (const eProp of crdbQuery.e_props) {
+    for (const eProp of triplehopQuery.e_props) {
       if (eProp.includes('|')) {
         if (eProp.split('|')[0] === entityTypeName) {
           eProps.add(eProp.split('|')[1])
@@ -138,8 +138,8 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
     // Filter out relations not related to this entity type
     const relations = {}
     // Source relations have no relations
-    if ('relations' in crdbQuery) {
-      for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+    if ('relations' in triplehopQuery) {
+      for (const [relation, relationQuery] of Object.entries(triplehopQuery.relations)) {
         if (relation.includes('|')) {
           if (relation.split('|')[0] === entityTypeName) {
             relations[relation.split('|')[1]] = relationQuery
@@ -170,20 +170,20 @@ function constructQueryEntityQueryPart (crdbQuery, entityTypeNames, entityTypesC
 
 /**
  * Extract GraphQL query parts
- * @param  {Object} crdbQuery
+ * @param  {Object} triplehopQuery
  * @param  {Object} relationTypesConfig
  * @param  {String} currentRelationType
  * @return {Array}
  */
-function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
+function constructQueryParts(triplehopQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
   const queryParts = []
   if (currentRelationType == null) {
     // current position = base entity
     // Entity properties
-    queryParts.push(...constructQueryPartsForProps(crdbQuery.e_props, entityTypesConfig[initialEntityTypeName].data))
+    queryParts.push(...constructQueryPartsForProps(triplehopQuery.e_props, entityTypesConfig[initialEntityTypeName].data))
 
     // Relations
-    for (const [relation, relationQuery] of Object.entries(crdbQuery.relations)) {
+    for (const [relation, relationQuery] of Object.entries(triplehopQuery.relations)) {
       const suffix = relation === '_source_' ? '' : '_s'
       queryParts.push(`${relation}${suffix} {`)
       queryParts.push(...constructQueryParts(relationQuery, entityTypesConfig, relationTypesConfig, null, relation))
@@ -195,14 +195,14 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
   // Entity sources
   if (currentRelationType === '_source_') {
     // TODO: define config for source props and use constructQueryPartsForProps?
-    if (crdbQuery.r_props.size !== 0) {
-      queryParts.push(...crdbQuery.r_props)
+    if (triplehopQuery.r_props.size !== 0) {
+      queryParts.push(...triplehopQuery.r_props)
     }
     if (
-      crdbQuery.e_props.size !== 0 ||
+      triplehopQuery.e_props.size !== 0 ||
       (
-        'relations' in crdbQuery &&
-        Object.keys(crdbQuery.relations).length
+        'relations' in triplehopQuery &&
+        Object.keys(triplehopQuery.relations).length
       )
     ) {
       // Get names of all entity types that can be used as source
@@ -215,32 +215,32 @@ function constructQueryParts (crdbQuery, entityTypesConfig, relationTypesConfig,
           setn.push(etn)
         }
       }
-      queryParts.push(...constructQueryEntityQueryPart(crdbQuery, setn, entityTypesConfig, relationTypesConfig))
+      queryParts.push(...constructQueryEntityQueryPart(triplehopQuery, setn, entityTypesConfig, relationTypesConfig))
     }
     return queryParts
   }
 
   // current position = relation
   const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
-  if (crdbQuery.r_props.size !== 0) {
-    queryParts.push(...constructQueryPartsForProps(crdbQuery.r_props, relationTypeConfig.data))
+  if (triplehopQuery.r_props.size !== 0) {
+    queryParts.push(...constructQueryPartsForProps(triplehopQuery.r_props, relationTypeConfig.data))
   }
-  if (crdbQuery.e_props.size !== 0 || Object.keys(crdbQuery.relations).length) {
+  if (triplehopQuery.e_props.size !== 0 || Object.keys(triplehopQuery.relations).length) {
     // Remove r_ or ri_
     const relationTypeConfig = relationTypesConfig[currentRelationType.split('_').slice(1).join('_')]
     const linkedEntityTypeNames = relationTypeConfig[`${currentRelationType.split('_')[0] === 'r' ? 'range' : 'domain'}_names`]
-    queryParts.push(...constructQueryEntityQueryPart(crdbQuery, linkedEntityTypeNames, entityTypesConfig, relationTypesConfig))
+    queryParts.push(...constructQueryEntityQueryPart(triplehopQuery, linkedEntityTypeNames, entityTypesConfig, relationTypesConfig))
   }
   if (
-    'relation_source' in crdbQuery &&
+    'relation_source' in triplehopQuery &&
     (
-      crdbQuery.relation_source.r_props.size !== 0 ||
-      crdbQuery.relation_source.e_props.size !== 0
+      triplehopQuery.relation_source.r_props.size !== 0 ||
+      triplehopQuery.relation_source.e_props.size !== 0
     )
   ) {
     // Relation source -> add _source_ and handle as entity source with relation source data
     queryParts.push('_source_ {')
-    queryParts.push(...constructQueryParts(crdbQuery.relation_source, entityTypesConfig, relationTypesConfig, null, '_source_'))
+    queryParts.push(...constructQueryParts(triplehopQuery.relation_source, entityTypesConfig, relationTypesConfig, null, '_source_'))
     queryParts.push('}')
   }
   return queryParts
@@ -265,15 +265,15 @@ function addRelationStructureIfNeeded (currentLevel, relation) {
   }
 }
 
-function crdbQueryFromDataPaths (dataPaths) {
+function triplehopQueryFromDataPaths (dataPaths) {
   // Entity sources are modeled using relation '_source_' with e_props
   // relation sources are modeled using relation_source
-  const crdbQuery = {
+  const triplehopQuery = {
     e_props: new Set(),
     relations: {}
   }
   for (const dataPath of dataPaths) {
-    let currentLevel = crdbQuery
+    let currentLevel = triplehopQuery
     // remove all dollar signs, split in parts
     const path = dataPath.split('$').join('').split('->')
     let isRelationSource = false
@@ -313,7 +313,7 @@ function crdbQueryFromDataPaths (dataPaths) {
       }
     }
   }
-  return crdbQuery
+  return triplehopQuery
 }
 
 function constructEditQueryParts (entityTypesConfig, relationTypesConfig, entityTypeName) {
@@ -351,7 +351,7 @@ function constructEditQueryParts (entityTypesConfig, relationTypesConfig, entity
   }
 
   return constructQueryParts(
-    crdbQueryFromDataPaths(dataPaths),
+    triplehopQueryFromDataPaths(dataPaths),
     entityTypesConfig,
     relationTypesConfig,
     entityTypeName
@@ -414,7 +414,7 @@ export const actions = {
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
       ...constructQueryParts(
-        crdbQueryFromDataPaths(dataPaths),
+        triplehopQueryFromDataPaths(dataPaths),
         entityTypesConfig,
         relationTypesConfig,
         entityTypeName

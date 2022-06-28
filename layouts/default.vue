@@ -85,9 +85,9 @@ export default {
         this.$store.state.config.project_def == null ||
         this.$store.state.config.project_def.display_name == null
       ) {
-        return 'CRDB'
+        return 'TripleHop'
       }
-      return this.$store.state.config.project_def.display_name ?? 'CRDB'
+      return this.$store.state.config.project_def.display_name ?? 'TripleHop'
     },
     links () {
       const result = []

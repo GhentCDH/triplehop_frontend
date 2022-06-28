@@ -22,7 +22,7 @@ export default {
   ** Global CSS
   */
   css: [
-    '@/assets/scss/crdb.scss'
+    '@/assets/scss/triplehop.scss'
   ],
   /*
   ** Plugins to load before mounting the App

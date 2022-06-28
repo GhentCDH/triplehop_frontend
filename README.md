@@ -1,10 +1,10 @@
-# Front-end for CRDB
+# Front-end for TripleHop
 
 ## Prerequisites
 
 * Nodejs, npm and yarn
 
-    ```
+    ```sh
     curl -fsSL https://deb.nodesource.com/setup_14.x | sudo bash -
     sudo apt-get install -y nodejs npm
     sudo npm install --global yarn
@@ -12,7 +12,7 @@
 
 ## Build Setup
 
-``` bash
+```sh
 # install dependencies
 $ yarn install
 

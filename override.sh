@@ -28,11 +28,11 @@ declare -a paths=(
 )
 
 for path in "${paths[@]}"; do
-    if test -d "crdb_frontend/$path"; then
-        cp -rTv"$update_flag" "crdb_frontend/$path" "$path"
+    if test -d "triplehop_frontend/$path"; then
+        cp -rTv"$update_flag" "triplehop_frontend/$path" "$path"
     fi
-    if test -f "crdb_frontend/$path"; then
-        cp -Tv"$update_flag" "crdb_frontend/$path" "$path"
+    if test -f "triplehop_frontend/$path"; then
+        cp -Tv"$update_flag" "triplehop_frontend/$path" "$path"
     fi
     if test -d "overrides/$path"; then
         cp -rTv"$update_flag" "overrides/$path" "$path"
