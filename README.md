@@ -16,8 +16,8 @@
 # install dependencies
 $ yarn install
 
-# serve with hot reload at localhost:3000
-$ yarn dev
+# serve with hot reload at virtual_network_ip:3000
+$ HOST=`ip -f inet addr show eth1 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p'` yarn dev
 
 # build for production and launch server
 $ yarn build
