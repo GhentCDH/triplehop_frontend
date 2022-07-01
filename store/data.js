@@ -73,7 +73,7 @@ function addSourceDataPaths (dataPaths, sourceEProps = null) {
  * Extract all fieldNames required to display an entity, including sources
  * @param  {Object} display object containing display information: title and layout with panels and fields
  * @param  {Set} sourceEProps all properties required to correctly display sources
- * @param  {boolean} full indicates if sources need to be added to all parts of the data path
+ *                            if sourceEProps is null, no source information will be added
  * @return {Set}            all required data paths to display the entity
  */
 function extractDataPathsWithSources (display, sourceEProps) {
@@ -363,15 +363,23 @@ export const actions = {
     const entityTypeConfig = entityTypesConfig[entityTypeName]
 
     // Construct all properties required to correctly display sources
-    const sourceEProps = new Set()
+    let sourceEProps = new Set()
+    // Check if there are source entity types
+    let sourcesEnabled = false
     for (const [etn, etc] of Object.entries(entityTypesConfig)) {
       if (
         'source' in etc &&
         etc.source
       ) {
+        sourcesEnabled = true
         extractDataPathsForField(etc.display.title)
           .forEach(path => sourceEProps.add(`${etn}|${path}`))
       }
+    }
+
+    // Let sourceEProps = null indicate that no source information will be requested
+    if (!sourcesEnabled) {
+      sourceEProps = null
     }
 
     // Get all fieldNames used in the title and layout with sources
@@ -400,12 +408,14 @@ export const actions = {
                 .forEach(path => dataPaths.add(`${prefix}->${linkedEntityTypeName}|${path}`))
             }
           }
-          // Add relation sources
-          for (const sourceEProp of sourceEProps) {
-            dataPaths.add(`${prefix}._source_->${sourceEProp}`)
+          if (sourceEProps != null) {
+            // Add relation sources
+            for (const sourceEProp of sourceEProps) {
+              dataPaths.add(`${prefix}._source_->${sourceEProp}`)
+            }
+            dataPaths.add(`${prefix}._source_.properties`)
+            dataPaths.add(`${prefix}._source_.source_props`)
           }
-          dataPaths.add(`${prefix}._source_.properties`)
-          dataPaths.add(`${prefix}._source_.source_props`)
         }
       }
     }
