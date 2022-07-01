@@ -175,7 +175,7 @@ function constructQueryEntityQueryPart (triplehopQuery, entityTypeNames, entityT
  * @param  {String} currentRelationType
  * @return {Array}
  */
-function constructQueryParts(triplehopQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
+function constructQueryParts (triplehopQuery, entityTypesConfig, relationTypesConfig, initialEntityTypeName = null, currentRelationType = null) {
   const queryParts = []
   if (currentRelationType == null) {
     // current position = base entity
