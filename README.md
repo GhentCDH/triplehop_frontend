@@ -6,7 +6,7 @@
 
     ```sh
     curl -fsSL https://deb.nodesource.com/setup_14.x | sudo bash -
-    sudo apt-get install -y nodejs npm
+    sudo apt-get install -y nodejs
     sudo npm install --global yarn
     ```
 
