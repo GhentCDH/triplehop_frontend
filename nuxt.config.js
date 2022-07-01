@@ -54,7 +54,7 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    baseURL: 'https://crdb-backend.ugent.be/'
+    baseURL: 'https://triplehop-backend.ugent.be/'
   },
   /*
   ** Nuxt auth module Configuration
@@ -108,7 +108,7 @@ export default {
     /*
     ** You can extend webpack config here
     */
-    extend (config, ctx) {
+    extend(config, ctx) {
     },
     transpile: [
       ({ isServer }) => 'vue-typeahead-bootstrap'
