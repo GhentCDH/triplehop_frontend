@@ -2,19 +2,25 @@
   <b-card
     class="border-0 bg-white mb-1"
   >
-    <b-link
-      :to="{
-        name: 'project_name-entity_type_name-id',
-        params: {
-          project_name: projectName,
-          entity_type_name: relation.entity.__typename.toLowerCase(),
-          id: relation.entity.id
-        }
-      }"
-    >
-      <b-icon-link />
-      {{ titleValue }}
-    </b-link>
+    <h5>
+      <b-link
+        v-if="entityTypesConfig[entityTypeName].detail"
+        :to="{
+          name: 'project_name-entity_type_name-id',
+          params: {
+            project_name: projectName,
+            entity_type_name: entityTypeName,
+            id: relation.entity.id
+          }
+        }"
+      >
+        <b-icon-link />
+        {{ titleValue }}
+      </b-link>
+      <template v-else>
+        {{ titleValue }}
+      </template>
+    </h5>
     <sources :sources="relationSources" />
 
     <layout-panel
@@ -56,6 +62,9 @@ export default {
   computed: {
     entityTypesConfig () {
       return this.$store.state.config.entity_types
+    },
+    entityTypeName () {
+      return this.relation.entity.__typename.toLowerCase()
     },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
