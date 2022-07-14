@@ -7,6 +7,9 @@
       <template v-if="field.type === 'edtf'">
         {{ nameOrNA(value.text) }}
       </template>
+      <template v-else-if="field.type === 'uncertain_centuries'">
+        {{ nameOrNA(value.text) }}
+      </template>
       <template v-else>
         {{ nameOrNA(value) }}
       </template>

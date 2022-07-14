@@ -167,7 +167,8 @@ export default {
     histogram_slider: HistogramSlider,
     Nested,
     nested_present: NestedPresent,
-    TableCellContent
+    TableCellContent,
+    uncertain_centuries: Dropdown
   },
   validate ({ query }) {
     if ((query.page != null && !isNumber(query.page)) || query.page === '0') {
@@ -402,6 +403,10 @@ export default {
           properties[systemName].aggregationData = this.aggs[systemName]
           continue
         }
+        if (filter.type === 'uncertain_centuries') {
+          properties[systemName].aggregationData = this.aggs[systemName]
+          continue
+        }
       }
       return properties
     },
@@ -458,6 +463,8 @@ export default {
       // * sort on lower value when sorting ascending
       // * sort on upper value when sorting descending
       if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
+        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
+      } else if (this.fields.filter(f => f.key === sortBy)[0].type === 'uncertain_centuries') {
         sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
       }
       return sortBy

@@ -96,6 +96,25 @@ function constructQuery (body, esFiltersDefs) {
       query.bool.must.push(queryPart)
       continue
     }
+    if (esFiltersDefs[systemName].type === 'uncertain_centuries') {
+      if (filterValues == null || filterValues.length === 0) {
+        continue
+      }
+      const queryPart = {
+        bool: {
+          should: []
+        }
+      }
+      queryPart.bool.should.push(
+        {
+          terms: {
+            [`${systemName}.dropdown_list.keyword`]: filterValues.map(f => f.key)
+          }
+        }
+      )
+      query.bool.must.push(queryPart)
+      continue
+    }
     if (filterValues != null) {
       const queryPart = {
         match: {
@@ -251,6 +270,15 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
         }
       }
     }
+    if (filter.type === 'uncertain_centuries') {
+      aggs[systemName] = {
+        terms: {
+          field: `${systemName}.dropdown_list.keyword`,
+          size: SIZE_AGG_MAX,
+          min_doc_count: 0
+        }
+      }
+    }
   }
   if (Object.keys(aggs).length > 0) {
     result.aggs = aggs
@@ -373,6 +401,15 @@ export function extractAggs (data, esFiltersDefs, nestedAggsCache) {
       continue
     }
     if (filter.type === 'dropdown') {
+      result[systemName] = data.aggregations[systemName].buckets.map((b) => {
+        return {
+          key: b.key,
+          count: b.doc_count
+        }
+      })
+      continue
+    }
+    if (filter.type === 'uncertain_centuries') {
       result[systemName] = data.aggregations[systemName].buckets.map((b) => {
         return {
           key: b.key,
