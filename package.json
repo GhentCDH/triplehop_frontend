@@ -8,6 +8,7 @@
     "dev": "nuxt --config-file nuxt.config.dev.js",
     "buildqas": "nuxt build --config-file nuxt.config.qas.js",
     "build": "nuxt build",
+    "startqas": "nuxt start --config-file nuxt.config.qas.js",
     "start": "nuxt start",
     "generate": "nuxt generate",
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
