@@ -41,14 +41,18 @@
       />
       <!-- TODO: move client-only to wikidata-images-field component (process.browser?)-->
       <client-only
-        v-else-if="field.type === 'wikidata_images' || field.type === 'vooruit_image'"
+        v-else-if="field.type === 'iiif_manifest' || field.type === 'vooruit_image' || field.type === 'wikidata_images'"
       >
-        <wikidata-images-field
-          v-if="field.type === 'wikidata_images'"
+        <iiif-manifest-field
+          v-if="field.type === 'iiif_manifest'"
           :value-and-sources="cleanValueAndSources"
         />
         <vooruit-image-field
           v-if="field.type === 'vooruit_image'"
+          :value-and-sources="cleanValueAndSources"
+        />
+        <wikidata-images-field
+          v-if="field.type === 'wikidata_images'"
           :value-and-sources="cleanValueAndSources"
         />
       </client-only>
@@ -79,6 +83,7 @@
 </template>
 
 <script>
+import IiifManifestField from '~/components/Detail/IiifManifestField.vue'
 import FilmmagieField from '~/components/Detail/FilmmagieField.vue'
 import GeometryField from '~/components/Detail/GeometryField.vue'
 import TableField from '~/components/Detail/TableField.vue'
@@ -88,6 +93,7 @@ import Sources from '~/components/Detail/Sources.vue'
 
 export default {
   components: {
+    IiifManifestField,
     FilmmagieField,
     GeometryField,
     TableField,
@@ -114,6 +120,7 @@ export default {
             value: JSON.parse(this.fieldValue[0].value),
             sources: this.fieldValue[0].sources
           }
+        case 'iiif_manifest':
         case 'online_identifier':
         case 'wikidata_images':
         case 'vooruit_image':
