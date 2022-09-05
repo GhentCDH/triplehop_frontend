@@ -120,6 +120,28 @@ function constructQueryPartsForProps (props, dataConfig) {
   return queryParts
 }
 
+function mergeRelationsRecursively (relations, relation, relationQuery) {
+  if (!(relation in relations)) {
+    relations[relation] = relationQuery
+  } else {
+    for (const eProp of relationQuery.e_props) {
+      relations[relation].e_props.add(eProp)
+    }
+    for (const rProp of relationQuery.r_props) {
+      relations[relation].r_props.add(rProp)
+    }
+    for (const [curRelation, curRelationQuery] of Object.entries(relationQuery.relations)) {
+      mergeRelationsRecursively(relations[relation].relations, curRelation, curRelationQuery)
+    }
+    for (const eProp of relationQuery.relation_source.e_props) {
+      relations[relation].relation_source.e_props.add(eProp)
+    }
+    for (const rProp of relationQuery.relation_source.r_props) {
+      relations[relation].relation_source.r_props.add(rProp)
+    }
+  }
+}
+
 function constructQueryEntityQueryPart (triplehopQuery, entityTypeNames, entityTypesConfig, relationTypesConfig) {
   const queryParts = []
   queryParts.push('entity {')
@@ -142,10 +164,10 @@ function constructQueryEntityQueryPart (triplehopQuery, entityTypeNames, entityT
       for (const [relation, relationQuery] of Object.entries(triplehopQuery.relations)) {
         if (relation.includes('|')) {
           if (relation.split('|')[0] === entityTypeName) {
-            relations[relation.split('|')[1]] = relationQuery
+            mergeRelationsRecursively(relations, relation.split('|')[1], relationQuery)
           }
         } else {
-          relations[relation] = relationQuery
+          mergeRelationsRecursively(relations, relation, relationQuery)
         }
       }
     }
