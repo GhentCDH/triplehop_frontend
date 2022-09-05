@@ -63,6 +63,7 @@ export default {
     const response = await this.$axios.get(
       `https://adore.ugent.be/IIIF/manifests/archive.ugent.be:${groups.id}/canvases/DS.0_${groups.page}`, {
         transformRequest: (data, headers) => {
+          delete headers.Authorization
           delete headers.common.Authorization
         }
       }
