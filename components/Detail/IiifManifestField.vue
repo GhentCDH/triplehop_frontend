@@ -67,7 +67,7 @@ export default {
         'https://api.collectie.gent/iiif/presentation/v2/manifest/archiefgent:',
         'https://data.collectie.gent/entity/archiefgent:'
       )
-      this.hosted = 'Hosted by Collectie van de Gentenaar'
+      this.hosted = 'Hosted by De Collectie van de Gentenaar'
     } else if (this.manifestUrl.includes('https://adore.ugent.be/IIIF/manifests/archive.ugent.be:')) {
       this.linkUrl = this.manifestUrl.replace(
         'https://adore.ugent.be/IIIF/manifests/archive.ugent.be:',
