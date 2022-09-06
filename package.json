@@ -1,7 +1,7 @@
 {
   "name": "triplehop",
   "version": "1.0.0",
-  "description": "Collective Reasearch Databases",
+  "description": "Triplehop",
   "author": "Ghent Centre for Digital Humanities",
   "private": true,
   "scripts": {
