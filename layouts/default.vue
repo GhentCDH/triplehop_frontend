@@ -30,7 +30,7 @@
           </b-navbar-nav>
           <b-navbar-nav class="ml-auto">
             <b-nav-item-dropdown v-if="$auth.loggedIn">
-              <template v-slot:button-content>
+              <template #button-content>
                 <b-icon icon="person-fill" />
                 {{ $auth.user.display_name }}
               </template>
