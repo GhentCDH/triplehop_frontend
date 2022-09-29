@@ -482,7 +482,7 @@ export default {
       if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
         sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
       } else if (this.fields.filter(f => f.key === sortBy)[0].type === 'uncertain_centuries') {
-        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
+        sortBy = `${sortBy}.numeric`
       }
       return sortBy
     },
@@ -519,7 +519,7 @@ export default {
           }
           continue
         }
-        if (this.esFiltersDefs[systemName].type === 'dropdown') {
+        if (['dropdown', 'uncertain_centuries'].includes(this.esFiltersDefs[systemName].type)) {
           if (filterValues != null && filterValues.length > 0) {
             for (const [i, filterValue] of filterValues.entries()) {
               query[`filter[${systemName}][${i}]`] = filterValue.key
@@ -666,7 +666,7 @@ export default {
           }
           continue
         }
-        if (filter.type === 'dropdown') {
+        if (['dropdown', 'uncertain_centuries'].includes(filter.type)) {
           if (this.$route.query[`filter[${systemName}][0]`] == null) {
             this.form[systemName] = null
             continue

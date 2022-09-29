@@ -11,7 +11,7 @@
         {{ nameOrNA(value.text) }}
       </template>
       <template v-else-if="field.type === 'uncertain_centuries'">
-        {{ nameOrNA(value.text) }}
+        {{ nameOrNA(value.display) }}
       </template>
       <template v-else>
         {{ nameOrNA(value) }}
@@ -34,10 +34,24 @@
       {{ nameOrNA(value.text) }}
     </template>
     <template v-else-if="field.type === 'uncertain_centuries'">
-      {{ nameOrNA(value.text) }}
+      {{ nameOrNA(value.display) }}
     </template>
     <template v-else>
       {{ value }}
+    </template>
+    <template v-if="field.searchable">
+      <nuxt-link
+        v-if="field.type === 'nested'"
+        :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.id}`"
+      >
+        <b-icon-search font-scale="0.5" shift-v="10" />
+      </nuxt-link>
+      <nuxt-link
+        v-else-if="field.type === 'uncertain_centuries'"
+        :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.withoutUncertain}`"
+      >
+        <b-icon-search font-scale="0.5" shift-v="10" />
+      </nuxt-link>
     </template>
   </div>
 </template>

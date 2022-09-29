@@ -108,7 +108,7 @@ function constructQuery (body, esFiltersDefs) {
       queryPart.bool.should.push(
         {
           terms: {
-            [`${systemName}.dropdown_list.keyword`]: filterValues.map(f => f.key)
+            [`${systemName}.withoutUncertain.keyword`]: filterValues.map(f => f.key)
           }
         }
       )
@@ -273,7 +273,7 @@ export function constructAggsQuery (body, esFiltersDefs, fullRangeData) {
     if (filter.type === 'uncertain_centuries') {
       aggs[systemName] = {
         terms: {
-          field: `${systemName}.dropdown_list.keyword`,
+          field: `${systemName}.withoutUncertain.keyword`,
           size: SIZE_AGG_MAX,
           min_doc_count: 0
         }
@@ -467,6 +467,7 @@ export function getFields (entityTypeConfig) {
         key: `${fieldConfig.systemName}_${fieldConfig.subField}`,
         label: fieldConfig.displayName,
         sortable: fieldConfig.sortable,
+        searchable: fieldConfig.searchable,
         type: fieldConfig.subFieldType ?? fieldConfig.type,
         mainLink: fieldConfig.mainLink,
         link: fieldConfig.link,
@@ -477,6 +478,7 @@ export function getFields (entityTypeConfig) {
         key: fieldConfig.systemName,
         label: fieldConfig.displayName,
         sortable: fieldConfig.sortable,
+        searchable: fieldConfig.searchable,
         type: fieldConfig.type,
         mainLink: fieldConfig.mainLink,
         link: fieldConfig.link
