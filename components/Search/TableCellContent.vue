@@ -4,7 +4,10 @@
       v-if="field.mainLink"
       :to="`${projectPrefix}${entityTypeName}/${entityId}`"
     >
-      <template v-if="field.type === 'edtf'">
+      <template v-if="field.type === 'main_link'">
+        <b-icon-box-arrow-right />
+      </template>
+      <template v-else-if="field.type === 'edtf'">
         {{ nameOrNA(value.text) }}
       </template>
       <template v-else-if="field.type === 'uncertain_centuries'">
@@ -28,6 +31,9 @@
       </template>
     </template>
     <template v-else-if="field.type === 'edtf'">
+      {{ nameOrNA(value.text) }}
+    </template>
+    <template v-else-if="field.type === 'uncertain_centuries'">
       {{ nameOrNA(value.text) }}
     </template>
     <template v-else>

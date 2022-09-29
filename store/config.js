@@ -87,6 +87,7 @@ export const actions = {
                 display_name
                 type
                 sortable
+                searchable
                 main_link
                 link
                 sub_field
@@ -136,6 +137,7 @@ export const actions = {
               displayName: rawColumn.display_name,
               type: rawColumn.type,
               sortable: rawColumn.sortable,
+              searchable: rawColumn.searchable,
               mainLink: rawColumn.main_link,
               link: rawColumn.link,
               subField: rawColumn.sub_field,

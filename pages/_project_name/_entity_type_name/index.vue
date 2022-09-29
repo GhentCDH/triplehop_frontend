@@ -82,7 +82,7 @@
             striped
             hover
             :items="sortedItems"
-            :fields="fields"
+            :fields="columns"
             :sort-by="sortBy.split('.')[0]"
             :sort-desc="sortDesc"
             :no-local-sorting="true"
@@ -335,6 +335,23 @@ export default {
         active: true
       })
       return breadcrumbs
+    },
+    columns () {
+      const fields = JSON.parse(JSON.stringify(this.fields))
+      for (const field of fields) {
+        if (field.mainLink) {
+          // Mainlink present, return fields
+          return fields
+        }
+      }
+      // No mainLink field present, add detail column with mainLink
+      fields.unshift({
+        key: '__link__',
+        label: 'Details',
+        type: 'main_link',
+        mainLink: true
+      })
+      return fields
     },
     currentPage () {
       return this.$route.query.page ?? 1
