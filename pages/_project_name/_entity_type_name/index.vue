@@ -217,7 +217,7 @@ export default {
     const size = 25
     // TODO: make default sorting configurable
 
-    this.sortBy = this.$route.query.sortBy ?? this.calcSortBy(this.fields[0].key)
+    this.sortBy = this.$route.query.sortBy ?? this.fields[0].key
     this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
 
     this.body = {
@@ -227,7 +227,7 @@ export default {
       size,
       sort: [
         {
-          [this.sortBy]: this.sortOrder
+          [this.calcSortBy(this.sortBy, this.sortOrder)]: this.sortOrder
         }
       ]
     }
@@ -441,9 +441,7 @@ export default {
     },
     sortedItems () {
       if (
-        this.sortBy != null &&
-        !(this.sortBy.includes('.')) &&
-        this.entityTypeConfig.elasticsearch.columns.filter(c => c.systemName === this.sortBy)[0].type === 'nested'
+        this.sortBy != null
       ) {
         const items = []
         for (const item of this.items) {
@@ -709,21 +707,37 @@ export default {
     sortingChanged ({ sortBy, sortDesc }) {
       this.$router.push({
         query: this.constructRouterQuery({
-          sortBy: this.calcSortBy(sortBy, sortDesc),
+          sortBy,
           sortOrder: sortDesc ? 'desc' : 'asc'
         })
       })
     },
     sortItem (item) {
       const result = {}
-      for (const field of item) {
-        if (field !== this.sortBy) {
-          result[field] = item[field]
-        } else if (this.sortOrder === 'desc') {
-          result[field] = [...item[field]].sort(compareNameUnicode).reverse()
-        } else {
-          result[field] = [...item[field]].sort(compareNameUnicode)
+      for (const field in item) {
+        if (field === this.sortBy) {
+          if (this.esFiltersDefs[field].type === 'uncertain_centuries') {
+            if (this.sortOrder === 'asc') {
+              result[field] = [...item[field]].sort(
+                (a, b) => { return a.numeric - b.numeric }
+              )
+            } else {
+              result[field] = [...item[field]].sort(
+                (a, b) => { return b.numeric - a.numeric }
+              )
+            }
+            continue
+          }
+          if (this.esFiltersDefs[field].type === 'nested') {
+            if (this.sortOrder === 'asc') {
+              result[field] = [...item[field]].sort(compareNameUnicode)
+            } else {
+              result[field] = [...item[field]].sort(compareNameUnicode).reverse()
+            }
+            continue
+          }
         }
+        result[field] = item[field]
       }
       return result
     }
