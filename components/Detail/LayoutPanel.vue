@@ -4,7 +4,6 @@
     class="bg-light border-0 mb-3"
   >
     <dl
-      v-if="'fields' in panel"
       class="row mb-0"
     >
       <template

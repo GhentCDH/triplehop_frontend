@@ -193,6 +193,7 @@ export const actions = {
                   field
                   type
                   base_layer
+                  show_condition
                 }
               }
             }

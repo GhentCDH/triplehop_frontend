@@ -24,11 +24,12 @@
     <sources :sources="relationSources" />
 
     <layout-panel
-      v-for="(panel, panelIndex) in relationTypeConfig.display.layout"
+      v-for="(panel, panelIndex) in panelsToShow"
       :key="`panel-${panelIndex}`"
       :panel="panel"
       :config="relationTypeConfig"
       :data="props"
+      :extra-data="extraData"
       :source-titles-config="sourceTitlesConfig"
     />
   </b-card>
@@ -66,6 +67,23 @@ export default {
     entityTypeName () {
       return this.relation.entity.__typename.toLowerCase()
     },
+    extraData () {
+      return {
+        range: this.entityTypeName
+      }
+    },
+    panelsToShow () {
+      const panelsToShow = []
+      for (const panel of this.relationTypeConfig.display.layout) {
+        const fieldsToShow = this.fieldsToShow(panel)
+        if (fieldsToShow.length === 0) {
+          continue
+        }
+        panel.fields = fieldsToShow
+        panelsToShow.push(panel)
+      }
+      return panelsToShow
+    },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name
     },
@@ -90,6 +108,30 @@ export default {
     },
     relationSources () {
       return constructRelationSources(this.sourceTitlesConfig, this.relation, '_rel_')
+    }
+  },
+  methods: {
+    fieldsToShow (panel) {
+      const fieldsToShow = []
+      if (!('fields' in panel)) {
+        return fieldsToShow
+      }
+
+      for (const field of panel.fields) {
+        if (field.show_condition == null) {
+          fieldsToShow.push(field)
+          continue
+        }
+        if (this.extraData == null) {
+          continue
+        }
+
+        const [conditionKey, conditionValue] = field.show_condition.split(':')
+        if (conditionValue === `$${this.extraData[conditionKey]}`) {
+          fieldsToShow.push(field)
+        }
+      }
+      return fieldsToShow
     }
   }
 }
