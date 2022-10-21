@@ -79,8 +79,9 @@ export default {
         if (fieldsToShow.length === 0) {
           continue
         }
-        panel.fields = fieldsToShow
-        panelsToShow.push(panel)
+        const panelCopy = JSON.parse(JSON.stringify(panel))
+        panelCopy.fields = fieldsToShow
+        panelsToShow.push(panelCopy)
       }
       return panelsToShow
     },
