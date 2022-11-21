@@ -17,7 +17,7 @@
     />
     <vue-slider v-else class="mt-5" />
     <histogram
-      :chart-data="histogramData"
+      :chart-data="chartData"
     />
   </div>
 </template>
@@ -45,7 +45,7 @@ export default {
       required: true
     },
     histogramData: {
-      type: Object,
+      type: Array,
       default: () => {
         return null
       }
@@ -87,6 +87,17 @@ export default {
     }
   },
   computed: {
+    chartData () {
+      return {
+        labels: this.histogramData.map(b => b.key),
+        datasets: [
+          {
+            backgroundColor: COLOR_PRIMARY,
+            data: this.histogramData.map(b => b.doc_count)
+          }
+        ]
+      }
+    },
     compValue: {
       get () {
         const val = []

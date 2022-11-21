@@ -1,105 +1,59 @@
-import {
-  constructAggsQuery,
-  constructAllNestedAggQuery,
-  constructDataQuery,
-  constructFullRangeAggQuery,
-  extractAggs,
-  extractAllNestedAggs,
-  extractItems,
-  extractTotal
-} from '~/assets/js/es'
-
 export const state = () => ({
   aggs: {},
-  aggsInitialized: null,
   items: [],
   fullRangeData: {},
   nestedAggsCache: {},
-  total: 0
+  total: 0,
+  sortBy: '',
+  sortOrder: '',
+  from: 0,
+  to: 0
 })
 
 export const mutations = {
   SET_AGGS (state, payload) {
     state.aggs = payload
   },
-  SET_AGGS_INITIALIZED (state, payload) {
-    state.aggsInitialized = payload
-  },
   SET_ITEMS (state, payload) {
     state.items = payload
-  },
-  SET_FULL_RANGE_DATA (state, payload) {
-    state.fullRangeData = payload
   },
   SET_NESTED_AGGS_CACHE (state, payload) {
     state.nestedAggsCache = payload
   },
   SET_TOTAL (state, payload) {
     state.total = payload
+  },
+  SET_SORT_BY (state, payload) {
+    state.sortBy = payload
+  },
+  SET_SORT_ORDER (state, payload) {
+    state.sortOrder = payload
+  },
+  SET_FROM (state, payload) {
+    state.from = payload
+  },
+  SET_TO (state, payload) {
+    state.to = payload
   }
 }
 
 export const actions = {
-  async search_data ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
+  async search ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
-      constructDataQuery(body, entityTypeConfig)
+      body
     )
     if (
       response.status === 200 &&
       response.data != null
     ) {
-      commit('SET_ITEMS', extractItems(response.data, entityTypeConfig))
-      commit('SET_TOTAL', extractTotal(response.data))
+      commit('SET_ITEMS', response.data.results)
+      commit('SET_AGGS', response.data.aggs)
+      commit('SET_TOTAL', response.data.total)
+      commit('SET_SORT_BY', response.data.sortBy)
+      commit('SET_SORT_ORDER', response.data.sortOrder)
+      commit('SET_FROM', response.data.from)
+      commit('SET_TO', response.data.to)
     }
-  },
-  async search_aggs ({ commit, state }, { body, entityTypeName, projectName, esFiltersDefs }) {
-    if (state.aggsInitialized !== entityTypeName) {
-      if (Object.values(esFiltersDefs).filter((def) => { return def.type === 'histogram_slider' }).length !== 0) {
-        const response = await this.$axios.post(
-          `/es/${projectName}/${entityTypeName}/search`,
-          constructFullRangeAggQuery(esFiltersDefs)
-        )
-        if (
-          response.status === 200 &&
-          'aggregations' in response.data
-        ) {
-          const fullRangeData = {}
-          for (const [aggName, aggResult] of Object.entries(response.data.aggregations)) {
-            fullRangeData[aggName] = new Date(aggResult.value).getFullYear()
-          }
-          commit('SET_FULL_RANGE_DATA', fullRangeData)
-        }
-      }
-      if (Object.values(esFiltersDefs).filter((def) => { return def.type === 'nested' }).length !== 0) {
-        const response = await this.$axios.post(
-          `/es/${projectName}/${entityTypeName}/search`,
-          constructAllNestedAggQuery(esFiltersDefs)
-        )
-        if (
-          response.status === 200 &&
-          'aggregations' in response.data
-        ) {
-          commit('SET_NESTED_AGGS_CACHE', extractAllNestedAggs(response.data, esFiltersDefs))
-        }
-      }
-      commit('SET_AGGS_INITIALIZED', entityTypeName)
-    }
-    const response = await this.$axios.post(
-      `/es/${projectName}/${entityTypeName}/search`,
-      constructAggsQuery(body, esFiltersDefs, state.fullRangeData)
-    )
-    if (response.data != null) {
-      commit('SET_AGGS', extractAggs(response.data, esFiltersDefs, state.nestedAggsCache))
-    }
-  },
-  initialize_empty_aggs ({ commit }, { esFiltersDefs }) {
-    const aggs = {}
-    for (const [systemName, filter] of Object.entries(esFiltersDefs)) {
-      if (filter.type === 'nested') {
-        aggs[systemName] = []
-      }
-    }
-    commit('SET_AGGS', aggs)
   }
 }

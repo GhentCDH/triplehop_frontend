@@ -4,18 +4,18 @@
     v-model="compValue"
     :clear-on-select="false"
     :disabled="disabled"
-    label="name"
+    label="value"
     :multiple="true"
     :options="aggregationData"
     :preserve-search="true"
     :show-labels="false"
-    track-by="id"
+    track-by="key"
     @close="multiselectClose"
     @input="multiselectInput"
     @open="multiselectOpen"
   >
     <template slot="option" slot-scope="props">
-      {{ props.option.name }}
+      {{ props.option.value }}
       <b-badge :pill="true">
         {{ props.option.count }}
       </b-badge>

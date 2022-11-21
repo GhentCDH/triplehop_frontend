@@ -15,7 +15,7 @@
 <script>
 import VueTypeaheadBootstrap from 'vue-typeahead-bootstrap'
 
-import { isArray, isObject } from '~/assets/js/utils'
+import { isArray } from '~/assets/js/utils'
 
 export default {
   components: {
@@ -57,36 +57,23 @@ export default {
   },
   methods: {
     isArray,
-    isObject,
     async autocompleteLookup (val) {
-      if (val == null) {
+      if (val == null || val.length < 3) {
         this.autocompleteData = []
+        return
       }
       const response = await this.$axios.post(
         this.searchUrl,
         {
-          suggest: {
-            autocomplete: {
-              prefix: val,
-              completion: {
-                field: `${this.systemName}.completion`,
-                skip_duplicates: true,
-                size: 10
-              }
-            }
-          }
+          field: this.systemName,
+          value: val
         }
       )
       if (
         response.status === 200 &&
-        'suggest' in response.data &&
-        'autocomplete' in response.data.suggest &&
-        isArray(response.data.suggest.autocomplete) &&
-        isObject(response.data.suggest.autocomplete[0]) &&
-        'options' in response.data.suggest.autocomplete[0] &&
-        isArray(response.data.suggest.autocomplete[0].options)
+        isArray(response.data)
       ) {
-        this.autocompleteData = response.data.suggest.autocomplete[0].options.map(o => o.text)
+        this.autocompleteData = response.data
       } else {
         this.autocompleteData = []
       }

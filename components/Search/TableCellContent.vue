@@ -8,7 +8,7 @@
         <b-icon-box-arrow-right />
       </template>
       <template v-else-if="field.type === 'edtf'">
-        {{ nameOrNA(value.text) }}
+        {{ nameOrNA(value) }}
       </template>
       <template v-else-if="field.type === 'uncertain_centuries'">
         {{ nameOrNA(value.display) }}
@@ -18,20 +18,20 @@
       </template>
     </nuxt-link>
     <template
-      v-else-if="field.type === 'nested'"
+      v-else-if="field.type === 'nested' || field.type === 'nested_multi_type'"
     >
       <nuxt-link
         v-if="field.link"
         :to="`${projectPrefix}${value.entity_type_name}/${value.id}`"
       >
-        {{ nameOrNA(value.name) }}
+        {{ nameOrNA(value.value) }}
       </nuxt-link>
       <template v-else>
-        {{ nameOrNA(value.name) }}
+        {{ nameOrNA(value.value) }}
       </template>
     </template>
     <template v-else-if="field.type === 'edtf'">
-      {{ nameOrNA(value.text) }}
+      {{ nameOrNA(value) }}
     </template>
     <template v-else-if="field.type === 'uncertain_centuries'">
       {{ nameOrNA(value.display) }}
@@ -41,7 +41,7 @@
     </template>
     <template v-if="field.searchable">
       <nuxt-link
-        v-if="field.type === 'nested'"
+        v-if="field.type === 'nested' || field.type === 'nested_multi_type'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.id}`"
       >
         <b-icon-search font-scale="0.5" shift-v="10" />

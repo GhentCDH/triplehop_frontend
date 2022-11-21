@@ -10,36 +10,37 @@
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>
-    <b-row v-else>
-      <b-col
-        v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
-        md="3"
-      >
-        <b-button
-          aria-controles="filters"
-          :aria-expanded="displayFilters ? 'true' : 'false'"
-          variant="primary"
-          class="d-md-none"
-          :disabled="!displayFiltersInitialized"
-          @click="displayFilters = !displayFilters"
+    <b-overlay
+      v-else
+      :show="$fetchState.pending"
+      spinner-variant="primary"
+    >
+      <b-row>
+        <b-col
+          v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
+          md="3"
         >
-          {{ displayFiltersInitialized && displayFilters ? 'Hide filters' : 'Display filters' }}
-        </b-button>
-        <!-- Hide on small screens using bootstrap classes first, then with v-model -->
-        <b-collapse
-          id="filters"
-          v-model="displayFilters"
-          :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
-        >
-          <b-form @submit.prevent="searchQueryChanged">
-            <div
-              v-for="(group, index) in filterGroups"
-              :key="index"
-              class="bg-light p-3"
-            >
-              <b-overlay
-                :show="disableFormElements"
-                spinner-variant="primary"
+          <b-button
+            aria-controles="filters"
+            :aria-expanded="displayFilters ? 'true' : 'false'"
+            variant="primary"
+            class="d-md-none"
+            :disabled="!displayFiltersInitialized"
+            @click="displayFilters = !displayFilters"
+          >
+            {{ displayFiltersInitialized && displayFilters ? 'Hide filters' : 'Display filters' }}
+          </b-button>
+          <!-- Hide on small screens using bootstrap classes first, then with v-model -->
+          <b-collapse
+            id="filters"
+            v-model="displayFilters"
+            :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
+          >
+            <b-form @submit.prevent="searchQueryChanged">
+              <div
+                v-for="(group, index) in filterGroups"
+                :key="index"
+                class="bg-light p-3"
               >
                 <b-form-group
                   v-for="filter in group.filters"
@@ -51,40 +52,35 @@
                   <component
                     :is="filter.type"
                     v-model="form[filter.systemName]"
-                    :disabled="disableFormElements"
+                    :disabled="$fetchState.pending"
                     :system-name="filter.systemName"
                     v-bind="filterProperties[filter.systemName]"
                     @changed="searchQueryChanged"
                   />
                 </b-form-group>
-              </b-overlay>
-            </div>
-          </b-form>
-        </b-collapse>
-      </b-col>
-      <b-col
-        v-if="total.value > 0"
-        md="9"
-      >
-        <b-overlay
-          :show="$fetchState.pending"
-          spinner-variant="primary"
+              </div>
+            </b-form>
+          </b-collapse>
+        </b-col>
+        <b-col
+          v-if="total > 0"
+          md="9"
         >
           Displaying {{ showingStart }} to {{ showingEnd }}
-          of {{ total.value }} results.
+          of {{ total }} results.
           <b-pagination
             :value="currentPage"
-            :total-rows="total.value"
+            :total-rows="totalPagination"
             :per-page="body.size"
             @input="pageChanged"
           />
           <b-table
             striped
             hover
-            :items="sortedItems"
+            :items="items"
             :fields="columns"
-            :sort-by="sortBy.split('.')[0]"
-            :sort-desc="sortDesc"
+            :sort-by="sortBy"
+            :sort-desc="sortOrder === 'desc'"
             :no-local-sorting="true"
             @sort-changed="sortingChanged"
           >
@@ -130,19 +126,19 @@
           </b-table>
           <b-pagination
             :value="currentPage"
-            :total-rows="total.value"
+            :total-rows="totalPagination"
             :per-page="body.size"
             @input="pageChanged"
           />
-        </b-overlay>
-      </b-col>
-      <b-col
-        v-else
-        md="9"
-      >
-        <em>No results found.</em>
-      </b-col>
-    </b-row>
+        </b-col>
+        <b-col
+          v-else
+          md="9"
+        >
+          <em>No results found.</em>
+        </b-col>
+      </b-row>
+    </b-overlay>
   </div>
 </template>
 
@@ -157,7 +153,7 @@ import Nested from '~/components/Search/Filters/Nested'
 import NestedPresent from '~/components/Search/Filters/NestedPresent'
 
 import { MAX_INT, getFields, getFilterDefs, getColumnKeys } from '~/assets/js/es'
-import { compareNameUnicode, isArray, isNumber, isObject } from '~/assets/js/utils'
+import { isArray, isNumber, isObject } from '~/assets/js/utils'
 
 export default {
   auth: false,
@@ -167,6 +163,7 @@ export default {
     histogram_slider: HistogramSlider,
     Nested,
     nested_present: NestedPresent,
+    nested_multi_type: Nested,
     TableCellContent,
     uncertain_centuries: Dropdown
   },
@@ -181,22 +178,15 @@ export default {
   },
   data () {
     return {
-      body: {
-        from: 0,
-        size: 25
-      },
-      disableFormElements: true,
+      body: {},
       displayFilters: true,
       displayFiltersInitialized: false,
       form: {},
       multiselectState: {},
-      oldForm: {},
-      sortBy: null,
-      sortOrder: null
+      oldForm: {}
     }
   },
   async fetch () {
-    this.disableFormElements = true
     if (!(this.entityTypeName in this.entityTypesConfig)) {
       return this.$nuxt.error({
         statusCode: 404,
@@ -212,36 +202,25 @@ export default {
 
     this.fillFormFromQuery()
 
-    // Request only the data on initial request, since aggregation can be relatively slow
+    // Get data including limited aggregations (including all aggregation can be too slow)
     // TODO: make size configurable
-    const size = 25
-    // TODO: make default sorting configurable
-
-    this.sortBy = this.$route.query.sortBy ?? this.fields[0].key
-    this.sortOrder = this.$route.query.sortOrder == null ? 'asc' : this.$route.query.sortOrder
-
     this.body = {
-      keys: this.esColumnsKeys,
-      filters: this.form,
-      from: this.$route.query.page == null ? 0 : (parseInt(this.$route.query.page) - 1) * size,
-      size,
-      sort: [
-        {
-          [this.calcSortBy(this.sortBy, this.sortOrder)]: this.sortOrder
-        }
-      ]
+      filters: this.simpleForm,
+      page: this.$route.query.page,
+      size: 25,
+      sortBy: this.$route.query.sortBy,
+      sortOrder: this.$route.query.sortOrder
     }
 
     let authSessionTries = 2
     while (authSessionTries--) {
       try {
         await this.$store.dispatch(
-          'es/search_data',
+          'es/search',
           {
             body: this.body,
             entityTypeName: this.entityTypeName,
-            projectName: this.projectName,
-            entityTypeConfig: this.entityTypeConfig
+            projectName: this.projectName
           }
         )
       } catch (e) {
@@ -254,66 +233,12 @@ export default {
       // Everything worked fine, exit loop
       break
     }
-    // Make sure dropdowns are rendered (with no options)
-    this.$store.dispatch('es/initialize_empty_aggs', { esFiltersDefs: this.esFiltersDefs })
+    this.completeFormFromData()
     this.oldForm = JSON.parse(JSON.stringify(this.form))
   },
   computed: {
     aggs () {
-      const aggs = rfdc()(this.$store.state.es.aggs)
-
-      // Display invalid options
-      for (const [systemName, filterValues] of Object.entries(this.form)) {
-        if (this.esFiltersDefs[systemName].type === 'nested') {
-          if (filterValues != null && filterValues.length > 0) {
-            for (const filterValue of filterValues) {
-              if (!(systemName in aggs)) {
-                aggs[systemName] = []
-              }
-              let found = false
-              for (const agg of aggs[systemName]) {
-                if (filterValue.id === agg.id) {
-                  found = true
-                  break
-                }
-              }
-              if (!found) {
-                aggs[systemName].push({
-                  id: filterValue.id,
-                  name: '<Invalid option>',
-                  count: 0
-                })
-              }
-            }
-          }
-          continue
-        }
-        if (this.esFiltersDefs[systemName].type === 'dropdown') {
-          if (filterValues != null && filterValues.length > 0) {
-            for (const filterValue of filterValues) {
-              if (!(systemName in aggs)) {
-                aggs[systemName] = []
-              }
-              let found = false
-              for (const agg of aggs[systemName]) {
-                if (filterValue.key === agg.key) {
-                  found = true
-                  break
-                }
-              }
-              if (!found) {
-                aggs[systemName].push({
-                  key: '<Invalid option>',
-                  count: 0
-                })
-              }
-            }
-          }
-          continue
-        }
-      }
-
-      return aggs
+      return this.$store.state.es.aggs
     },
     breadcrumbs () {
       const breadcrumbs = []
@@ -380,9 +305,6 @@ export default {
     filterGroups () {
       return this.entityTypeConfig.elasticsearch.filters
     },
-    fullRangeData () {
-      return this.$store.state.es.fullRangeData
-    },
     items () {
       return this.$store.state.es.items
     },
@@ -396,67 +318,69 @@ export default {
       const properties = {}
       for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
         properties[systemName] = {}
-        if (filter.type === 'histogram_slider') {
-          properties[systemName].histogramData = this.aggs[`${systemName}_hist`]
-          properties[systemName].range = {
-            min: this.fullRangeData[`${systemName}_min`],
-            max: this.fullRangeData[`${systemName}_max`]
-          }
-          continue
+        switch (filter.type) {
+          case 'nested':
+          case 'nested_multi_type':
+          case 'dropdown':
+          case 'uncertain_centuries':
+            properties[systemName].aggregationData = this.aggs[systemName]
+            break
+          case 'autocomplete':
+            properties[systemName].searchUrl = `/es/${this.projectName}/${this.entityTypeName}/suggest`
+            break
+          case 'histogram_slider':
+            properties[systemName].histogramData = this.aggs[`${systemName}_hist`]
+            properties[systemName].range = {
+              min: this.aggs[`${systemName}_min`],
+              max: this.aggs[`${systemName}_max`]
+            }
+            break
         }
-        if (filter.type === 'autocomplete') {
-          properties[systemName].searchUrl = `/es/${this.projectName}/${this.entityTypeName}/search`
-          continue
-        }
-        if (filter.type === 'nested') {
-          properties[systemName].aggregationData = this.aggs[systemName]
-          continue
-        }
-        if (filter.type === 'nested_present') {
-          properties[systemName].aggregationData = this.aggs[systemName]
-          continue
-        }
-        if (filter.type === 'dropdown') {
-          properties[systemName].aggregationData = this.aggs[systemName]
-          continue
-        }
-        if (filter.type === 'uncertain_centuries') {
-          properties[systemName].aggregationData = this.aggs[systemName]
-          continue
-        }
+        //   if (filter.type === 'nested_present') {
+        //     properties[systemName].aggregationData = this.aggs[systemName]
+        //     continue
+        //   }
       }
       return properties
     },
+    simpleForm () {
+      const simpleForm = {}
+      for (const [key, values] of Object.entries(this.form)) {
+        switch (this.esFiltersDefs[key].type) {
+          case 'nested':
+          case 'nested_multi_type':
+          case 'uncertain_centuries':
+            simpleForm[key] = []
+            for (const value of values) {
+              simpleForm[key].push(value.key)
+            }
+            break
+          default:
+            simpleForm[key] = values
+        }
+      }
+      return simpleForm
+    },
     showingStart () {
-      return this.body.from + 1
+      return this.$store.state.es.from
     },
     showingEnd () {
-      if (this.total.value < this.body.from + this.body.size) {
-        return this.total.value
-      }
-      return this.body.from + this.body.size
+      return this.$store.state.es.to
     },
     sortDesc () {
       return this.sortOrder === 'desc'
     },
-    sortedItems () {
-      if (
-        this.sortBy != null
-      ) {
-        const items = []
-        for (const item of this.items) {
-          if (this.sortBy in item && isArray(item[this.sortBy]) && item[this.sortBy].length > 1) {
-            items.push(this.sortItem(item))
-          } else {
-            items.push(item)
-          }
-        }
-        return items
-      }
-      return this.items
+    sortBy () {
+      return this.$store.state.es.sortBy
+    },
+    sortOrder () {
+      return this.$store.state.es.sortOrder
     },
     total () {
       return this.$store.state.es.total
+    },
+    totalPagination () {
+      return Math.min(this.$store.state.es.total, 10000)
     }
   },
   watch: {
@@ -467,53 +391,43 @@ export default {
     this.displayOrHideFilters()
     const self = this
     window.addEventListener('resize', self.displayOrHideFilters)
-
-    this.fetchAggregations()
   },
   methods: {
     isArray,
     isObject,
-    calcSortBy (sortBy, sortDesc = false) {
-      // For edtf:
-      // * sort on lower value when sorting ascending
-      // * sort on upper value when sorting descending
-      if (this.fields.filter(f => f.key === sortBy)[0].type === 'edtf') {
-        sortBy = `${sortBy}.${sortDesc ? 'upper' : 'lower'}`
-      } else if (this.fields.filter(f => f.key === sortBy)[0].type === 'uncertain_centuries') {
-        sortBy = `${sortBy}.numeric`
-      }
-      return sortBy
-    },
     constructRouterQuery (queryPart) {
       const query = {}
 
       for (const [systemName, filterValues] of Object.entries(this.form)) {
         if (this.esFiltersDefs[systemName].type === 'histogram_slider') {
+          if (filterValues == null) {
+            continue
+          }
           if (
             filterValues[0] != null &&
-            filterValues[0] !== this.fullRangeData[`${systemName}_min`]
+            filterValues[0] !== this.aggs[`${systemName}_min`]
           ) {
             query[`filter[${systemName}]_min`] = filterValues[0]
           }
           if (
             filterValues[1] != null &&
-            filterValues[1] !== this.fullRangeData[`${systemName}_max`]
+            filterValues[1] !== this.aggs[`${systemName}_max`]
           ) {
             query[`filter[${systemName}]_max`] = filterValues[1]
           }
           continue
         }
-        if (this.esFiltersDefs[systemName].type === 'nested') {
+        if (this.esFiltersDefs[systemName].type === 'nested' || this.esFiltersDefs[systemName].type === 'nested_multi_type') {
           if (filterValues != null && filterValues.length > 0) {
             for (const [i, filterValue] of filterValues.entries()) {
-              query[`filter[${systemName}][${i}]`] = filterValue.id
+              query[`filter[${systemName}][${i}]`] = filterValue.key
             }
           }
           continue
         }
         if (this.esFiltersDefs[systemName].type === 'nested_present') {
           if (filterValues != null) {
-            query[`filter[${systemName}]`] = filterValues.id
+            query[`filter[${systemName}]`] = filterValues.key
           }
           continue
         }
@@ -533,19 +447,27 @@ export default {
       if ('page' in queryPart) {
         query.page = queryPart.page
       } else {
-        query.page = Math.floor(this.body.from / this.body.size) + 1
+        query.page = this.body.page
+      }
+
+      if (query.page === 1) {
+        delete query.page
       }
 
       if ('sortBy' in queryPart) {
-        query.sortBy = queryPart.sortBy
-      } else {
-        query.sortBy = this.sortBy
+        if (queryPart.sortBy != null) {
+          query.sortBy = queryPart.sortBy
+        }
+      } else if (this.$route.query.sortBy != null) {
+        query.sortBy = this.$route.query.sortBy
       }
 
       if ('sortOrder' in queryPart) {
-        query.sortOrder = queryPart.sortOrder
-      } else {
-        query.sortOrder = this.sortOrder
+        if (queryPart.sortOrder != null) {
+          query.sortOrder = queryPart.sortOrder
+        }
+      } else if (this.$route.query.sortOrder != null) {
+        query.sortOrder = this.$route.query.sortOrder
       }
 
       return query
@@ -563,59 +485,14 @@ export default {
         setTimeout(() => { this.displayFiltersInitialized = true }, 350)
       }
     },
-    formChanged () {
-      const form = {}
-      for (const field of this.form) {
-        if (this.form[field] != null) {
-          form[field] = this.form[field]
-        }
-      }
-    },
-    async fetchAggregations () {
-      await this.$store.dispatch(
-        'es/search_aggs',
-        {
-          body: this.body,
-          entityTypeName: this.entityTypeName,
-          projectName: this.projectName,
-          esFiltersDefs: this.esFiltersDefs
-        }
-      )
-
-      for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
-        if (filter.type === 'nested') {
-          if (this.form[systemName] != null) {
-            this.form[systemName] = this.form[systemName].map(
-              (filterValue) => {
-                return this.aggs[systemName].filter(v => v.id === filterValue.id)[0]
-              }
-            )
-          }
-          continue
-        }
-        if (filter.type === 'nested_present') {
-          if (this.form[systemName] != null) {
-            this.form[systemName] = this.aggs[systemName].filter(v => v.id === this.form[systemName].id)[0]
-          }
-          continue
-        }
-        if (filter.type === 'dropdown') {
-          if (this.form[systemName] != null) {
-            this.form[systemName] = this.form[systemName].map(
-              (filterValue) => {
-                return this.aggs[systemName].filter(v => v.key === filterValue.key)[0]
-              }
-            )
-          }
-          continue
-        }
-      }
-      this.disableFormElements = false
-    },
     fillFormFromQuery () {
+      const newForm = {}
       for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
         if (filter.type === 'histogram_slider') {
-          this.form[systemName] = [
+          if (this.$route.query[`filter[${systemName}]_min`] == null && this.$route.query[`filter[${systemName}]_max`] == null) {
+            continue
+          }
+          newForm[systemName] = [
             this.$route.query[`filter[${systemName}]_min`] ?? null,
             this.$route.query[`filter[${systemName}]_max`] ?? null
           ]
@@ -623,10 +500,9 @@ export default {
         }
         if (filter.type === 'nested') {
           if (this.$route.query[`filter[${systemName}][0]`] == null) {
-            this.form[systemName] = null
             continue
           }
-          this.form[systemName] = []
+          newForm[systemName] = []
           let counter = 0
           while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
             const value = this.$route.query[`filter[${systemName}][${counter}]`]
@@ -637,9 +513,39 @@ export default {
                 message: `Invalid value "${value}" for filter "${systemName}".`
               })
             }
-            this.form[systemName].push(
+            newForm[systemName].push(
               {
-                id: intValue
+                key: value
+              }
+            )
+            counter++
+          }
+          continue
+        }
+        if (filter.type === 'nested_multi_type') {
+          if (this.$route.query[`filter[${systemName}][0]`] == null) {
+            continue
+          }
+          newForm[systemName] = []
+          let counter = 0
+          while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
+            const value = this.$route.query[`filter[${systemName}][${counter}]`]
+            if (!value.includes('|')) {
+              return this.$nuxt.error({
+                statusCode: 400,
+                message: `Invalid value "${value}" for filter "${systemName}".`
+              })
+            }
+            const intValue = parseInt(value.split('|')[1])
+            if (Number.isNaN(intValue) || intValue > MAX_INT) {
+              return this.$nuxt.error({
+                statusCode: 400,
+                message: `Invalid value "${value}" for filter "${systemName}".`
+              })
+            }
+            newForm[systemName].push(
+              {
+                key: value
               }
             )
             counter++
@@ -648,7 +554,6 @@ export default {
         }
         if (filter.type === 'nested_present') {
           if (this.$route.query[`filter[${systemName}]`] == null) {
-            this.form[systemName] = null
             continue
           }
           const value = this.$route.query[`filter[${systemName}]`]
@@ -659,20 +564,19 @@ export default {
               message: `Invalid value "${value}" for filter "${systemName}".`
             })
           }
-          this.form[systemName] = {
+          newForm[systemName] = {
             id: intValue
           }
           continue
         }
         if (['dropdown', 'uncertain_centuries'].includes(filter.type)) {
           if (this.$route.query[`filter[${systemName}][0]`] == null) {
-            this.form[systemName] = null
             continue
           }
-          this.form[systemName] = []
+          newForm[systemName] = []
           let counter = 0
           while (this.$route.query[`filter[${systemName}][${counter}]`] != null) {
-            this.form[systemName].push(
+            newForm[systemName].push(
               {
                 key: this.$route.query[`filter[${systemName}][${counter}]`]
               }
@@ -682,22 +586,46 @@ export default {
           continue
         }
         if (filter.type === 'autocomplete') {
-          this.form[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
+          newForm[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
         }
       }
+      this.form = rfdc()(newForm)
+    },
+    completeFormFromData () {
+      const newForm = {}
+      for (const [systemName, filter] of Object.entries(this.esFiltersDefs)) {
+        switch (filter.type) {
+          case 'nested':
+          case 'nested_multi_type':
+          case 'uncertain_centuries':
+          case 'dropdown':
+            if (this.form[systemName] != null) {
+              newForm[systemName] = this.form[systemName].map(
+                (filterValue) => {
+                  return this.aggs[systemName].filter(v => v.key === filterValue.key)[0]
+                }
+              )
+            }
+            break
+          case 'nested_present':
+            if (this.form[systemName] != null) {
+              newForm[systemName] = this.aggs[systemName].filter(v => v.key === this.form[systemName].key)[0]
+            }
+            break
+          default:
+            newForm[systemName] = this.form[systemName]
+        }
+      }
+      this.form = rfdc()(newForm)
     },
     pageChanged (page) {
-      if (page == null && this.body.from === 0) {
-        return
-      }
-      if (page === Math.floor(this.body.from / this.body.size) + 1) {
+      if (page === this.body.page) {
         return
       }
       this.$router.push({ query: this.constructRouterQuery({ page }) })
     },
     async reload () {
       await this.$fetch()
-      await this.fetchAggregations()
     },
     searchQueryChanged () {
       if (JSON.stringify(this.form) !== JSON.stringify(this.oldForm)) {
@@ -707,39 +635,10 @@ export default {
     sortingChanged ({ sortBy, sortDesc }) {
       this.$router.push({
         query: this.constructRouterQuery({
-          sortBy,
-          sortOrder: sortDesc ? 'desc' : 'asc'
+          sortBy: sortBy === '' ? null : sortBy,
+          sortOrder: sortDesc ? 'desc' : null
         })
       })
-    },
-    sortItem (item) {
-      const result = {}
-      for (const field in item) {
-        if (field === this.sortBy) {
-          if (this.esFiltersDefs[field].type === 'uncertain_centuries') {
-            if (this.sortOrder === 'asc') {
-              result[field] = [...item[field]].sort(
-                (a, b) => { return a.numeric - b.numeric }
-              )
-            } else {
-              result[field] = [...item[field]].sort(
-                (a, b) => { return b.numeric - a.numeric }
-              )
-            }
-            continue
-          }
-          if (this.esFiltersDefs[field].type === 'nested') {
-            if (this.sortOrder === 'asc') {
-              result[field] = [...item[field]].sort(compareNameUnicode)
-            } else {
-              result[field] = [...item[field]].sort(compareNameUnicode).reverse()
-            }
-            continue
-          }
-        }
-        result[field] = item[field]
-      }
-      return result
     }
   }
 }

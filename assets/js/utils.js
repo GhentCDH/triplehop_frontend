@@ -12,18 +12,6 @@ export function capitalizeFirstLetter (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-export function compareNameUnicode (a, b) {
-  const normA = normalizeUnicode(a.name).toLowerCase()
-  const normB = normalizeUnicode(b.name).toLowerCase()
-  if (normA < normB) {
-    return -1
-  }
-  if (normA > normB) {
-    return 1
-  }
-  return 0
-}
-
 export function stringify (input) {
   if (typeof input === 'object' && input !== null) {
     return JSON.stringify(input)
@@ -306,10 +294,6 @@ export function isObject (variable) {
 
 export function isUUID (string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(string)
-}
-
-export function normalizeUnicode (string) {
-  return string.normalize('NFKD').replace(/[^\w]/g, '')
 }
 
 export function nestedKeyExists (obj, ...props) {
