@@ -3,14 +3,14 @@
     v-if="aggregationData != null"
     v-model="compValue"
     :disabled="disabled"
-    label="name"
+    label="value"
     :options="aggregationData"
     :show-labels="false"
     track-by="id"
     @input="$emit('changed')"
   >
     <template slot="option" slot-scope="props">
-      {{ props.option.name }}
+      {{ props.option.value }}
       <b-badge :pill="true">
         {{ props.option.count }}
       </b-badge>

@@ -321,8 +321,9 @@ export default {
         switch (filter.type) {
           case 'nested':
           case 'nested_multi_type':
-          case 'dropdown':
           case 'uncertain_centuries':
+          case 'nested_present':
+          case 'dropdown':
             properties[systemName].aggregationData = this.aggs[systemName]
             break
           case 'autocomplete':
@@ -336,10 +337,6 @@ export default {
             }
             break
         }
-        //   if (filter.type === 'nested_present') {
-        //     properties[systemName].aggregationData = this.aggs[systemName]
-        //     continue
-        //   }
       }
       return properties
     },
@@ -350,6 +347,7 @@ export default {
           case 'nested':
           case 'nested_multi_type':
           case 'uncertain_centuries':
+          case 'dropdown':
             simpleForm[key] = []
             for (const value of values) {
               simpleForm[key].push(value.key)
@@ -565,7 +563,7 @@ export default {
             })
           }
           newForm[systemName] = {
-            id: intValue
+            key: intValue
           }
           continue
         }
@@ -586,7 +584,10 @@ export default {
           continue
         }
         if (filter.type === 'autocomplete') {
-          newForm[systemName] = this.$route.query[`filter[${systemName}]`] ?? null
+          if (this.$route.query[`filter[${systemName}]`] == null) {
+            continue
+          }
+          newForm[systemName] = this.$route.query[`filter[${systemName}]`]
         }
       }
       this.form = rfdc()(newForm)

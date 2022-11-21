@@ -38,7 +38,7 @@ export const mutations = {
 }
 
 export const actions = {
-  async search ({ commit }, { body, entityTypeName, projectName, entityTypeConfig }) {
+  async search ({ commit }, { body, entityTypeName, projectName }) {
     const response = await this.$axios.post(
       `/es/${projectName}/${entityTypeName}/search`,
       body
