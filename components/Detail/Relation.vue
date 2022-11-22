@@ -74,6 +74,9 @@ export default {
     },
     panelsToShow () {
       const panelsToShow = []
+      if (this.relationTypeConfig.display.layout == null) {
+        return panelsToShow
+      }
       for (const panel of this.relationTypeConfig.display.layout) {
         const fieldsToShow = this.fieldsToShow(panel)
         if (fieldsToShow.length === 0) {
