@@ -59,6 +59,12 @@
       >
         <b-icon-search font-scale="0.5" shift-v="10" />
       </nuxt-link>
+      <nuxt-link
+        v-else-if="field.type === 'text'"
+        :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value}`"
+      >
+        <b-icon-search font-scale="0.5" shift-v="10" />
+      </nuxt-link>
     </template>
   </div>
 </template>
