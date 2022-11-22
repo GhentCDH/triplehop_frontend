@@ -20,8 +20,9 @@
     <template
       v-else-if="field.type === 'nested' || field.type === 'nested_multi_type'"
     >
+      <template v-if="value.id == null" />
       <nuxt-link
-        v-if="field.link"
+        v-else-if="field.link"
         :to="`${projectPrefix}${value.entity_type_name}/${value.id}`"
       >
         {{ nameOrNA(value.value) }}
