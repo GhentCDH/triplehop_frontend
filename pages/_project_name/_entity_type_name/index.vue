@@ -325,6 +325,8 @@ export default {
           case 'nested_present':
           case 'dropdown':
             properties[systemName].aggregationData = this.aggs[systemName]
+            properties[systemName].filters = this.simpleForm
+            properties[systemName].searchUrl = `/es/${this.projectName}/${this.entityTypeName}/aggregation_suggest`
             break
           case 'autocomplete':
             properties[systemName].searchUrl = `/es/${this.projectName}/${this.entityTypeName}/suggest`
@@ -614,7 +616,9 @@ export default {
             }
             break
           default:
-            newForm[systemName] = this.form[systemName]
+            if (this.form[systemName] != null) {
+              newForm[systemName] = this.form[systemName]
+            }
         }
       }
       this.form = rfdc()(newForm)

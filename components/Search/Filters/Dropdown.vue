@@ -6,13 +6,14 @@
     :disabled="disabled"
     label="key"
     :multiple="true"
-    :options="aggregationData"
-    :preserve-search="true"
+    :options="options"
+    :internal-search="false"
     :show-labels="false"
     track-by="key"
     @close="multiselectClose"
     @input="multiselectInput"
     @open="multiselectOpen"
+    @search-change="updateOptions"
   >
     <template slot="option" slot-scope="props">
       {{ props.option.key }}
@@ -24,6 +25,8 @@
 </template>
 <script>
 import Multiselect from 'vue-multiselect'
+
+import { isArray } from '~/assets/js/utils'
 
 export default {
   components: {
@@ -40,6 +43,16 @@ export default {
       type: Boolean,
       required: true
     },
+    filters: {
+      type: Object,
+      default: () => {
+        return null
+      }
+    },
+    searchUrl: {
+      type: String,
+      required: true
+    },
     systemName: {
       type: String,
       required: true
@@ -51,6 +64,7 @@ export default {
   },
   data () {
     return {
+      options: this.aggregationData,
       state: null
     }
   },
@@ -62,6 +76,11 @@ export default {
       set (val) {
         this.$emit('input', val)
       }
+    }
+  },
+  watch: {
+    aggregationData () {
+      this.options = this.aggregationData
     }
   },
   methods: {
@@ -76,6 +95,30 @@ export default {
     },
     multiselectOpen () {
       this.state = 'open'
+    },
+    async updateOptions (input) {
+      if (input === '') {
+        this.options = this.aggregationData
+        return
+      }
+      this.isLoading = true
+      const response = await this.$axios.post(
+        this.searchUrl,
+        {
+          filters: this.filters,
+          field: this.systemName,
+          value: input
+        }
+      )
+      if (
+        response.status === 200 &&
+        isArray(response.data)
+      ) {
+        this.options = response.data
+      } else {
+        this.options = []
+      }
+      this.isLoading = false
     }
   }
 }
