@@ -1,30 +1,45 @@
 # Front-end for TripleHop
 
-## Prerequisites
+TripleHop is a platform that aims to facilitate collaborative research data creation and publication.
 
-* Nodejs, npm and yarn
+![TripleHop screenshot](triplehop_screenshot.png)
 
-    ```sh
-    curl -fsSL https://deb.nodesource.com/setup_14.x | sudo bash -
-    sudo apt-get install -y nodejs
-    sudo npm install --global yarn
-    ```
+The front-end for TripleHop consists of a Nuxt.js application connected to a [TripleHop back-end](https://github.com/GhentCDH/triplehop_backend).
 
-## Build Setup
+## Work in progress
 
-```sh
-# install dependencies
-$ yarn install
+The TripleHop platform is still a work in progress.
 
-# serve with hot reload at virtual_network_ip:3000
-$ HOST=`ip -f inet addr show eth1 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p'` yarn dev
+Currently implemented:
 
-# build for production and launch server
-$ yarn build
-$ yarn start
+* Data model configuration using json files
+* Basic exploration of data
+* A part of the editing interface
+* Data import using import scripts
+* Limited GraphQL API
 
-# generate static project
-$ yarn generate
-```
+TO DO:
 
-For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
+* Documentation
+* Testing
+* Data model configuration with a web interface
+* Editing interface
+* Data import using a web interface
+* LOD presentation
+* LOD mapping
+* HDT export
+* Plug-in system in the back-end and front-end, re-evaluation of the data model configuration format
+* Graph visualizations
+* Visual query interface
+
+## Contributing
+
+Please see our [contributing guidelines](CONTRIBUTING.md).
+
+## Acknowledgements
+
+TripleHop is and has been funded by
+
+* [Clariah-VL](https://clariahvl.hypotheses.org/)
+* [Cinema Belgica](https://www.cinemabelgica.be/)
+* [Novel Echoes](https://research.flw.ugent.be/en/projects/novel-echoes)
