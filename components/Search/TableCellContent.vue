@@ -24,12 +24,16 @@
       <nuxt-link
         v-else-if="field.link"
         :to="`${projectPrefix}${value.entity_type_name}/${value.id}`"
+        :class="`table-cell-item__${value.entity_type_name}`"
       >
         {{ nameOrNA(value.value) }}
       </nuxt-link>
-      <template v-else>
+      <span
+        v-else
+        :class="`table-cell-item__${value.entity_type_name}`"
+      >
         {{ nameOrNA(value.value) }}
-      </template>
+      </span>
     </template>
     <template v-else-if="field.type === 'edtf'">
       {{ nameOrNA(value) }}

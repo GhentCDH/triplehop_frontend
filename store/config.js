@@ -102,6 +102,10 @@ export const actions = {
                 }
               }
             }
+            style {
+              search
+              detail
+            }
           }
         }
         `
@@ -116,7 +120,8 @@ export const actions = {
         source: raw.source,
         data: {},
         display: raw.display,
-        edit: raw.edit
+        edit: raw.edit,
+        style: raw.style
       }
       for (const rawField of raw.data) {
         config[raw.system_name].data[rawField.system_name] = {

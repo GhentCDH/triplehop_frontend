@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="`${projectName}__${entityTypeName}__search`">
     <b-breadcrumb
       class="bg-light"
       :items="breadcrumbs"
@@ -235,6 +235,19 @@ export default {
     }
     this.completeFormFromData()
     this.oldForm = JSON.parse(JSON.stringify(this.form))
+  },
+  head () {
+    if (this.entityTypeConfig.style?.search == null) {
+      return {}
+    }
+    return {
+      style: [
+        {
+          cssText: this.entityTypeConfig.style?.search.map(rule => `.novel_echoes__text__search ${rule}`).join('\n'),
+          type: 'text/css'
+        }
+      ]
+    }
   },
   computed: {
     aggs () {
