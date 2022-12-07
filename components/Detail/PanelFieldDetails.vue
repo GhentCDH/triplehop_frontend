@@ -74,10 +74,10 @@
           {{ cleanValueAndSources.value }}
         </template>
       </template>
-      <template v-else>
-        {{ cleanValueAndSources.value }}
-        <sources :sources="cleanValueAndSources.sources" />
-      </template>
+      <span
+        v-else
+        class="preserve-whitespace"
+      >{{ cleanValueAndSources.value }}<sources :sources="cleanValueAndSources.sources" /></span>
     </template>
   </dd>
 </template>
