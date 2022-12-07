@@ -1,7 +1,7 @@
 <template>
   <dt
     class="col-sm-3 col-lg-2"
-    :class="{'text-muted': fieldValue.length === 0}"
+    :class="{'empty-field': fieldValue.length === 0}"
   >
     {{ field.label ? field.label : config.data[field.field.replace('$', '')].display_name }}
   </dt>
