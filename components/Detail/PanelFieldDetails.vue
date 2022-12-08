@@ -74,6 +74,16 @@
           {{ cleanValueAndSources.value }}
         </template>
       </template>
+      <template
+        v-else-if="field.type === 'text_flatten'"
+      >
+        <span
+          v-for="(item, index) in cleanValueAndSources"
+          :key="index"
+        >
+          {{ item.value }}<sources :sources="item.sources" /><template v-if="index != cleanValueAndSources.length -1">, </template>
+        </span>
+      </template>
       <span
         v-else
         class="preserve-whitespace"
@@ -128,6 +138,7 @@ export default {
           return this.fieldValue[0]
         case 'filmmagie':
         case 'list':
+        case 'text_flatten':
           return this.fieldValue
       }
       return this.fieldValue[0]
