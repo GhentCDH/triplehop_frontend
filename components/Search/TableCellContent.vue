@@ -18,7 +18,7 @@
       </template>
     </nuxt-link>
     <template
-      v-else-if="field.type === 'nested' || field.type === 'nested_multi_type'"
+      v-else-if="field.type === 'nested' || field.type === 'nested_multi_type' || field.type === 'nested_flatten'"
     >
       <template v-if="value.id == null" />
       <nuxt-link
@@ -46,7 +46,7 @@
     </template>
     <template v-if="field.searchable">
       <nuxt-link
-        v-if="field.type === 'nested'"
+        v-if="field.type === 'nested' || field.type === 'nested_flatten'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.id}`"
       >
         <b-icon-search font-scale="0.5" shift-v="10" />

@@ -164,6 +164,7 @@ export default {
     Nested,
     nested_present: NestedPresent,
     nested_multi_type: Nested,
+    nested_flatten: Nested,
     TableCellContent,
     uncertain_centuries: Dropdown
   },
@@ -334,6 +335,7 @@ export default {
         switch (filter.type) {
           case 'nested':
           case 'nested_multi_type':
+          case 'nested_flatten':
           case 'uncertain_centuries':
           case 'nested_present':
           case 'dropdown':
@@ -361,6 +363,7 @@ export default {
         switch (this.esFiltersDefs[key].type) {
           case 'nested':
           case 'nested_multi_type':
+          case 'nested_flatten':
           case 'uncertain_centuries':
           case 'dropdown':
             simpleForm[key] = []
@@ -430,7 +433,11 @@ export default {
           }
           continue
         }
-        if (this.esFiltersDefs[systemName].type === 'nested' || this.esFiltersDefs[systemName].type === 'nested_multi_type') {
+        if (
+          this.esFiltersDefs[systemName].type === 'nested' ||
+          this.esFiltersDefs[systemName].type === 'nested_multi_type' ||
+          this.esFiltersDefs[systemName].type === 'nested_flatten'
+        ) {
           if (filterValues != null && filterValues.length > 0) {
             for (const [i, filterValue] of filterValues.entries()) {
               query[`filter[${systemName}][${i}]`] = filterValue.key
@@ -511,7 +518,7 @@ export default {
           ]
           continue
         }
-        if (filter.type === 'nested') {
+        if (filter.type === 'nested' || filter.type === 'nested_flatten') {
           if (this.$route.query[`filter[${systemName}][0]`] == null) {
             continue
           }
@@ -613,6 +620,7 @@ export default {
         switch (filter.type) {
           case 'nested':
           case 'nested_multi_type':
+          case 'nested_flatten':
           case 'uncertain_centuries':
           case 'dropdown':
             if (this.form[systemName] != null) {
