@@ -64,6 +64,9 @@ export const actions = {
                   type
                   base_layer
                   base_url
+                  searchable
+                  search_key
+                  search_value
                 }
               }
             }

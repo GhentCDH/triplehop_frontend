@@ -445,6 +445,8 @@ export const actions = {
     const queryParts = [
       'query {',
       `get${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
+      'id',
+      '__typename',
       ...constructQueryParts(
         triplehopQueryFromDataPaths(dataPaths),
         entityTypesConfig,

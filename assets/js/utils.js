@@ -20,10 +20,14 @@ export function stringify (input) {
 }
 
 // Merge objects
-function addValuesWithSourceObjects (valuesWithSourceObjects, additionalValuesWithSourceObjects, relationSourceObjects) {
+function addValuesWithSourceObjects (valuesWithSourceObjects, additionalValuesWithSourceObjects, relationSourceObjects, entityPath) {
+  console.log(relationSourceObjects)
   for (const [value, sourceObjects] of Object.entries(additionalValuesWithSourceObjects)) {
     if (!(value in valuesWithSourceObjects)) {
-      valuesWithSourceObjects[value] = {}
+      valuesWithSourceObjects[value] = {
+        entityPath,
+        sources: {}
+      }
     }
     addSourceObjects(valuesWithSourceObjects[value], sourceObjects)
     addSourceObjects(valuesWithSourceObjects[value], relationSourceObjects)
@@ -33,12 +37,12 @@ function addValuesWithSourceObjects (valuesWithSourceObjects, additionalValuesWi
 // Merge objects
 function addSourceObjects (sourceObjects, additionalSourceObjects) {
   for (const [sourceEntityName, sourceEntities] of Object.entries(additionalSourceObjects)) {
-    if (!(sourceEntityName in sourceObjects)) {
-      sourceObjects[sourceEntityName] = {}
+    if (!(sourceEntityName in sourceObjects.sources)) {
+      sourceObjects.sources[sourceEntityName] = {}
     }
     for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
-      if (!(sourceEntityId in sourceObjects[sourceEntityName])) {
-        sourceObjects[sourceEntityName][sourceEntityId] = sourceEntity
+      if (!(sourceEntityId in sourceObjects.sources[sourceEntityName])) {
+        sourceObjects.sources[sourceEntityName][sourceEntityId] = sourceEntity
       }
       // TODO: merge other source relation values if necessary
     }
@@ -47,15 +51,23 @@ function addSourceObjects (sourceObjects, additionalSourceObjects) {
 
 function constructEntitySource (sourceTitlesConfig, entity, property) {
   if (sourceTitlesConfig == null) {
-    return {}
+    return {
+      sources: {}
+    }
   }
   if (!('_source_' in entity)) {
-    return {}
+    return {
+      sources: {}
+    }
   }
   if (entity._source_.length === 0) {
-    return {}
+    return {
+      sources: {}
+    }
   }
-  const sourceObjects = {}
+  const sourceObjects = {
+    sources: {}
+  }
   for (const source of entity._source_) {
     if (source.properties.includes(property)) {
       const sourceData = {
@@ -130,7 +142,7 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
     [input]: []
   }
   for (const match of matches) {
-    let currentLevels = [data]
+    let currentLevels = [[data, [{ id: data.id, typeName: data.__typename?.toLowerCase() }]]]
     const relationSources = constructEntitySource(sourceTitlesConfig, rawRelation, '__rel__')
     // remove all dollar signs, split in parts
     const path = match.split('$').join('').split('->')
@@ -143,7 +155,7 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
           const newResults = {}
           for (const result of Object.keys(results)) {
             for (const currentLevel of currentLevels) {
-              for (const rel of currentLevel[`${relation}_s`]) {
+              for (const rel of currentLevel[0][`${relation}_s`]) {
                 // TODO: relation sources
                 newResults[result.replace(match, stringify(rel[rProp]))] = results[result]
               }
@@ -155,33 +167,35 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
           const newResults = {}
           for (const result of Object.keys(results)) {
             for (const currentLevel of currentLevels) {
-              if (currentLevel[p] != null) {
-                if (isArray(currentLevel[p])) {
-                  for (const [index, value] of currentLevel[p].entries()) {
+              if (currentLevel[0][p] != null) {
+                if (isArray(currentLevel[0][p])) {
+                  for (const [index, value] of currentLevel[0][p].entries()) {
                     // Add entity source
                     addValuesWithSourceObjects(
                       newResults,
                       {
                         [result.replace(match, stringify(value))]: constructEntitySource(
                           sourceTitlesConfig,
-                          currentLevel,
+                          currentLevel[0],
                           `${p}[${index}]`
                         )
                       },
-                      relationSources
+                      relationSources,
+                      currentLevel[1]
                     )
                   }
                 } else {
                   addValuesWithSourceObjects(
                     newResults,
                     {
-                      [result.replace(match, stringify(currentLevel[p]))]: constructEntitySource(
+                      [result.replace(match, stringify(currentLevel[0][p]))]: constructEntitySource(
                         sourceTitlesConfig,
-                        currentLevel,
+                        currentLevel[0],
                         p
                       )
                     },
-                    relationSources
+                    relationSources,
+                    currentLevel[1]
                   )
                 }
               } else if (displayNA) {
@@ -190,11 +204,12 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
                   {
                     [result.replace(match, 'N/A')]: constructEntitySource(
                       sourceTitlesConfig,
-                      currentLevel,
+                      currentLevel[0],
                       p
                     )
                   },
-                  relationSources
+                  relationSources,
+                  currentLevel[1]
                 )
               }
             }
@@ -205,13 +220,20 @@ function rawConstructFieldFromData (input, data, sourceTitlesConfig, rawRelation
         // not last element => p = relation => travel
         const newCurrentLevels = []
         for (const currentLevel of currentLevels) {
-          for (const rel of currentLevel[`${p}_s`]) {
+          for (const rel of currentLevel[0][`${p}_s`]) {
             // Add relations sources
             addSourceObjects(
               relationSources,
               constructEntitySource(sourceTitlesConfig, rel, '__rel__')
             )
-            newCurrentLevels.push(rel.entity)
+            newCurrentLevels.push(
+              [
+                rel.entity,
+                [
+                  ...currentLevel[1],
+                  { id: rel.entity.id, typeName: rel.entity.__typename.toLowerCase() }
+                ]
+              ])
           }
         }
         currentLevels = newCurrentLevels
@@ -247,8 +269,10 @@ export function constructFieldFromData (input, data, sourceTitlesConfig, rawRela
   const raw = rawConstructFieldFromData(input, data, sourceTitlesConfig, rawRelation, displayNA)
   const results = []
   for (const [value, sourceObjects] of Object.entries(raw)) {
+    console.log(value)
+    console.log(sourceObjects)
     const sources = []
-    for (const [sourceEntityTypeName, sourceEntities] of Object.entries(sourceObjects)) {
+    for (const [sourceEntityTypeName, sourceEntities] of Object.entries(sourceObjects.sources)) {
       for (const [sourceEntityId, sourceEntity] of Object.entries(sourceEntities)) {
         if ('title' in sourceEntity) {
           const sourceData = {
