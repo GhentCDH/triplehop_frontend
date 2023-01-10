@@ -41,15 +41,15 @@
         :show="disableFormElements"
         spinner-variant="primary"
       >
-        <b-row>
-          <b-col
-            id="edit"
-            sm="9"
-            class="mb-3"
-          >
-            <b-form
-              @submit.prevent="onSubmit"
-              @reset.prevent="onReset"
+        <b-form
+          @submit.prevent="onSubmit"
+          @reset.prevent="onReset"
+        >
+          <b-row>
+            <b-col
+              id="edit"
+              md="9"
+              class="mb-3"
             >
               <h2 id="entity" class="text-primary">
                 Entity
@@ -79,104 +79,120 @@
                 :relation-type-name="relationTypeName"
                 @input="formInput(relationTypeName, $event)"
               />
-              <h2 id="actions" class="text-primary">
-                Actions
-              </h2>
-              <b-button
-                type="submit"
-                variant="primary"
-                :disabled="!formDataChanged || disableFormElements || invalid"
-              >
-                Submit
-              </b-button>
-              <b-button
-                type="reset"
-                variant="danger"
-                :disabled="!formDataChanged || disableFormElements"
-              >
-                Reset
-              </b-button>
-            </b-form>
-          </b-col>
-          <!-- TODO: display navbar before refs are loaded -->
-          <b-navbar
-            v-if="refsLoaded"
-            v-b-scrollspy:edit
-            class="d-none d-sm-block col-sm-3 sticky-top toc"
-          >
-            <div class="border-left border-secondary nav-border-left">
-              <b-navbar-brand href="#">
-                Quick navigation
-              </b-navbar-brand>
-              <b-nav
-                vertical
-              >
-                <li class="nav-item">
-                  <b-link
-                    href="#entity"
-                    :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
-                  >
-                    Entity
-                  </b-link>
-                  <b-nav>
-                    <template
-                      v-for="(panel, panelIndex) in layout"
-                    >
-                      <li
-                        :key="`nav-entity-${panelIndex}`"
-                        :class="['nav-item', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
-                      >
-                        <b-link
-                          :href="`#entity-${panel.label}`"
-                          :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
-                        >
-                          <b-icon-arrow-90deg-down
-                            rotate="270"
-                            shift-v="4"
-                          />
-                          {{ panel.label }}
-                        </b-link>
-                      </li>
-                    </template>
-                  </b-nav>
-                </li>
-                <li class="nav-item">
-                  <b-link
-                    href="#relations"
-                    :class="['nav-link']"
-                  >
-                    Relations
-                  </b-link>
-                  <b-nav>
-                    <template
-                      v-for="(relationTypeName, panelIndex) in editableRelationTypeNames"
-                    >
-                      <li
-                        :key="`nav-relation-${relationTypeName}`"
-                        :class="['nav-item', {'text-danger': $refs.relationPanels[panelIndex].invalid}]"
-                      >
-                        <b-link
-                          :href="`#${relationTypeName}`"
-                          :class="['nav-link']"
-                        >
-                          <b-icon-arrow-90deg-down
-                            :key="`icon-relation-${relationTypeName}`"
-                            rotate="270"
-                            shift-v="4"
-                          />
-                          {{ getRelationConfig(relationTypeName).edit.domain_title }}
-                        </b-link>
-                      </li>
-                    </template>
-                  </b-nav>
-                </li>
-                <b-nav-item href="#actions">
+              <div class="d-md-none">
+                <h2 id="actions" class="text-primary">
                   Actions
-                </b-nav-item>
-              </b-nav>
-            </div>
-          </b-navbar>
-        </b-row>
+                </h2>
+                <b-button
+                  type="submit"
+                  variant="primary"
+                  :disabled="!formDataChanged || disableFormElements || invalid"
+                >
+                  Submit
+                </b-button>
+                <b-button
+                  type="reset"
+                  variant="danger"
+                  :disabled="!formDataChanged || disableFormElements"
+                >
+                  Reset
+                </b-button>
+              </div>
+            </b-col>
+            <!-- TODO: display navbar before refs are loaded -->
+            <b-navbar
+              v-if="refsLoaded"
+              v-b-scrollspy:edit
+              class="d-none d-md-block col-md-3 sticky-top toc"
+            >
+              <div class="border-left border-secondary nav-border-left">
+                <b-nav vertical>
+                  <b-nav-text class="text-dark">
+                    Actions
+                  </b-nav-text>
+                  <b-nav-text>
+                    <b-button
+                      type="submit"
+                      variant="primary"
+                      :disabled="!formDataChanged || disableFormElements || invalid"
+                    >
+                      Submit
+                    </b-button>
+                    <b-button
+                      type="reset"
+                      variant="danger"
+                      :disabled="!formDataChanged || disableFormElements"
+                    >
+                      Reset
+                    </b-button>
+                  </b-nav-text>
+                  <b-nav-text class="text-dark">
+                    Quick navigation
+                  </b-nav-text>
+                  <li class="nav-item">
+                    <b-link
+                      href="#entity"
+                      :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
+                    >
+                      Entity
+                    </b-link>
+                    <b-nav>
+                      <template
+                        v-for="(panel, panelIndex) in layout"
+                      >
+                        <li
+                          :key="`nav-entity-${panelIndex}`"
+                          :class="['nav-item', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
+                        >
+                          <b-link
+                            :href="`#entity-${panel.label}`"
+                            :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
+                          >
+                            <b-icon-arrow-90deg-down
+                              rotate="270"
+                              shift-v="4"
+                            />
+                            {{ panel.label }}
+                          </b-link>
+                        </li>
+                      </template>
+                    </b-nav>
+                  </li>
+                  <li class="nav-item">
+                    <b-link
+                      href="#relations"
+                      :class="['nav-link']"
+                    >
+                      Relations
+                    </b-link>
+                    <b-nav>
+                      <template
+                        v-for="(relationTypeName, panelIndex) in editableRelationTypeNames"
+                      >
+                        <li
+                          :key="`nav-relation-${relationTypeName}`"
+                          :class="['nav-item', {'text-danger': $refs.relationPanels[panelIndex].invalid}]"
+                        >
+                          <b-link
+                            :href="`#${relationTypeName}`"
+                            :class="['nav-link']"
+                          >
+                            <b-icon-arrow-90deg-down
+                              :key="`icon-relation-${relationTypeName}`"
+                              rotate="270"
+                              shift-v="4"
+                            />
+                            {{ getRelationConfig(relationTypeName).edit.domain_title }}
+                          </b-link>
+                        </li>
+                      </template>
+                    </b-nav>
+                  </li>
+                </b-nav>
+              </div>
+            </b-navbar>
+          </b-row>
+        </b-form>
       </b-overlay>
     </template>
   </div>
