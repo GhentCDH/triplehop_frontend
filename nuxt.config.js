@@ -108,10 +108,11 @@ export default {
     /*
     ** You can extend webpack config here
     */
-    extend(config, ctx) {
+    extend (config, ctx) {
     },
     transpile: [
-      ({ isServer }) => 'vue-typeahead-bootstrap'
+      ({ isServer }) => 'vue-typeahead-bootstrap',
+      ({ isServer }) => 'htmlparser2'
     ]
   },
   router: {
