@@ -80,12 +80,6 @@ export default {
     },
     entityTypesConfig () {
       const entityTypesConfig = JSON.parse(JSON.stringify(this.$store.state.config.entity_types))
-      // Filter out entity types without elasticsearch config
-      for (const entityTypeName of Object.keys(entityTypesConfig)) {
-        if (!('elasticsearch' in entityTypesConfig[entityTypeName])) {
-          delete entityTypesConfig[entityTypeName]
-        }
-      }
       // Filter out entity types for wich the user has no es_index permission
       for (const entityTypeName of Object.keys(entityTypesConfig)) {
         if (!hasEntityTypePermission(this.$auth.user, this.projectName, entityTypeName, 'es_data', 'index')) {
