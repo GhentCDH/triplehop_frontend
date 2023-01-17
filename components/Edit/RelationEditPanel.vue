@@ -10,37 +10,38 @@
       :key="relationId"
       class="border-0 bg-white mb-1"
     >
-      <b-row>
-        <b-col
-          sm="12"
-          class="mb-1"
+      <div class="mb-2">
+        [{{ relationData.entity.id }}] {{ relationData.entity.title }}
+        <b-link
+          target="_blank"
+          title="View entity"
+          :to="{
+            name: 'project_name-entity_type_name-id',
+            params: {
+              project_name: projectName,
+              entity_type_name: relationData.entity.entityTypeName,
+              id: relationData.entity.id
+            }
+          }"
         >
-          [{{ relationData.entity.id }}] {{ relationData.entity.title }}
-          <!-- TODO: check edit permission on entity type -->
-          <b-link
-            target="_blank"
-            title="Edit entity"
-            :to="{
-              name: 'project_name-entity_type_name-id-edit',
-              params: {
-                project_name: projectName,
-                entity_type_name: relationData.entity.entityTypeName,
-                id: relationData.entity.id
-              }
-            }"
-          >
-            <b-icon-pencil-fill />
-          </b-link>
-          <b-button
-            class="float-right"
-            variant="danger"
-            title="Delete this relation"
-            @click="onDelete(relationId)"
-          >
-            <b-icon-trash />
-          </b-button>
-        </b-col>
-      </b-row>
+          <b-icon-eye-fill />
+        </b-link>
+        <!-- TODO: check edit permission on entity type -->
+        <b-link
+          target="_blank"
+          title="Edit entity"
+          :to="{
+            name: 'project_name-entity_type_name-id-edit',
+            params: {
+              project_name: projectName,
+              entity_type_name: relationData.entity.entityTypeName,
+              id: relationData.entity.id
+            }
+          }"
+        >
+          <b-icon-pencil-fill />
+        </b-link>
+      </div>
       <relation-edit-panel-panel
         v-for="(panel, panelIndex) in layout"
         :key="`${relationTypeName}-panel-${panelIndex}`"
@@ -51,6 +52,13 @@
         :disabled="disabled"
         @input="onInput(relationId, $event)"
       />
+      <b-button
+        variant="danger"
+        title="Delete this relation"
+        @click="onDelete(relationId)"
+      >
+        <b-icon-trash /> Delete this relation
+      </b-button>
     </b-card>
   </b-card>
 </template>
