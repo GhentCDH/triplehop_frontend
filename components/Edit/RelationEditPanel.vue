@@ -184,20 +184,24 @@ export default {
       )
     },
     reset () {
-      for (const entityPanel of this.$refs.entityPanels) {
-        entityPanel.reset()
+      if (this.$refs.entityPanels != null) {
+        for (const entityPanel of this.$refs.entityPanels) {
+          entityPanel.reset()
+        }
       }
-      if (this.layout.length !== 0) {
+      if (this.$refs.relationPanels != null) {
         for (const relationPanel of this.$refs.relationPanels) {
           relationPanel.reset()
         }
       }
     },
     touch () {
-      for (const entityPanel of this.$refs.entityPanels) {
-        entityPanel.touch()
+      if (this.$refs.entityPanels != null) {
+        for (const entityPanel of this.$refs.entityPanels) {
+          entityPanel.touch()
+        }
       }
-      if (this.layout.length !== 0) {
+      if (this.$refs.relationPanels != null) {
         for (const relationPanel of this.$refs.relationPanels) {
           relationPanel.touch()
         }
