@@ -8,7 +8,6 @@
       v-for="field in panel.fields"
       :key="field.field"
       ref="formGroups"
-      :config="relationTypeConfig"
       :field="field"
       :initial-value="formData[field.field.replace('$', '')]"
       :disabled="disabled"
@@ -35,16 +34,6 @@ export default {
     panel: {
       type: Object,
       required: true
-    },
-    relationTypeConfig: {
-      type: Object,
-      required: true
-    },
-    sourceTitlesConfig: {
-      type: Object,
-      default: () => {
-        return null
-      }
     }
   },
   computed: {

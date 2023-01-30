@@ -1,20 +1,23 @@
 <template>
   <b-form-group
-    :label="field.label ? field.label : config.data[id].display_name"
+    :label="field.label"
     :label-for="id"
   >
     <component
       :is="component_type(field)"
       :id="id"
       ref="input"
+      :disabled="disabled"
       :field="field"
       :initial-value="initialValue"
+      v-bind="componentProps"
       @input="$emit('input', $event)"
     />
     <slot
       v-if="field.help_message"
       name="description"
     >
+      <!-- eslint-disable-next-line vue/no-v-html vue/no-v-text-v-html-on-component -->
       <b-form-text v-html="marked(field.help_message)" />
     </slot>
   </b-form-group>
@@ -26,16 +29,18 @@ import sanitizeHtml from 'sanitize-html'
 import FormDropdown from '~/components/Edit/FormDropdown.vue'
 import FormInput from '~/components/Edit/FormInput.vue'
 import FormMultiInput from '~/components/Edit/FormMultiInput.vue'
+import FormNested from '~/components/Edit/FormNested.vue'
 
 export default {
   components: {
     FormDropdown,
     FormInput,
-    FormMultiInput
+    FormMultiInput,
+    FormNested
   },
   props: {
-    config: {
-      type: Object,
+    disabled: {
+      type: Boolean,
       required: true
     },
     field: {
@@ -45,7 +50,11 @@ export default {
     initialValue: {
       // JSON representation
       type: String,
-      required: true
+      default: () => { return null }
+    },
+    componentProps: {
+      type: Object,
+      default: () => { return {} }
     }
   },
   data () {
@@ -63,6 +72,9 @@ export default {
       if (field.type === 'dropdown') {
         return 'form-dropdown'
       }
+      if (field.type === 'nested') {
+        return 'form-nested'
+      }
       if (field.multi) {
         return 'form-multi-input'
       }
@@ -72,9 +84,7 @@ export default {
       return sanitizeHtml(marked(markdown))
     },
     reset () {
-      this.$nextTick(() => {
-        this.$refs.input.$v.$reset()
-      })
+      this.$refs.input.$v.$reset()
     },
     touch () {
       this.$refs.input.$v.$touch()

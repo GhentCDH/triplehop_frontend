@@ -3,7 +3,7 @@
     <b-form-select
       :id="id"
       :value="value"
-      :state="validateState()"
+      :state="validateState"
       :options="field.options"
       @input="onInput"
     />
@@ -42,7 +42,7 @@ export default {
     },
     initialValue: {
       type: String,
-      required: true
+      default: null
     }
   },
   data () {
@@ -70,6 +70,11 @@ export default {
         return []
       }
       return this.field.validators.filter(v => !this.$v.value[v.type])
+    },
+    validateState () {
+      // Only markup touched fields as correct or incorrect
+      const { $dirty, $invalid } = this.$v.value
+      return $dirty ? !$invalid : null
     }
   },
   watch: {
@@ -92,11 +97,6 @@ export default {
           value: this.value
         }
       )
-    },
-    validateState () {
-      // Only markup touched fields as correct or incorrect
-      const { $dirty, $invalid } = this.$v.value
-      return $dirty ? !$invalid : null
     }
   }
 }

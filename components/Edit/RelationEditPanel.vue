@@ -10,44 +10,20 @@
       :key="relationId"
       class="border-0 bg-white mb-1"
     >
-      <div class="mb-2">
-        [{{ relationData.entity.id }}] {{ relationData.entity.title }}
-        <b-link
-          target="_blank"
-          title="View entity"
-          :to="{
-            name: 'project_name-entity_type_name-id',
-            params: {
-              project_name: projectName,
-              entity_type_name: relationData.entity.entityTypeName,
-              id: relationData.entity.id
-            }
-          }"
-        >
-          <b-icon-eye-fill />
-        </b-link>
-        <!-- TODO: check edit permission on entity type -->
-        <b-link
-          target="_blank"
-          title="Edit entity"
-          :to="{
-            name: 'project_name-entity_type_name-id-edit',
-            params: {
-              project_name: projectName,
-              entity_type_name: relationData.entity.entityTypeName,
-              id: relationData.entity.id
-            }
-          }"
-        >
-          <b-icon-pencil-fill />
-        </b-link>
-      </div>
+      <relation-entity-edit-panel
+        ref="entityPanels"
+        :disabled="disabled"
+        :form-data="relationData.entity"
+        :label="entityTypesConfig[relationData.entity.entityTypeName].display_name"
+        :project-name="projectName"
+        :select-entity="isNaN(relationId)"
+        @input="onEntityInput(relationId, $event)"
+      />
       <relation-edit-panel-panel
         v-for="(panel, panelIndex) in layout"
         :key="`${relationTypeName}-panel-${panelIndex}`"
-        ref="panels"
+        ref="relationPanels"
         :panel="panel"
-        :relation-type-config="relationTypeConfig"
         :form-data="formData[relationId].relation"
         :disabled="disabled"
         @input="onInput(relationId, $event)"
@@ -60,18 +36,34 @@
         <b-icon-trash /> Delete this relation
       </b-button>
     </b-card>
+    <b-button
+      v-for="range_name in relationTypeConfig.range_names"
+      :key="range_name"
+      class="mt-3"
+      variant="primary"
+      @click="onAdd(range_name)"
+    >
+      <b-icon icon="plus" />
+      Add {{ panelTitle }} relation to a(n) {{ entityTypesConfig[range_name].display_name }}
+    </b-button>
   </b-card>
 </template>
 <script>
 import RelationEditPanelPanel from '~/components/Edit/RelationEditPanelPanel.vue'
+import RelationEntityEditPanel from '~/components/Edit/RelationEntityEditPanel.vue'
 
 export default {
   components: {
-    RelationEditPanelPanel
+    RelationEditPanelPanel,
+    RelationEntityEditPanel
   },
   props: {
     disabled: {
       type: Boolean,
+      required: true
+    },
+    entityTypesConfig: {
+      type: Object,
       required: true
     },
     formData: {
@@ -93,18 +85,26 @@ export default {
   },
   computed: {
     invalid () {
-      if (this.$refs.panels == null) {
+      if (this.$refs.entityPanels == null) {
         return false
       }
-      for (const panel of this.$refs.panels) {
-        if (panel.invalid) {
+      for (const entityPanel of this.$refs.entityPanels) {
+        if (entityPanel.invalid) {
+          return true
+        }
+      }
+      if (this.$refs.relationPanels == null) {
+        return false
+      }
+      for (const relationPanel of this.$refs.relationPanels) {
+        if (relationPanel.invalid) {
           return true
         }
       }
       return false
     },
     layout () {
-      const layout = this.relationTypeConfig.edit.layout
+      const layout = JSON.parse(JSON.stringify(this.relationTypeConfig.edit.layout))
       if (layout == null) {
         return []
       }
@@ -112,6 +112,7 @@ export default {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
           field.validators = this.relationTypeConfig.data[systemName].validators
+          field.label = field.label ?? this.relationTypeConfig.data[systemName].display_name
         }
       }
       return layout
@@ -124,11 +125,50 @@ export default {
     }
   },
   methods: {
+    getInitialEntityValue (relationId) {
+      if (this.formData[relationId].entity.id == null) {
+        return null
+      }
+      return {
+        key: this.formData[relationId].entity.id,
+        value: this.formData[relationId].entity.title
+      }
+    },
+    getInitialEntityOptions (relationId) {
+      if (this.formData[relationId].entity.id == null) {
+        return null
+      }
+      return [
+        {
+          key: this.formData[relationId].entity.id,
+          value: this.formData[relationId].entity.title
+        }
+      ]
+    },
+    onAdd (entityTypeName) {
+      this.$emit(
+        'input',
+        {
+          action: 'add_relation',
+          value: entityTypeName
+        }
+      )
+    },
     onDelete (relationId) {
       this.$emit(
         'input',
         {
-          action: 'delete',
+          action: 'delete_relation',
+          relationId
+        }
+      )
+    },
+    onEntityInput (relationId, event) {
+      this.$emit(
+        'input',
+        {
+          action: 'edit_relation_entity',
+          ...event,
           relationId
         }
       )
@@ -137,22 +177,29 @@ export default {
       this.$emit(
         'input',
         {
+          action: 'edit_relation',
           ...event,
           relationId
         }
       )
     },
     reset () {
+      for (const entityPanel of this.$refs.entityPanels) {
+        entityPanel.reset()
+      }
       if (this.layout.length !== 0) {
-        for (const panel of this.$refs.panels) {
-          panel.reset()
+        for (const relationPanel of this.$refs.relationPanels) {
+          relationPanel.reset()
         }
       }
     },
     touch () {
+      for (const entityPanel of this.$refs.entityPanels) {
+        entityPanel.touch()
+      }
       if (this.layout.length !== 0) {
-        for (const panel of this.$refs.panels) {
-          panel.touch()
+        for (const relationPanel of this.$refs.relationPanels) {
+          relationPanel.touch()
         }
       }
     }

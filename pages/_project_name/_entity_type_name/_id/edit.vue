@@ -77,6 +77,7 @@
                 :project-name="projectName"
                 :relation-type-config="getRelationConfig(relationTypeName)"
                 :relation-type-name="relationTypeName"
+                :entity-types-config="entityTypesConfig"
                 @input="formInput(relationTypeName, $event)"
               />
               <div class="d-md-none">
@@ -199,8 +200,9 @@
 </template>
 
 <script>
+import { v4 as uuidv4 } from 'uuid'
 
-import { constructFieldFromData, isNumber } from '~/assets/js/utils'
+import { constructFieldFromData, isNumber, isArray } from '~/assets/js/utils'
 import EditPanel from '~/components/Edit/EditPanel.vue'
 import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
 
@@ -214,20 +216,19 @@ function addToStructure (element, structure, value) {
     }
     currentElement = currentElement[structurePart]
   }
-
-  if (Array.isArray(value)) {
-    // Object; value = [key, value]
+  if (isArray(value)) {
+    // Entity or relation data changes in the form of [key, value]
     if (!(lastStructurePart in currentElement)) {
       currentElement[lastStructurePart] = {}
     }
-    currentElement[lastStructurePart][value[0]] = value[1]
-  } else {
-  // Array
-    if (!(lastStructurePart in currentElement)) {
-      currentElement[lastStructurePart] = []
-    }
-    currentElement[lastStructurePart].push(value)
+    currentElement[lastStructurePart][value[0]] = JSON.parse(JSON.stringify(value[1]))
+    return
   }
+  // Deletion or addition of relations
+  if (!(lastStructurePart in currentElement)) {
+    currentElement[lastStructurePart] = []
+  }
+  currentElement[lastStructurePart].push(JSON.parse(JSON.stringify(value)))
 }
 
 export default {
@@ -429,14 +430,32 @@ export default {
       }
 
       // Update formdata
-      if (relationId == null) {
-        // entity
-        formData[systemName] = value
-      } else if (action === 'delete') {
+      if (action === 'add_relation') {
+        const newRelationId = uuidv4()
+        this.$set(
+          formData,
+          newRelationId,
+          {
+            entity: {
+              entityTypeName: value,
+              id: null,
+              title: null
+            },
+            relation: {}
+          }
+        )
+      } else if (action === 'delete_relation') {
         this.$delete(formData, relationId)
-      } else {
+      } else if (action === 'edit_relation') {
         // Relation data
         formData[relationId].relation[systemName] = value
+      } else if (action === 'edit_relation_entity') {
+        // Relation entity data
+        formData[relationId].entity.id = value?.key
+        formData[relationId].entity.title = value?.value
+      } else {
+        // entity
+        formData[systemName] = value
       }
     },
     getRelationConfig (relationTypeName) {
@@ -458,14 +477,14 @@ export default {
       // Entity
       for (const [key, value] of Object.entries(this.formData.entity)) {
         if (JSON.stringify(value) !== JSON.stringify(this.oldFormData.entity[key])) {
-          if (!('entity' in submitData)) {
-            submitData.entity = {}
-          }
-          submitData.entity[key] = JSON.parse(JSON.stringify(value))
+          addToStructure(
+            submitData,
+            ['entity'],
+            [key, value]
+          )
         }
       }
       // Relations
-      // TODO: add relations
       for (const relationTypeName of this.editableRelationTypeNames) {
         for (const relationId in this.oldFormData[relationTypeName]) {
           if (!(relationId in this.formData[relationTypeName])) {
@@ -477,12 +496,22 @@ export default {
           }
         }
         for (const [relationId, relationData] of Object.entries(this.formData[relationTypeName])) {
+          // add new relation
+          if (!(relationId in this.oldFormData[relationTypeName])) {
+            addToStructure(
+              submitData,
+              [relationTypeName, 'post'],
+              relationData
+            )
+            continue
+          }
+          // update existing relation
           for (const [key, value] of Object.entries(relationData)) {
             if (JSON.stringify(value) !== JSON.stringify(this.oldFormData[relationTypeName][relationId][key])) {
               addToStructure(
                 submitData,
                 [relationTypeName, 'put', relationId],
-                [key, JSON.parse(JSON.stringify(value))]
+                [key, value]
               )
             }
           }
@@ -547,7 +576,10 @@ export default {
           }
         }
       }
-      this.resetValidation()
+      // Wait untill components are updated (or removed) before resetting validation
+      this.$nextTick(() => {
+        this.resetValidation()
+      })
     },
     resetValidation () {
       for (const entityPanel of this.$refs.entityPanels) {

@@ -18,7 +18,7 @@
           </b-input-group-prepend>
           <b-form-input
             :value="keyedValues[fieldKey]"
-            :state="validateState(fieldKey)"
+            :state="keyedValidateState[fieldKey]"
             @input="onInput(fieldKey, $event)"
           />
           <b-input-group-append>
@@ -133,6 +133,14 @@ export default {
         }
       }
       return keyedValidatorsWithError
+    },
+    keyedValidateState () {
+      const keyedValidateState = {}
+      for (const [index, fieldKey] of this.fieldKeys.entries()) {
+        const { $dirty, $invalid } = this.$v.values.$each[index]
+        keyedValidateState[fieldKey] = $dirty ? !$invalid : null
+      }
+      return keyedValidateState
     }
   },
   watch: {
@@ -199,10 +207,6 @@ export default {
           value: this.values
         }
       )
-    },
-    validateState (fieldKey) {
-      const { $dirty, $invalid } = this.$v.values.$each[this.fieldKeys.indexOf(fieldKey)]
-      return $dirty ? !$invalid : null
     }
   }
 }

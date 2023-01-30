@@ -1,9 +1,19 @@
 <template>
   <div v-frag>
-    <b-form-input
-      :id="id"
+    <!-- TODO: validation -->
+    <multiselect
       :value="value"
-      :state="validateState"
+      :clear-on-select="false"
+      label="value"
+      :disabled="disabled"
+      :multiple="false"
+      :options="options"
+      :internal-search="false"
+      :loading="isLoading"
+      :show-labels="false"
+      track-by="key"
+      :class="validateClass"
+      @search-change="loadOptions"
       @input="onInput"
     />
     <form-feedback
@@ -15,18 +25,20 @@
 </template>
 <script>
 import frag from 'vue-frag'
+import Multiselect from 'vue-multiselect'
 import { validationMixin } from 'vuelidate'
-import { helpers, required } from 'vuelidate/lib/validators'
+import { required } from 'vuelidate/lib/validators'
 
+import { isArray } from '~/assets/js/utils'
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { edtfYear } from '~/assets/js/validators'
 
 export default {
   directives: {
     frag
   },
   components: {
-    FormFeedback
+    FormFeedback,
+    Multiselect
   },
   mixins: [
     validationMixin
@@ -36,6 +48,10 @@ export default {
       type: String,
       required: true
     },
+    disabled: {
+      type: Boolean,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -43,12 +59,18 @@ export default {
     initialValue: {
       // JSON representation
       type: String,
+      default: null
+    },
+    searchUrl: {
+      type: String,
       required: true
     }
   },
   data () {
     return {
-      value: JSON.parse(this.initialValue)
+      isLoading: true,
+      options: [],
+      value: this.getValue(this.initialValue)
     }
   },
   validations () {
@@ -60,12 +82,6 @@ export default {
       for (const validator of validators) {
         if (validator.type === 'required') {
           validations.value.required = required
-        }
-        if (validator.type === 'edtf_year') {
-          validations.value.edtfYear = edtfYear
-        }
-        if (validator.type === 'regex') {
-          validations.value.regex = helpers.regex('regex', new RegExp(validator.regex))
         }
       }
     }
@@ -82,21 +98,57 @@ export default {
       // Only markup touched fields as correct or incorrect
       const { $dirty, $invalid } = this.$v.value
       return $dirty ? !$invalid : null
+    },
+    validateClass () {
+      if (this.validateState == null) {
+        return ''
+      }
+      return this.validateState ? 'is-valid' : 'is-invalid'
     }
   },
   watch: {
     initialValue () {
+      const newValue = this.getValue(this.initialValue)
       if (
-        (this.initialValue === 'null' && this.value === '') ||
-        (this.initialValue !== 'null' && JSON.parse(this.initialValue) !== this.value)
+        (this.value == null && newValue.key != null) ||
+        (this.value != null && newValue.key !== this.value.key)
       ) {
         // Reset
-        this.value = JSON.parse(this.initialValue)
+        this.value = newValue
         this.$v.$reset()
       }
     }
   },
+  created () {
+    this.loadOptions()
+  },
   methods: {
+    async loadOptions (input) {
+      this.isLoading = true
+      const response = await this.$axios.post(
+        this.searchUrl,
+        {
+          field: this.id,
+          value: input ?? ''
+        }
+      )
+      if (
+        response.status === 200 &&
+        isArray(response.data)
+      ) {
+        this.options = response.data
+      } else {
+        this.options = []
+      }
+      this.isLoading = false
+    },
+    getValue (value) {
+      const formValue = JSON.parse(value)
+      return {
+        key: formValue.id,
+        value: formValue.title
+      }
+    },
     onInput (value) {
       this.value = value
       this.$v.value.$touch()
