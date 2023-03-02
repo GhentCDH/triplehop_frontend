@@ -60,7 +60,6 @@
                 :key="`panel-${panelIndex}`"
                 ref="entityPanels"
                 :disabled="disableFormElements"
-                :entity-type-config="entityTypeConfig"
                 :form-data="formData.entity"
                 :panel="panel"
                 @input="formInput('entity', $event)"
@@ -381,6 +380,7 @@ export default {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
           field.validators = this.entityTypeConfig.data[systemName].validators
+          field.label = this.label ?? this.entityTypeConfig.data[systemName].display_name
         }
       }
       return layout

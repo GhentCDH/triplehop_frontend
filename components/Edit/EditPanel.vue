@@ -9,7 +9,6 @@
       v-for="field in panel.fields"
       :key="field.field"
       ref="formGroups"
-      :config="entityTypeConfig"
       :field="field"
       :initial-value="JSON.stringify(formData[field.field.replace('$', '')])"
       :disabled="disabled"
@@ -27,10 +26,6 @@ export default {
   props: {
     disabled: {
       type: Boolean,
-      required: true
-    },
-    entityTypeConfig: {
-      type: Object,
       required: true
     },
     formData: {
