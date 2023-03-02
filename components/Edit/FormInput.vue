@@ -87,7 +87,7 @@ export default {
   watch: {
     initialValue () {
       if (
-        (this.initialValue === 'null' && this.value === '') ||
+        (this.initialValue === 'null' && this.value !== '') ||
         (this.initialValue !== 'null' && JSON.parse(this.initialValue) !== this.value)
       ) {
         // Reset
