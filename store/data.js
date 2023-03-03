@@ -343,6 +343,8 @@ function constructEditQueryParts (entityTypesConfig, relationTypesConfig, entity
 
   // Get all fieldNames used in the edit form
   const dataPaths = extractDataPathsWithSources(entityTypeConfig.edit)
+  // Get id (necessary when a new entity is posted)
+  dataPaths.add('$id')
 
   // Get all fieldNames used in the relations edit forms and title fields of related entities
   const relationSides = ['domain', 'range']
@@ -467,6 +469,29 @@ export const actions = {
       response.data.data[`get${capitalizeFirstLetter(entityTypeName)}`]
     )
   },
+  loadAdd ({ commit }, { entityTypeName, entityTypesConfig, projectName, relationTypesConfig }) {
+    const data = {}
+    // Initialize fields with multiple values as empty array, other fields as null
+    entityTypesConfig[entityTypeName].edit.layout.forEach((layout) => {
+      layout.fields.forEach((field) => {
+        data[field.field.substring(1)] = field.multi ? [] : null
+      })
+    })
+    // Add an empty array for each relation type
+    const relationSides = ['domain', 'range']
+    for (const [relation, relationTypeConfig] of Object.entries(relationTypesConfig)) {
+      for (const side of relationSides) {
+        const directedRelationName = `${side === 'domain' ? 'r' : 'ri'}_${relation}`
+        if (relationTypeConfig[`${side}_names`].includes(entityTypeName)) {
+          data[`${directedRelationName}_s`] = []
+        }
+      }
+    }
+    commit(
+      'SET_DATA',
+      data
+    )
+  },
   async loadEdit ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig }) {
     const queryParts = [
       'query {',
@@ -492,11 +517,15 @@ export const actions = {
     )
   },
   async save ({ commit }, { entityTypeName, entityTypesConfig, id, projectName, relationTypesConfig, data }) {
+    const verb = id == null ? 'post' : 'put'
     const queryParts = [
       'mutation {'
     ]
-    // TODO: post
-    queryParts.push(`put${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
+    if (id == null) {
+      queryParts.push(`${verb}${capitalizeFirstLetter(entityTypeName)}(input: {`)
+    } else {
+      queryParts.push(`${verb}${capitalizeFirstLetter(entityTypeName)}(id: ${id}, input: {`)
+    }
 
     for (const relationTypeName in data) {
       // TODO: don't do JSON.stringify, use detailed GraphQL schema
@@ -527,7 +556,7 @@ export const actions = {
     }
     commit(
       'SET_DATA',
-      response.data.data[`put${capitalizeFirstLetter(entityTypeName)}`]
+      response.data.data[`${verb}${capitalizeFirstLetter(entityTypeName)}`]
     )
   }
 }

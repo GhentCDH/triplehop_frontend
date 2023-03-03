@@ -23,6 +23,7 @@
         </h1>
         <!-- TODO: title sources? -->
         <b-link
+          v-if="id"
           class="title-link"
           :to="{
             name: 'project_name-entity_type_name-id',
@@ -236,8 +237,8 @@ export default {
     RelationEditPanel
   },
   validate ({ params }) {
-    // Make sure id is a number
-    if (!isNumber(params.id)) {
+    // Make sure id is undefined (add) or a number (edit)
+    if ('id' in params && !isNumber(params.id)) {
       return false
     }
     return true
@@ -268,16 +269,29 @@ export default {
     try {
       await this.$store.dispatch('config/load_relation_types', this.projectName)
 
-      await this.$store.dispatch(
-        'data/loadEdit',
-        {
-          entityTypeName: this.entityTypeName,
-          entityTypesConfig: this.entityTypesConfig,
-          id: this.$route.params.id,
-          projectName: this.projectName,
-          relationTypesConfig: this.relationTypesConfig
-        }
-      )
+      if (!('id' in this.$route.params)) {
+        this.$store.dispatch(
+          'data/loadAdd',
+          {
+            entityTypeName: this.entityTypeName,
+            entityTypesConfig: this.entityTypesConfig,
+            id: this.$route.params.id,
+            projectName: this.projectName,
+            relationTypesConfig: this.relationTypesConfig
+          }
+        )
+      } else {
+        await this.$store.dispatch(
+          'data/loadEdit',
+          {
+            entityTypeName: this.entityTypeName,
+            entityTypesConfig: this.entityTypesConfig,
+            id: this.$route.params.id,
+            projectName: this.projectName,
+            relationTypesConfig: this.relationTypesConfig
+          }
+        )
+      }
     } catch (e) {
       throw new Error('Error while fetching data.')
     }
@@ -395,6 +409,11 @@ export default {
       return this.$store.state.config.relation_types
     },
     title () {
+      // TODO: use form data
+      // problem: for related entities, not all data is available (only title)
+      // posible solution: update entityData with unsaved data
+      // * when data of entities changes
+      // * when relevant (used in title) relations change
       return this.constructFieldFromData(
         this.entityTypeConfig.display.title,
         this.entityData,
@@ -518,17 +537,20 @@ export default {
         }
       }
       if (Object.keys(submitData).length !== 0) {
+        const saveObject = {
+          entityTypeName: this.entityTypeName,
+          entityTypesConfig: this.entityTypesConfig,
+          projectName: this.projectName,
+          relationTypesConfig: this.relationTypesConfig,
+          data: submitData
+        }
+        if ('id' in this.$route.params) {
+          saveObject.id = this.$route.params.id
+        }
         try {
           await this.$store.dispatch(
             'data/save',
-            {
-              entityTypeName: this.entityTypeName,
-              entityTypesConfig: this.entityTypesConfig,
-              id: this.$route.params.id,
-              projectName: this.projectName,
-              relationTypesConfig: this.relationTypesConfig,
-              data: submitData
-            }
+            saveObject
           )
           this.setFormData()
           this.resetValidation()
@@ -539,6 +561,16 @@ export default {
               variant: 'success'
             }
           )
+          if (!('id' in this.$route.params)) {
+            this.$router.push({
+              name: 'project_name-entity_type_name-id-edit',
+              params: {
+                project_name: this.projectName,
+                entity_type_name: this.entityTypeName,
+                id: this.entityData.id
+              }
+            })
+          }
         } catch (error) {
           console.error(error)
           this.$store.dispatch(
