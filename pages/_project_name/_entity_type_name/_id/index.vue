@@ -23,7 +23,7 @@
         </h1>
         <!-- TODO: title sources? -->
         <b-link
-          v-if="hasEntityTypePermission($auth.user, projectName, entityTypeName, 'edit', 'edit')"
+          v-if="hasEntityTypePermission($auth.user, projectName, entityTypeName, 'data', 'put')"
           class="title-link"
           :to="{
             name: 'project_name-entity_type_name-id-edit',

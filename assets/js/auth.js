@@ -10,10 +10,7 @@ export function hasAtLeastOneEntityTypeWithPermission (user, projectName, scope,
 
   if (nestedKeyExists(user, 'permissions', projectName, 'entities')) {
     for (const scopePermissions of Object.values(user.permissions[projectName].entities)) {
-      if (
-        scope in scopePermissions &&
-        permission in scopePermissions[scope]
-      ) {
+      if (nestedKeyExists(scopePermissions, scope, permission)) {
         return true
       }
     }
@@ -37,7 +34,7 @@ export function hasEntityTypePermission (user, projectName, entityTypeName, scop
     return false
   }
 
-  if (nestedKeyExists(user, 'permissions', projectName, 'entities', entityTypeName)) {
+  if (nestedKeyExists(user, 'permissions', projectName, 'entities', entityTypeName, scope, permission)) {
     return true
   }
 
