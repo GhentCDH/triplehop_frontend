@@ -146,6 +146,7 @@
 <script>
 import rfdc from 'rfdc'
 import { ExpiredAuthSessionError } from '~auth/runtime'
+import { hasEntityTypePermission } from '~/assets/js/auth'
 import TableCellContent from '~/components/Search/TableCellContent'
 import Autocomplete from '~/components/Search/Filters/Autocomplete'
 import Dropdown from '~/components/Search/Filters/Dropdown'
@@ -278,19 +279,39 @@ export default {
     },
     columns () {
       const fields = JSON.parse(JSON.stringify(this.fields))
+      let mainLinkPresent = false
       for (const field of fields) {
         if (field.mainLink) {
           // Mainlink present, return fields
-          return fields
+          mainLinkPresent = true
         }
       }
-      // No mainLink field present, add detail column with mainLink
-      fields.unshift({
-        key: '__link__',
-        label: 'Details',
-        type: 'main_link',
-        mainLink: true
-      })
+      if (!mainLinkPresent) {
+        // No mainLink field present, add detail column with mainLink
+        fields.unshift({
+          key: '__link__',
+          label: 'Details',
+          type: 'main_link',
+          mainLink: true
+        })
+      }
+      if (hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'data', 'put')) {
+        const actionField = {
+          key: '__actions__',
+          label: 'Actions',
+          type: 'actions',
+          actions: []
+        }
+        if (hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'data', 'put')) {
+          actionField.actions.push('edit')
+        }
+        fields.push(actionField)
+        fields.push({
+          key: '__id__',
+          label: 'Id',
+          type: 'id'
+        })
+      }
       return fields
     },
     currentPage () {

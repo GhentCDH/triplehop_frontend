@@ -35,6 +35,18 @@
         {{ nameOrNA(value.value) }}
       </span>
     </template>
+    <template v-else-if="field.type === 'id'">
+      {{ entityId }}
+    </template>
+    <template v-else-if="field.type === 'actions'">
+      <nuxt-link
+        v-if="field.actions.includes('edit')"
+        :to="`${projectPrefix}${entityTypeName}/${entityId}/edit`"
+        title="Edit this entity"
+      >
+        <b-icon-pencil />
+      </nuxt-link>
+    </template>
     <template v-else-if="field.type === 'edtf'">
       {{ nameOrNA(value) }}
     </template>
