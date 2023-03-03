@@ -24,6 +24,7 @@
             aria-controles="filters"
             :aria-expanded="displayFilters ? 'true' : 'false'"
             variant="primary"
+            size="sm"
             class="d-md-none"
             :disabled="!displayFiltersInitialized"
             @click="displayFilters = !displayFilters"

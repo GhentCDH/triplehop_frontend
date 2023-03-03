@@ -62,14 +62,14 @@
                 </b-form-invalid-feedback>
               </b-input-group>
             </b-form-group>
-            <b-btn
+            <b-button
               block
               class="mt-4"
               variant="primary"
               @click="login()"
             >
               Login
-            </b-btn>
+            </b-button>
           </form>
         </b-card>
       </b-overlay>

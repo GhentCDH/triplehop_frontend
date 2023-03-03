@@ -12,7 +12,11 @@
           class="mt-3"
         >
           <b-input-group-prepend>
-            <b-button variant="outline-default" class="draggable-handle">
+            <b-button
+              variant="outline-default"
+              size="sm"
+              class="draggable-handle"
+            >
               <b-icon icon="arrows-move" />
             </b-button>
           </b-input-group-prepend>
@@ -24,6 +28,7 @@
           <b-input-group-append>
             <b-button
               variant="danger"
+              size="sm"
               title="Remove this value"
               @click="del(fieldKey)"
             >
@@ -39,8 +44,9 @@
       </transition-group>
     </draggable>
     <b-button
-      class="mt-3"
       variant="primary"
+      size="sm"
+      class="mt-3"
       @click="add"
     >
       <b-icon icon="plus" />

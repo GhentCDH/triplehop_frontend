@@ -13,6 +13,7 @@
     />
     <b-button
       v-if="data.length > 5"
+      size="sm"
       class="mt-3"
       variant="primary"
       @click="collapsed = !collapsed"

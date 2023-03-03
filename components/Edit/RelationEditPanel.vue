@@ -30,6 +30,7 @@
       />
       <b-button
         variant="danger"
+        size="sm"
         title="Delete this relation"
         @click="onDelete(relationId)"
       >
@@ -39,8 +40,9 @@
     <b-button
       v-for="range_name in relationTypeConfig.range_names"
       :key="range_name"
-      class="mt-3"
       variant="primary"
+      size="sm"
+      class="mt-3"
       @click="onAdd(range_name)"
     >
       <b-icon icon="plus" />
