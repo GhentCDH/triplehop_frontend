@@ -1,3 +1,4 @@
+import { sortRoutes } from '@nuxt/utils'
 export default {
   /*
   ** Headers of the page
@@ -119,11 +120,5 @@ export default {
     middleware: [
       'auth'
     ]
-  },
-  watchers: {
-    webpack: {
-      aggregateTimeout: 300,
-      poll: 1000
-    }
   }
 }
