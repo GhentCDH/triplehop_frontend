@@ -1,0 +1,35 @@
+
+@include media-breakpoint-up(md) {
+  .flex-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .flex-expand-y-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .overflow-y {
+    overflow-y: auto;
+  }
+
+  .flex-expand-y {
+    flex: 1;
+    overflow-y: auto;
+  }
+   
+  table.sticky-header{
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th {
+      background-color: $white;
+      position: sticky !important;
+      top: 0;
+    }
+  }
+}

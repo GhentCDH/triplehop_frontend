@@ -1,5 +1,5 @@
 <template>
-  <div :class="`${projectName}__${entityTypeName}__search page-search`">
+  <div :class="`${projectName}__${entityTypeName}__search page-search d-flex`">
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>
@@ -7,11 +7,13 @@
       v-else
       :show="$fetchState.pending"
       spinner-variant="primary"
+      class="d-md-flex overflow-y"
     >
       <b-row>
         <b-col
           v-if="filterGroups && isArray(filterGroups) && filterGroups.length"
           md="3"
+          class="flex-expand-y-container"
         >
           <b-button
             aria-controles="filters"
@@ -28,7 +30,7 @@
           <b-collapse
             id="filters"
             v-model="displayFilters"
-            class="filters scrollable"
+            class="flex-expand-y scrollable"
             :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
           >
             <b-form @submit.prevent="searchQueryChanged">
@@ -60,6 +62,7 @@
         <b-col
           v-if="total > 0"
           md="9"
+          class="flex-expand-y-container"
         >
           <div>
             <h1>
@@ -75,10 +78,11 @@
               />
             </div>
           </div>
-          <div class="results-table scrollable">
+          <div class="flex-expand-y scrollable">
             <b-table
               striped
               hover
+              class="sticky-header"
               :items="items"
               :fields="columns"
               :sort-by="sortBy"
