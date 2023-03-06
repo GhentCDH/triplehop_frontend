@@ -1,4 +1,3 @@
-import { sortRoutes } from '@nuxt/utils'
 export default {
   /*
   ** Headers of the page
