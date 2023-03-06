@@ -389,7 +389,7 @@ export default {
       return false
     },
     layout () {
-      const layout = this.entityTypeConfig.edit.layout
+      const layout = JSON.parse(JSON.stringify(this.entityTypeConfig.edit.layout))
       for (const panel of layout) {
         for (const field of panel.fields) {
           const systemName = field.field.replace('$', '')
