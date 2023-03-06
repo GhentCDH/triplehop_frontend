@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="`${projectName}__${entityTypeName}__${id}__edit page-edit`">
     <div
       v-if="$fetchState.pending"
       class="text-center"

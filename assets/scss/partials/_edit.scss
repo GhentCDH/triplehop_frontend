@@ -1,3 +1,15 @@
+.page-edit {
+  .title-wrapper {
+    position: relative;
+  }
+
+  .title-link {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+  }
+}
+
 .select-entity-icon-wrapper {
   margin-top: 2em;
 }
