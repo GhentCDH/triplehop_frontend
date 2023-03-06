@@ -14,16 +14,11 @@
           class="text-primary"
         >
           <b-navbar-nav>
-            <b-nav-item v-if="$config.homepage != null" :href="$config.homepage">
-              Home
-            </b-nav-item>
-            <b-nav-item v-else :to="projectPrefix">
-              Home
-            </b-nav-item>
             <b-nav-item
               v-for="link in links"
               :key="link.systemName"
               :to="`${projectPrefix}${link.systemName}`"
+              :active="link.active"
             >
               {{ link.displayName }}
             </b-nav-item>
@@ -90,20 +85,27 @@ export default {
       return this.$store.state.config.project_def.display_name ?? 'TripleHop'
     },
     links () {
-      const result = []
+      const links = []
       if (
         this.$store.state.config.entity_types != null
       ) {
         for (const [entityTypeName, entityTypeConfig] of Object.entries(this.$store.state.config.entity_types)) {
           if ('elasticsearch' in entityTypeConfig) {
-            result.push({
+            const link = {
               systemName: entityTypeName,
               displayName: entityTypeConfig.display_name
-            })
+            }
+            if (
+              this.$route.name === 'project_name-entity_type_name' &&
+              this.$route.params.entity_type_name === entityTypeName
+            ) {
+              link.active = true
+            }
+            links.push(link)
           }
         }
       }
-      return result
+      return links
     },
     projectName () {
       return this.$config.projectName ?? this.$route.params.project_name

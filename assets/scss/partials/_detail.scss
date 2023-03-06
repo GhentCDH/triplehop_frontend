@@ -1,17 +1,24 @@
-.title-wrapper {
-  position: relative;
-}
+.page-detail {
+  .title-wrapper {
+    position: relative;
+  }
 
-.title-link {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
+  .title-link {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+  }
 
-.empty-field {
-  color: $gray-500;
-}
+  .empty-field {
+    color: $gray-500;
+  }
 
-.preserve-whitespace {
-  white-space: pre-wrap;
+  .preserve-whitespace {
+    white-space: pre-wrap;
+  }
+
+  .content {
+    overflow-y: auto;
+    max-height: calc(100vh - 12rem);
+  }
 }

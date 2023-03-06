@@ -6,7 +6,7 @@
     <vue-slider
       v-if="valid"
       v-model="compValue"
-      class="mt-5"
+      class="mt-5 pl-3 pr-3"
       :min="range.min"
       :max="range.max"
       :dot-options="sliderDotOptions"

@@ -1,0 +1,29 @@
+.page-search {
+  h1 {
+    display:inline-block;
+    padding-top: 1.5rem;
+  }
+
+  @include media-breakpoint-up(md) {
+    .filters {
+      overflow-y: auto;
+      max-height: calc(100vh - 4.5rem);
+    }
+
+    .results-table {
+      overflow-y: auto;
+      max-height: calc(100vh - 9.5rem);
+      
+      table {
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      th {
+        background-color: $white;
+        position: sticky !important;
+        top: 0;
+      }
+    }
+  }
+}

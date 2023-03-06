@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="`${projectName}__${entityTypeName}__${id} page-detail`">
     <div
       v-if="$fetchState.pending"
       class="text-center"
@@ -39,31 +39,33 @@
         </b-link>
       </div>
 
-      <layout-panel
-        v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
-        :key="`panel-${panelIndex}`"
-        :panel="panel"
-        :config="entityTypeConfig"
-        :data="entityData"
-        :source-titles-config="sourceTitlesConfig"
-      />
+      <div class="content scrollable">
+        <layout-panel
+          v-for="(panel, panelIndex) in entityTypeConfig.display.layout"
+          :key="`panel-${panelIndex}`"
+          :panel="panel"
+          :config="entityTypeConfig"
+          :data="entityData"
+          :source-titles-config="sourceTitlesConfig"
+        />
 
-      <relation-list
-        v-for="relationTypeName of domainRelationTypeNames"
-        :key="`${relationTypeName}-domain`"
-        :data="entityData[`r_${relationTypeName}_s`]"
-        :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
-        :relation-type-name="relationTypeName"
-        :source-titles-config="sourceTitlesConfig"
-      />
-      <relation-list
-        v-for="relationTypeName of rangeRelationTypeNames"
-        :key="`${relationTypeName}-range`"
-        :data="entityData[`ri_${relationTypeName}_s`]"
-        :relation-title="relationTypesConfig[relationTypeName].display.range_title"
-        :relation-type-name="relationTypeName"
-        :source-titles-config="sourceTitlesConfig"
-      />
+        <relation-list
+          v-for="relationTypeName of domainRelationTypeNames"
+          :key="`${relationTypeName}-domain`"
+          :data="entityData[`r_${relationTypeName}_s`]"
+          :relation-title="relationTypesConfig[relationTypeName].display.domain_title"
+          :relation-type-name="relationTypeName"
+          :source-titles-config="sourceTitlesConfig"
+        />
+        <relation-list
+          v-for="relationTypeName of rangeRelationTypeNames"
+          :key="`${relationTypeName}-range`"
+          :data="entityData[`ri_${relationTypeName}_s`]"
+          :relation-title="relationTypesConfig[relationTypeName].display.range_title"
+          :relation-type-name="relationTypeName"
+          :source-titles-config="sourceTitlesConfig"
+        />
+      </div>
     </template>
   </div>
 </template>

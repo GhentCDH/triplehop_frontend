@@ -1,12 +1,5 @@
 <template>
-  <div :class="`${projectName}__${entityTypeName}__search`">
-    <b-breadcrumb
-      class="bg-light"
-      :items="breadcrumbs"
-    />
-
-    <h1>{{ entityTypeConfig.elasticsearch.title }}</h1>
-
+  <div :class="`${projectName}__${entityTypeName}__search page-search`">
     <p v-if="$fetchState.error">
       Error while fetching data...
     </p>
@@ -35,6 +28,7 @@
           <b-collapse
             id="filters"
             v-model="displayFilters"
+            class="filters scrollable"
             :class="displayFiltersInitialized ? '' : 'd-none d-md-block'"
           >
             <b-form @submit.prevent="searchQueryChanged">
@@ -67,70 +61,72 @@
           v-if="total > 0"
           md="9"
         >
-          Displaying {{ showingStart }} to {{ showingEnd }}
-          of {{ total }} results.
-          <b-pagination
-            :value="currentPage"
-            :total-rows="totalPagination"
-            :per-page="body.size"
-            @input="pageChanged"
-          />
-          <b-table
-            striped
-            hover
-            :items="items"
-            :fields="columns"
-            :sort-by="sortBy"
-            :sort-desc="sortOrder === 'desc'"
-            :no-local-sorting="true"
-            @sort-changed="sortingChanged"
-          >
-            <template #cell()="data">
-              <template v-if="isArray(data.value)">
-                <ul
-                  v-if="data.value.length > 1"
-                  class="list-line"
-                >
-                  <li
-                    v-for="(item, index) in data.value"
-                    :key="index"
+          <div>
+            <h1>
+              {{ entityTypeConfig.elasticsearch.title }}
+            </h1>
+            <div class="float-right text-center">
+              Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
+              <b-pagination
+                :value="currentPage"
+                :total-rows="totalPagination"
+                :per-page="body.size"
+                @input="pageChanged"
+              />
+            </div>
+          </div>
+          <div class="results-table scrollable">
+            <b-table
+              striped
+              hover
+              :items="items"
+              :fields="columns"
+              :sort-by="sortBy"
+              :sort-desc="sortOrder === 'desc'"
+              :no-local-sorting="true"
+              @sort-changed="sortingChanged"
+            >
+              <template #cell()="data">
+                <template v-if="isArray(data.value)">
+                  <ul
+                    v-if="data.value.length > 1"
+                    class="list-line"
                   >
+                    <li
+                      v-for="(item, index) in data.value"
+                      :key="index"
+                    >
+                      <table-cell-content
+                        :entity-id="data.item._id"
+                        :entity-type-name="entityTypeName"
+                        :field="data.field"
+                        :project-prefix="projectPrefix"
+                        :value="item"
+                      />
+                    </li>
+                  </ul>
+                  <template v-else-if="data.value.length == 1">
                     <table-cell-content
                       :entity-id="data.item._id"
                       :entity-type-name="entityTypeName"
                       :field="data.field"
                       :project-prefix="projectPrefix"
-                      :value="item"
+                      :value="data.value[0]"
                     />
-                  </li>
-                </ul>
-                <template v-else-if="data.value.length == 1">
+                  </template>
+                </template>
+                <template v-else>
                   <table-cell-content
                     :entity-id="data.item._id"
                     :entity-type-name="entityTypeName"
                     :field="data.field"
                     :project-prefix="projectPrefix"
-                    :value="data.value[0]"
+                    :value="data.value"
                   />
                 </template>
               </template>
-              <template v-else>
-                <table-cell-content
-                  :entity-id="data.item._id"
-                  :entity-type-name="entityTypeName"
-                  :field="data.field"
-                  :project-prefix="projectPrefix"
-                  :value="data.value"
-                />
-              </template>
-            </template>
-          </b-table>
-          <b-pagination
-            :value="currentPage"
-            :total-rows="totalPagination"
-            :per-page="body.size"
-            @input="pageChanged"
-          />
+            </b-table>
+          </div>
         </b-col>
         <b-col
           v-else
@@ -255,27 +251,6 @@ export default {
   computed: {
     aggs () {
       return this.$store.state.es.aggs
-    },
-    breadcrumbs () {
-      const breadcrumbs = []
-      // project home
-      if (this.$config.homepage != null) {
-        breadcrumbs.push({
-          text: 'Home',
-          href: this.$config.homepage
-        })
-      } else {
-        breadcrumbs.push({
-          text: 'Home',
-          to: this.projectPrefix
-        })
-      }
-      // entity search
-      breadcrumbs.push({
-        text: this.entityTypeConfig.display_name,
-        active: true
-      })
-      return breadcrumbs
     },
     columns () {
       const fields = JSON.parse(JSON.stringify(this.fields))
