@@ -84,10 +84,10 @@
           {{ item.value }}<sources :sources="item.sources" /><template v-if="index != cleanValueAndSources.length -1">, </template>
         </span>
       </template>
-      <span
-        v-else
-        class="preserve-whitespace"
-      >{{ cleanValueAndSources.value }}<sources :sources="cleanValueAndSources.sources" /></span>
+      <span v-else>
+        <span class="preserve-whitespace">{{ cleanValueAndSources.value }}</span>
+        <sources :sources="cleanValueAndSources.sources" />
+      </span>
     </template>
   </dd>
 </template>
