@@ -39,7 +39,7 @@
             }
           }"
         >
-          <b-icon-eye-fill />
+          <b-icon icon="eye-fill" />
         </b-link>
         <!-- TODO: check edit permission on entity type -->
         <b-link
@@ -54,7 +54,7 @@
             }
           }"
         >
-          <b-icon-pencil-fill />
+          <b-icon icon="pencil-fill" />
         </b-link>
       </b-col>
     </b-row>

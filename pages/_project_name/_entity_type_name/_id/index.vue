@@ -34,7 +34,7 @@
             }
           }"
         >
-          <b-icon-pencil-fill />
+          <b-icon icon="pencil-fill" />
           Edit
         </b-link>
       </div>

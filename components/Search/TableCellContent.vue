@@ -5,7 +5,7 @@
       :to="`${projectPrefix}${entityTypeName}/${entityId}`"
     >
       <template v-if="field.type === 'main_link'">
-        <b-icon-box-arrow-right />
+        <b-icon icon="box-arrow-right" />
       </template>
       <template v-else-if="field.type === 'edtf'">
         {{ nameOrNA(value) }}
@@ -44,7 +44,7 @@
         :to="`${projectPrefix}${entityTypeName}/${entityId}/edit`"
         title="Edit this entity"
       >
-        <b-icon-pencil />
+        <b-icon icon="pencil" />
       </nuxt-link>
     </template>
     <template v-else-if="field.type === 'edtf'">
@@ -61,25 +61,25 @@
         v-if="field.type === 'nested' || field.type === 'nested_flatten'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.id}`"
       >
-        <b-icon-search font-scale="0.5" shift-v="10" />
+        <b-icon icon="search" font-scale="0.5" shift-v="10" />
       </nuxt-link>
       <nuxt-link
         v-else-if="field.type === 'nested_multi_type'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.entity_type_name}|${value.id}`"
       >
-        <b-icon-search font-scale="0.5" shift-v="10" />
+        <b-icon icon="search" font-scale="0.5" shift-v="10" />
       </nuxt-link>
       <nuxt-link
         v-else-if="field.type === 'uncertain_centuries'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value.withoutUncertain}`"
       >
-        <b-icon-search font-scale="0.5" shift-v="10" />
+        <b-icon icon="search" font-scale="0.5" shift-v="10" />
       </nuxt-link>
       <nuxt-link
         v-else-if="field.type === 'text'"
         :to="`${projectPrefix}${entityTypeName}?filter[${field.key}][0]=${value}`"
       >
-        <b-icon-search font-scale="0.5" shift-v="10" />
+        <b-icon icon="search" font-scale="0.5" shift-v="10" />
       </nuxt-link>
     </template>
   </div>

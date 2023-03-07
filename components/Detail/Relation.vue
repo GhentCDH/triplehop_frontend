@@ -14,7 +14,7 @@
           }
         }"
       >
-        <b-icon-link />
+        <b-icon icon="link" />
         {{ titleValue }}
       </b-link>
       <template v-else>

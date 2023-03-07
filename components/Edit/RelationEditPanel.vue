@@ -34,7 +34,7 @@
         title="Delete this relation"
         @click="onDelete(relationId)"
       >
-        <b-icon-trash /> Delete this relation
+        <b-icon icon="trash" /> Delete this relation
       </b-button>
     </b-card>
     <b-button

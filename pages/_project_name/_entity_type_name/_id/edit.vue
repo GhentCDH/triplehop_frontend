@@ -34,7 +34,7 @@
             }
           }"
         >
-          <b-icon-eye-fill />
+          <b-icon icon="eye-fill" />
           View
         </b-link>
       </div>
@@ -149,7 +149,8 @@
                             :href="`#entity-${panel.label}`"
                             :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
                           >
-                            <b-icon-arrow-90deg-down
+                            <b-icon
+                              icon="arrow-90deg-down"
                               rotate="270"
                               shift-v="4"
                             />
@@ -178,8 +179,9 @@
                             :href="`#${relationTypeName}`"
                             :class="['nav-link']"
                           >
-                            <b-icon-arrow-90deg-down
+                            <b-icon
                               :key="`icon-relation-${relationTypeName}`"
+                              icon="arrow-90deg-down"
                               rotate="270"
                               shift-v="4"
                             />
