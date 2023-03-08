@@ -89,14 +89,20 @@
                   variant="primary"
                   :disabled="!formDataChanged || disableFormElements || invalid"
                 >
-                  Submit
+                  Submit <b-icon icon="save" />
                 </b-button>
                 <b-button
                   type="reset"
                   variant="danger"
                   :disabled="!formDataChanged || disableFormElements"
                 >
-                  Reset
+                  Reset <b-icon icon="arrow-counterclockwise" />
+                </b-button>
+                <b-button
+                  type="reset"
+                  @click="$router.go(-1)"
+                >
+                  Cancel <b-icon icon="x" />
                 </b-button>
               </div>
             </b-col>
@@ -112,20 +118,28 @@
                     Actions
                   </b-nav-text>
                   <b-nav-text>
-                    <b-button
-                      type="submit"
-                      variant="primary"
-                      :disabled="!formDataChanged || disableFormElements || invalid"
-                    >
-                      Submit
-                    </b-button>
-                    <b-button
-                      type="reset"
-                      variant="danger"
-                      :disabled="!formDataChanged || disableFormElements"
-                    >
-                      Reset
-                    </b-button>
+                    <b-button-group vertical>
+                      <b-button
+                        type="submit"
+                        variant="primary"
+                        :disabled="!formDataChanged || disableFormElements || invalid"
+                      >
+                        Submit <b-icon icon="save" />
+                      </b-button>
+                      <b-button
+                        type="reset"
+                        variant="danger"
+                        :disabled="!formDataChanged || disableFormElements"
+                      >
+                        Reset <b-icon icon="arrow-counterclockwise" />
+                      </b-button>
+                      <b-button
+                        type="reset"
+                        @click="$router.go(-1)"
+                      >
+                        Cancel <b-icon icon="x" />
+                      </b-button>
+                    </b-button-group>
                   </b-nav-text>
                   <b-nav-text class="text-dark">
                     Quick navigation
