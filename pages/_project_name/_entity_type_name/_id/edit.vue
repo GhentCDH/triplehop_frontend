@@ -197,6 +197,13 @@
           </b-row>
         </b-form>
       </b-overlay>
+      <b-modal
+        :visible="leaveRoute != null"
+        @cancel="leaveRoute(false); leaveRoute = null"
+        @ok="leaveRoute()"
+      >
+        You have unsaved changes. Do you want to leave the page?
+      </b-modal>
     </template>
   </div>
 </template>
@@ -238,6 +245,13 @@ export default {
     EditPanel,
     RelationEditPanel
   },
+  beforeRouteLeave (to, from, next) {
+    if (this.formDataChanged) {
+      this.leaveRoute = next
+    } else {
+      this.leaveRoute = null
+    }
+  },
   validate ({ params }) {
     // Make sure id is undefined (add) or a number (edit)
     if ('id' in params && !isNumber(params.id)) {
@@ -251,8 +265,9 @@ export default {
       formData: {
         entity: {}
       },
-      refsLoaded: false,
-      oldFormData: {}
+      leaveRoute: null,
+      oldFormData: {},
+      refsLoaded: false
     }
   },
   async fetch () {
@@ -428,6 +443,15 @@ export default {
       return this.title.map(title => title.value).join(', ')
     }
   },
+  created () {
+    if (process.browser) {
+      // eslint-disable-next-line nuxt/no-globals-in-created
+      window.addEventListener('beforeunload', this.beforeWindowUnload)
+    }
+  },
+  beforeDestroy () {
+    window.removeEventListener('beforeunload', this.beforeWindowUnload)
+  },
   mounted () {
     const interval = setInterval(() => {
       if (
@@ -440,6 +464,13 @@ export default {
     }, 50)
   },
   methods: {
+    beforeWindowUnload (event) {
+      if (this.formDataChanged) {
+        event.preventDefault()
+        event.returnValue = 'You have unsaved changes. Do you want to leave the page?'
+        return 'You have unsaved changes. Do you want to leave the page?'
+      }
+    },
     constructFieldFromData,
     formInput (path, { action, relationId, systemName, value }) {
       // Determine which part of the formdata needs to be updated
