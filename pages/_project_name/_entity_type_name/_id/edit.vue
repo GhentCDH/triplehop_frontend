@@ -225,6 +225,7 @@
 <script>
 import { v4 as uuidv4 } from 'uuid'
 
+import { hasEntityTypePermission } from '~/assets/js/auth'
 import { constructFieldFromData, isNumber, isArray } from '~/assets/js/utils'
 import EditPanel from '~/components/Edit/EditPanel.vue'
 import RelationEditPanel from '~/components/Edit/RelationEditPanel.vue'
@@ -266,9 +267,17 @@ export default {
       this.leaveRoute = null
     }
   },
-  validate ({ params }) {
+  validate ({ params, $auth }) {
     // Make sure id is undefined (add) or a number (edit)
     if ('id' in params && !isNumber(params.id)) {
+      return false
+    }
+    // Make sure user had post or edit permissions
+    if ('id' in params) {
+      if (!(hasEntityTypePermission($auth.user, params.project_name, params.entity_type_name, 'data', 'put'))) {
+        return false
+      }
+    } else if (!(hasEntityTypePermission($auth.user, params.project_name, params.entity_type_name, 'data', 'post'))) {
       return false
     }
     return true
