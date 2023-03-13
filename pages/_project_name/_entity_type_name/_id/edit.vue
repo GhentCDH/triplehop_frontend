@@ -261,11 +261,13 @@ export default {
     RelationEditPanel
   },
   beforeRouteLeave (to, from, next) {
-    if (this.formDataChanged) {
-      this.leaveRoute = next
-    } else {
-      this.leaveRoute = null
+    if (this.redirectAfterAdd) {
+      return next()
     }
+    if (!(this.formDataChanged)) {
+      return next()
+    }
+    this.leaveRoute = next
   },
   validate ({ params, $auth }) {
     // Make sure id is undefined (add) or a number (edit)
@@ -290,6 +292,7 @@ export default {
       },
       leaveRoute: null,
       oldFormData: {},
+      redirectAfterAdd: false,
       refsLoaded: false
     }
   },
@@ -608,8 +611,6 @@ export default {
             'data/save',
             saveObject
           )
-          this.setFormData()
-          this.resetValidation()
           this.$store.dispatch(
             'notifications/create',
             {
@@ -618,6 +619,7 @@ export default {
             }
           )
           if (!('id' in this.$route.params)) {
+            this.redirectAfterAdd = true
             this.$router.push({
               name: 'project_name-entity_type_name-id-edit',
               params: {
@@ -627,6 +629,8 @@ export default {
               }
             })
           }
+          this.setFormData()
+          this.resetValidation()
         } catch (error) {
           console.error(error)
           this.$store.dispatch(
