@@ -38,11 +38,3 @@ export function getFilterDefs (entityTypeConfig) {
   }
   return filterDefs
 }
-
-export function getColumnKeys (entityTypeConfig) {
-  const columnKeys = new Set()
-  for (const columnDef of entityTypeConfig.elasticsearch.columns) {
-    columnKeys.add(columnDef.systemName)
-  }
-  return [...columnKeys]
-}

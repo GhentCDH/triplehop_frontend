@@ -307,9 +307,6 @@ export default {
     entityTypeName () {
       return this.$route.params.entity_type_name
     },
-    esColumnsKeys () {
-      return getColumnKeys(this.entityTypeConfig)
-    },
     esFiltersDefs () {
       return getFilterDefs(this.entityTypeConfig)
     },
