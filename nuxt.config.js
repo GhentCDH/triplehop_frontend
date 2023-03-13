@@ -112,7 +112,8 @@ export default {
     },
     transpile: [
       ({ isServer }) => 'vue-typeahead-bootstrap',
-      ({ isServer }) => 'htmlparser2'
+      ({ isServer }) => 'htmlparser2',
+      ({ isServer }) => 'defu'
     ]
   },
   router: {
