@@ -63,7 +63,7 @@
         >
           <div>
             <h1>
-              {{ entityTypeConfig.elasticsearch.title }}
+              {{ entityTypeConfig.elasticsearch?.title ?? entityTypeName }}
             </h1>
             <div class="float-right text-center">
               Displaying {{ showingStart }} to {{ showingEnd }} of {{ total }} results.
@@ -150,7 +150,7 @@ import HistogramSlider from '~/components/Search/Filters/HistogramSlider'
 import Nested from '~/components/Search/Filters/Nested'
 import NestedPresent from '~/components/Search/Filters/NestedPresent'
 
-import { MAX_INT, getFields, getFilterDefs, getColumnKeys } from '~/assets/js/es'
+import { MAX_INT, getFields, getFilterDefs } from '~/assets/js/es'
 import { isArray, isNumber, isObject } from '~/assets/js/utils'
 
 export default {
@@ -192,7 +192,11 @@ export default {
         message: `Entity type "${this.entityTypeName}" cannot be found.`
       })
     }
-    if (!('elasticsearch' in this.entityTypeConfig)) {
+    // Known issue: https://github.com/nuxt/nuxt/issues/7285 (will be fixed with Nuxt 3)
+    if (
+      !('elasticsearch' in this.entityTypeConfig) &&
+      !hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'es_data', 'view')
+    ) {
       return this.$nuxt.error({
         statusCode: 404,
         message: `No search page available for entity type "${this.entityTypeName}".`
@@ -314,7 +318,18 @@ export default {
       return getFields(this.entityTypeConfig)
     },
     filterGroups () {
-      return this.entityTypeConfig.elasticsearch.filters
+      // TODO: rethink default value (edit_relation_title)
+      return this.entityTypeConfig.elasticsearch?.filters ?? [
+        {
+          filters: [
+            {
+              systemName: 'edit_relation_title',
+              displayName: 'Id and title',
+              type: 'nested'
+            }
+          ]
+        }
+      ]
     },
     items () {
       return this.$store.state.es.items

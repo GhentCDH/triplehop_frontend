@@ -29,6 +29,27 @@
             </b-navbar-nav>
             <b-navbar-nav class="ml-auto">
               <b-nav-item-dropdown
+                v-if="elasticsearchExtra.length"
+              >
+                <template #button-content>
+                  <b-icon icon="list-ul" title="List entities" />
+                </template>
+                <b-dropdown-header>List entities</b-dropdown-header>
+                <b-dropdown-item
+                  v-for="entityTypeName in elasticsearchExtra"
+                  :key="entityTypeName"
+                  :to="{
+                    name: 'project_name-entity_type_name',
+                    params: {
+                      project_name: projectName,
+                      entity_type_name: entityTypeName
+                    }
+                  }"
+                >
+                  {{ entityTypesConfig[entityTypeName].display_name }}
+                </b-dropdown-item>
+              </b-nav-item-dropdown>
+              <b-nav-item-dropdown
                 v-if="hasAtLeastOneEntityTypeWithPermission($auth.user, projectName, 'es_data', 'index')"
               >
                 <template #button-content>
@@ -122,6 +143,27 @@ export default {
         return 'TripleHop'
       }
       return this.$store.state.config.project_def.display_name ?? 'TripleHop'
+    },
+    elasticsearchExtra () {
+      const extra = []
+      if (
+        this.$store.state.config.entity_types != null
+      ) {
+        for (const [entityTypeName, entityTypeConfig] of Object.entries(this.$store.state.config.entity_types)) {
+          // if 'elasticsearch' in entityTypeConfig, then the link is included in links
+          if (
+            !('elasticsearch' in entityTypeConfig) &&
+            hasEntityTypePermission(this.$auth.user, this.projectName, entityTypeName, 'es_data', 'view')
+          ) {
+            extra.push(entityTypeName)
+          }
+        }
+      }
+      if (extra.length) {
+        extra.push(...this.links.map(link => link.systemName))
+      }
+      extra.sort()
+      return extra
     },
     entityTypesConfig () {
       return this.$store.state.config.entity_types

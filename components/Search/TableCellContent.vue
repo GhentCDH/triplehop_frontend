@@ -13,6 +13,9 @@
       <template v-else-if="field.type === 'uncertain_centuries'">
         {{ nameOrNA(value.display) }}
       </template>
+      <template v-else-if="field.type === 'nested'">
+        {{ nameOrNA(value.value) }}
+      </template>
       <template v-else>
         {{ nameOrNA(value) }}
       </template>
