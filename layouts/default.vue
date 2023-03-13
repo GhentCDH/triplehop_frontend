@@ -47,7 +47,7 @@
                 v-if="hasAtLeastOneEntityTypeWithPermission($auth.user, projectName, 'data', 'post')"
               >
                 <template #button-content>
-                  <b-icon icon="plus" title="Add Entity"/>
+                  <b-icon icon="plus" title="Add Entity" />
                 </template>
                 <b-dropdown-header>Add Entity</b-dropdown-header>
                 <b-dropdown-item
