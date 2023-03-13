@@ -558,5 +558,29 @@ export const actions = {
       'SET_DATA',
       response.data.data[`${verb}${capitalizeFirstLetter(entityTypeName)}`]
     )
+  },
+  async delete ({ commit }, { projectName, entityTypeName, id }) {
+    const queryParts = [
+      'mutation {',
+      `delete${capitalizeFirstLetter(entityTypeName)}(id: ${id}){`,
+      'id',
+      '}',
+      '}'
+    ]
+
+    const response = await this.$axios.post(
+      `/data/${projectName}`,
+      {
+        query: queryParts.join('\n')
+      }
+    )
+
+    if ('errors' in response.data) {
+      throw new Error(response.data.errors[0].message)
+    }
+    commit(
+      'SET_DATA',
+      {}
+    )
   }
 }

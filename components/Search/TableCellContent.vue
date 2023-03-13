@@ -46,6 +46,13 @@
       >
         <b-icon icon="pencil" />
       </nuxt-link>
+      <nuxt-link
+        v-if="field.actions.includes('delete')"
+        :to="`${projectPrefix}${entityTypeName}/${entityId}/delete`"
+        title="Delete this entity"
+      >
+        <b-icon icon="trash" />
+      </nuxt-link>
     </template>
     <template v-else-if="field.type === 'edtf'">
       {{ nameOrNA(value) }}

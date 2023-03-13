@@ -280,6 +280,9 @@ export default {
         if (hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'data', 'put')) {
           actionField.actions.push('edit')
         }
+        if (hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'data', 'delete')) {
+          actionField.actions.push('delete')
+        }
         fields.push(actionField)
         fields.push({
           key: '__id__',
