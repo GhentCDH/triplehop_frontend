@@ -2,6 +2,7 @@ import { helpers, required } from 'vuelidate/lib/validators'
 
 import { edtfYear } from '~/assets/js/validation/edtf'
 import { geometryPoint } from '~/assets/js/validation/geometry'
+import { list } from '~/assets/js/validation/list'
 
 export const generateValidations = function (validators, multi = false) {
   const validation = {}
@@ -18,6 +19,9 @@ export const generateValidations = function (validators, multi = false) {
       }
       if (validator.type === 'geometry_point') {
         validation.geometryPoint = geometryPoint
+      }
+      if (validator.type === 'list') {
+        validation.list = list(validator.allowed_values)
       }
     }
   }
