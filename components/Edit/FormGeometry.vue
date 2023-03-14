@@ -99,12 +99,27 @@ export default {
   methods: {
     getValue (value) {
       const formValue = JSON.parse(value)
+      if (formValue == null || formValue === '') {
+        return null
+      }
       return `${formValue.coordinates[1]},${formValue.coordinates[0]}`
     },
     onInput (value) {
       this.value = value
-      const coordinates = this.value.split(',')
       this.$v.value.$touch()
+
+      if (this.value === '') {
+        this.$emit(
+          'input',
+          {
+            systemName: this.id,
+            value: this.value
+          }
+        )
+        return
+      }
+
+      const coordinates = this.value.split(',')
       this.$emit(
         'input',
         {
