@@ -198,7 +198,7 @@
                             rotate="270"
                             shift-v="4"
                           />
-                          {{ getRelationConfig(relationTypeName).edit.domain_title }}
+                          {{ relationTypeName.startsWith('r_') ? getRelationConfig(relationTypeName).edit.domain_title : getRelationConfig(relationTypeName).edit.range_title }}
                         </b-link>
                       </li>
                     </template>
