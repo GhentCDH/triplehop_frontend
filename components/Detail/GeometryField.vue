@@ -33,7 +33,7 @@ export default {
   },
   computed: {
     geometry () {
-      return this.valueAndSources.value
+      return this.valueAndSources
     }
   },
   methods: {
