@@ -1,7 +1,7 @@
 import parse from 'edtf'
 import { helpers } from 'vuelidate/lib/validators'
 
-export const edtfYear = function (value) {
+export const edtfYear = (value) => {
   // Don't validate if empty value
   if (!helpers.req(value)) {
     return true
