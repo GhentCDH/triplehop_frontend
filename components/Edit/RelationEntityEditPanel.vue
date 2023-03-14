@@ -19,6 +19,7 @@
           @input="$emit('input', $event)"
         />
         <template v-else>
+          <strong> {{ label }}</strong>
           [{{ formData.id }}] {{ formData.title }}
         </template>
       </b-col>
