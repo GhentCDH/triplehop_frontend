@@ -8,6 +8,30 @@
     bottom: 0;
     right: 0;
   }
+
+  @include media-breakpoint-down(md) {
+    .content {
+      margin-bottom: 1rem;
+    }
+  }
+
+  @include media-breakpoint-up(md) {
+    .content {
+      overflow-y: scroll;
+      max-height: calc(100vh - 12rem);
+    }
+
+    .quick-nav {
+      overflow-y: auto;
+      max-height: calc(100vh - 12rem);
+    }
+  }
+
+  .quick-nav {
+    .nav {
+      flex-direction: column;
+    }
+  }
 }
 
 .select-entity-icon-wrapper {

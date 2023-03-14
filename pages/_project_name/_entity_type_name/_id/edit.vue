@@ -50,7 +50,7 @@
             <b-col
               id="edit"
               md="9"
-              class="mb-3"
+              class="content scrollable"
             >
               <h2 id="entity" class="text-primary">
                 Entity
@@ -110,103 +110,101 @@
             <b-navbar
               v-if="refsLoaded"
               v-b-scrollspy:edit
-              class="d-none d-md-block col-md-3 sticky-top toc"
+              class="d-none d-md-block col-md-3 quick-nav"
             >
-              <div class="border-left border-secondary nav-border-left">
-                <b-nav vertical>
-                  <b-nav-text class="text-dark">
-                    Actions
-                  </b-nav-text>
-                  <b-nav-text>
-                    <b-button-group vertical>
-                      <b-button
-                        type="submit"
-                        variant="primary"
-                        :disabled="!formDataChanged || disableFormElements || invalid"
-                      >
-                        Submit <b-icon icon="save" />
-                      </b-button>
-                      <b-button
-                        type="reset"
-                        variant="danger"
-                        :disabled="!formDataChanged || disableFormElements"
-                      >
-                        Reset <b-icon icon="arrow-counterclockwise" />
-                      </b-button>
-                      <b-button
-                        type="reset"
-                        @click="$router.go(-1)"
-                      >
-                        Cancel <b-icon icon="x" />
-                      </b-button>
-                    </b-button-group>
-                  </b-nav-text>
-                  <b-nav-text class="text-dark">
-                    Quick navigation
-                  </b-nav-text>
-                  <li class="nav-item">
-                    <b-link
-                      href="#entity"
-                      :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
+              <b-nav vertical>
+                <b-nav-text class="text-dark">
+                  Actions
+                </b-nav-text>
+                <b-nav-text>
+                  <b-button-group vertical>
+                    <b-button
+                      type="submit"
+                      variant="primary"
+                      :disabled="!formDataChanged || disableFormElements || invalid"
                     >
-                      Entity
-                    </b-link>
-                    <b-nav>
-                      <template
-                        v-for="(panel, panelIndex) in layout"
-                      >
-                        <li
-                          :key="`nav-entity-${panelIndex}`"
-                          :class="['nav-item', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
-                        >
-                          <b-link
-                            :href="`#entity-${panel.label}`"
-                            :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
-                          >
-                            <b-icon
-                              icon="arrow-90deg-down"
-                              rotate="270"
-                              shift-v="4"
-                            />
-                            {{ panel.label }}
-                          </b-link>
-                        </li>
-                      </template>
-                    </b-nav>
-                  </li>
-                  <li class="nav-item">
-                    <b-link
-                      href="#relations"
-                      :class="['nav-link']"
+                      Submit <b-icon icon="save" />
+                    </b-button>
+                    <b-button
+                      type="reset"
+                      variant="danger"
+                      :disabled="!formDataChanged || disableFormElements"
                     >
-                      Relations
-                    </b-link>
-                    <b-nav>
-                      <template
-                        v-for="(relationTypeName, panelIndex) in editableRelationTypeNames"
+                      Reset <b-icon icon="arrow-counterclockwise" />
+                    </b-button>
+                    <b-button
+                      type="reset"
+                      @click="$router.go(-1)"
+                    >
+                      Cancel <b-icon icon="x" />
+                    </b-button>
+                  </b-button-group>
+                </b-nav-text>
+                <b-nav-text class="text-dark">
+                  Quick navigation
+                </b-nav-text>
+                <li class="nav-item">
+                  <b-link
+                    href="#entity"
+                    :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
+                  >
+                    Entity
+                  </b-link>
+                  <b-nav>
+                    <template
+                      v-for="(panel, panelIndex) in layout"
+                    >
+                      <li
+                        :key="`nav-entity-${panelIndex}`"
+                        :class="['nav-item', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
                       >
-                        <li
-                          :key="`nav-relation-${relationTypeName}`"
-                          :class="['nav-item', {'text-danger': $refs.relationPanels[panelIndex].invalid}]"
+                        <b-link
+                          :href="`#entity-${panel.label}`"
+                          :class="['nav-link', {'text-danger': $refs.entityPanels[panelIndex].invalid}]"
                         >
-                          <b-link
-                            :href="`#${relationTypeName}`"
-                            :class="['nav-link']"
-                          >
-                            <b-icon
-                              :key="`icon-relation-${relationTypeName}`"
-                              icon="arrow-90deg-down"
-                              rotate="270"
-                              shift-v="4"
-                            />
-                            {{ getRelationConfig(relationTypeName).edit.domain_title }}
-                          </b-link>
-                        </li>
-                      </template>
-                    </b-nav>
-                  </li>
-                </b-nav>
-              </div>
+                          <b-icon
+                            icon="arrow-90deg-down"
+                            rotate="270"
+                            shift-v="4"
+                          />
+                          {{ panel.label }}
+                        </b-link>
+                      </li>
+                    </template>
+                  </b-nav>
+                </li>
+                <li class="nav-item">
+                  <b-link
+                    href="#relations"
+                    :class="['nav-link']"
+                  >
+                    Relations
+                  </b-link>
+                  <b-nav>
+                    <template
+                      v-for="(relationTypeName, panelIndex) in editableRelationTypeNames"
+                    >
+                      <li
+                        :key="`nav-relation-${relationTypeName}`"
+                        :class="['nav-item', {'text-danger': $refs.relationPanels[panelIndex].invalid}]"
+                      >
+                        <b-link
+                          :href="`#${relationTypeName}`"
+                          :class="['nav-link']"
+                        >
+                          <b-icon
+                            :key="`icon-relation-${relationTypeName}`"
+                            icon="arrow-90deg-down"
+                            rotate="270"
+                            shift-v="4"
+                          />
+                          {{ getRelationConfig(relationTypeName).edit.domain_title }}
+                        </b-link>
+                      </li>
+                    </template>
+                  </b-nav>
+                </li>
+              </b-nav>
             </b-navbar>
           </b-row>
         </b-form>
