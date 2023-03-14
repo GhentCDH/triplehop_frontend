@@ -48,38 +48,41 @@
         >
           <b-row>
             <b-col
-              id="edit"
               md="9"
               class="content scrollable"
             >
-              <h2 id="entity" class="text-primary">
-                Entity
-              </h2>
-              <!-- TODO: add uuid to panel so it can be used as key? -->
-              <edit-panel
-                v-for="(panel, panelIndex) in layout"
-                :key="`panel-${panelIndex}`"
-                ref="entityPanels"
-                :disabled="disableFormElements"
-                :form-data="formData.entity"
-                :panel="panel"
-                @input="formInput('entity', $event)"
-              />
-              <h2 id="relations" class="text-primary">
-                Relations
-              </h2>
-              <relation-edit-panel
-                v-for="relationTypeName in editableRelationTypeNames"
-                :key="`panel-${relationTypeName}`"
-                ref="relationPanels"
-                :disabled="disableFormElements"
-                :form-data="formData[relationTypeName]"
-                :project-name="projectName"
-                :relation-type-config="getRelationConfig(relationTypeName)"
-                :relation-type-name="relationTypeName"
-                :entity-types-config="entityTypesConfig"
-                @input="formInput(relationTypeName, $event)"
-              />
+              <template v-if="layout.length !== 0">
+                <h2 id="entity" class="text-primary">
+                  Entity
+                </h2>
+                <!-- TODO: add uuid to panel so it can be used as key? -->
+                <edit-panel
+                  v-for="(panel, panelIndex) in layout"
+                  :key="`panel-${panelIndex}`"
+                  ref="entityPanels"
+                  :disabled="disableFormElements"
+                  :form-data="formData.entity"
+                  :panel="panel"
+                  @input="formInput('entity', $event)"
+                />
+              </template>
+              <template v-if="editableRelationTypeNames.length !== 0">
+                <h2 id="relations" class="text-primary">
+                  Relations
+                </h2>
+                <relation-edit-panel
+                  v-for="relationTypeName in editableRelationTypeNames"
+                  :key="`panel-${relationTypeName}`"
+                  ref="relationPanels"
+                  :disabled="disableFormElements"
+                  :form-data="formData[relationTypeName]"
+                  :project-name="projectName"
+                  :relation-type-config="getRelationConfig(relationTypeName)"
+                  :relation-type-name="relationTypeName"
+                  :entity-types-config="entityTypesConfig"
+                  @input="formInput(relationTypeName, $event)"
+                />
+              </template>
               <div class="d-md-none">
                 <h2 id="actions" class="text-primary">
                   Actions
@@ -109,7 +112,6 @@
             <!-- TODO: display navbar before refs are loaded -->
             <b-navbar
               v-if="refsLoaded"
-              v-b-scrollspy:edit
               class="d-none d-md-block col-md-3 quick-nav"
             >
               <b-nav vertical>
@@ -143,7 +145,10 @@
                 <b-nav-text class="text-dark">
                   Quick navigation
                 </b-nav-text>
-                <li class="nav-item">
+                <li
+                  v-if="layout.length !== 0"
+                  class="nav-item"
+                >
                   <b-link
                     href="#entity"
                     :class="['nav-link', {'text-danger': anyEntityPanelInvalid}]"
@@ -173,7 +178,10 @@
                     </template>
                   </b-nav>
                 </li>
-                <li class="nav-item">
+                <li
+                  v-if="editableRelationTypeNames.length !== 0"
+                  class="nav-item"
+                >
                   <b-link
                     href="#relations"
                     :class="['nav-link']"
@@ -452,7 +460,7 @@ export default {
     title () {
       // TODO: use form data
       // problem: for related entities, not all data is available (only title)
-      // posible solution: update entityData with unsaved data
+      // possible solution: update entityData with unsaved data
       // * when data of entities changes
       // * when relevant (used in title) relations change
       return this.constructFieldFromData(
@@ -479,8 +487,8 @@ export default {
   mounted () {
     const interval = setInterval(() => {
       if (
-        this.$refs.entityPanels != null &&
-        this.$refs.relationPanels != null
+        (this.layout.length === 0 || this.$refs.entityPanels != null) &&
+        (this.editableRelationTypeNames.length === 0 || this.$refs.relationPanels != null)
       ) {
         this.refsLoaded = true
         clearInterval(interval)
@@ -539,11 +547,15 @@ export default {
       return this.relationTypesConfig[relationTypeName.split('_').slice(1, -1).join('_')]
     },
     async onSubmit () {
-      for (const entityPanel of this.$refs.entityPanels) {
-        entityPanel.touch()
+      if ('entityPanels' in this.$refs) {
+        for (const entityPanel of this.$refs.entityPanels) {
+          entityPanel.touch()
+        }
       }
-      for (const relationPanel of this.$refs.relationPanels) {
-        relationPanel.touch()
+      if ('relationPanels' in this.$refs) {
+        for (const relationPanel of this.$refs.relationPanels) {
+          relationPanel.touch()
+        }
       }
       if (this.invalid) {
         return
@@ -672,11 +684,15 @@ export default {
       })
     },
     resetValidation () {
-      for (const entityPanel of this.$refs.entityPanels) {
-        entityPanel.reset()
+      if ('entityPanels' in this.$refs) {
+        for (const entityPanel of this.$refs.entityPanels) {
+          entityPanel.reset()
+        }
       }
-      for (const relationPanel of this.$refs.relationPanels) {
-        relationPanel.reset()
+      if ('relationPanels' in this.$refs) {
+        for (const relationPanel of this.$refs.relationPanels) {
+          relationPanel.reset()
+        }
       }
     },
     setFormData () {
