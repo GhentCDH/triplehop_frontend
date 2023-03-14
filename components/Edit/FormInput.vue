@@ -4,6 +4,7 @@
       :id="id"
       :value="value"
       :state="validateState"
+      :type="inputType"
       @input="onInput"
     />
     <form-feedback
@@ -72,6 +73,12 @@ export default {
     return validations
   },
   computed: {
+    inputType () {
+      if (this.field.type === 'number') {
+        return 'number'
+      }
+      return 'text'
+    },
     validatorsWithError () {
       if (this.field.validators == null) {
         return []
@@ -98,7 +105,11 @@ export default {
   },
   methods: {
     onInput (value) {
-      this.value = value
+      if (this.field.type === 'number') {
+        this.value = parseInt(value)
+      } else {
+        this.value = value
+      }
       this.$v.value.$touch()
       this.$emit(
         'input',
