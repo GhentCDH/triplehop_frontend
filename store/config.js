@@ -50,6 +50,7 @@ export const actions = {
               type
               validators {
                 type
+                allowed_values
                 regex
                 error_message
               }
@@ -187,6 +188,12 @@ export const actions = {
               system_name
               display_name
               type
+              validators {
+                type
+                allowed_values
+                regex
+                error_message
+              }
             }
             display {
               domain_title
@@ -240,7 +247,8 @@ export const actions = {
         for (const rawField of raw.data) {
           config[raw.system_name].data[rawField.system_name] = {
             display_name: rawField.display_name,
-            type: rawField.type
+            type: rawField.type,
+            validators: rawField.validators
           }
         }
       }
