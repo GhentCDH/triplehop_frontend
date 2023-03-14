@@ -9,7 +9,7 @@
       :key="field.field"
       ref="formGroups"
       :field="field"
-      :initial-value="formData[field.field.replace('$', '')]"
+      :initial-value="JSON.stringify(formData[field.field.replace('$', '')])"
       :disabled="disabled"
       @input="$emit('input', $event)"
     />
