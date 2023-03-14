@@ -88,11 +88,10 @@ export default {
   methods: {
     onInput (value) {
       if (this.field.type === 'number') {
-        this.value = parseInt(value)
+        this.value = value === '' ? null : parseInt(value)
       } else {
         this.value = value
       }
-      this.$v.value.$touch()
       this.$emit(
         'input',
         {
@@ -100,6 +99,10 @@ export default {
           value: this.value
         }
       )
+      // Wait untill components are updated before validating
+      this.$nextTick(() => {
+        this.$v.value.$touch()
+      })
     }
   }
 }
