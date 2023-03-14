@@ -18,10 +18,9 @@
 // Currently only point geometries are supported
 import frag from 'vue-frag'
 import { validationMixin } from 'vuelidate'
-import { required } from 'vuelidate/lib/validators'
 
+import { generateValidations } from '~/assets/js/validation'
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { geometryPoint } from '~/assets/js/validators/geometry'
 
 export default {
   directives: {
@@ -54,21 +53,7 @@ export default {
     }
   },
   validations () {
-    const validations = {
-      value: {}
-    }
-    const validators = this.field.validators
-    if (validators) {
-      for (const validator of validators) {
-        if (validator.type === 'required') {
-          validations.value.required = required
-        }
-        if (validator.type === 'geometry_point') {
-          validations.value.geometryPoint = geometryPoint
-        }
-      }
-    }
-    return validations
+    return generateValidations(this.field.validators)
   },
   computed: {
     validatorsWithError () {

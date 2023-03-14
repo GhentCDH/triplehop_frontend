@@ -17,10 +17,9 @@
 <script>
 import frag from 'vue-frag'
 import { validationMixin } from 'vuelidate'
-import { helpers, required } from 'vuelidate/lib/validators'
 
+import { generateValidations } from '~/assets/js/validation'
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { edtfYear } from '~/assets/js/validators/edtf'
 
 export default {
   directives: {
@@ -53,24 +52,7 @@ export default {
     }
   },
   validations () {
-    const validations = {
-      value: {}
-    }
-    const validators = this.field.validators
-    if (validators) {
-      for (const validator of validators) {
-        if (validator.type === 'required') {
-          validations.value.required = required
-        }
-        if (validator.type === 'edtf_year') {
-          validations.value.edtfYear = edtfYear
-        }
-        if (validator.type === 'regex') {
-          validations.value.regex = helpers.regex('regex', new RegExp(validator.regex))
-        }
-      }
-    }
-    return validations
+    return generateValidations(this.field.validators)
   },
   computed: {
     inputType () {

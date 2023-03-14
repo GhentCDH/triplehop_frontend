@@ -27,9 +27,9 @@
 import frag from 'vue-frag'
 import Multiselect from 'vue-multiselect'
 import { validationMixin } from 'vuelidate'
-import { required } from 'vuelidate/lib/validators'
 
 import { isArray } from '~/assets/js/utils'
+import { generateValidations } from '~/assets/js/validation'
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
 
 export default {
@@ -74,18 +74,7 @@ export default {
     }
   },
   validations () {
-    const validations = {
-      value: {}
-    }
-    const validators = this.field.validators
-    if (validators) {
-      for (const validator of validators) {
-        if (validator.type === 'required') {
-          validations.value.required = required
-        }
-      }
-    }
-    return validations
+    return generateValidations(this.field.validators)
   },
   computed: {
     validatorsWithError () {

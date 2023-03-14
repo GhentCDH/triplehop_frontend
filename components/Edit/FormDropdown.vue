@@ -17,8 +17,8 @@
 <script>
 import frag from 'vue-frag'
 import { validationMixin } from 'vuelidate'
-import { required } from 'vuelidate/lib/validators'
 
+import { generateValidations } from '~/assets/js/validation'
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
 
 export default {
@@ -51,18 +51,7 @@ export default {
     }
   },
   validations () {
-    const validations = {
-      value: {}
-    }
-    const validators = this.field.validators
-    if (validators) {
-      for (const validator of validators) {
-        if (validator.type === 'required') {
-          validations.value.required = required
-        }
-      }
-    }
-    return validations
+    return generateValidations(this.field.validators)
   },
   computed: {
     validatorsWithError () {
