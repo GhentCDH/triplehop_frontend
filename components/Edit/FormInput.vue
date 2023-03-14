@@ -95,7 +95,7 @@ export default {
     initialValue () {
       if (
         (this.initialValue === 'null' && this.value !== '') ||
-        (this.initialValue !== 'null' && JSON.parse(this.initialValue) !== this.value)
+        (this.initialValue !== 'null' && this.initialValue !== JSON.stringify(this.value))
       ) {
         // Reset
         this.value = JSON.parse(this.initialValue)

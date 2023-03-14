@@ -47,7 +47,7 @@ export default {
   },
   data () {
     return {
-      value: this.initialValue
+      value: JSON.parse(this.initialValue)
     }
   },
   validations () {
@@ -79,9 +79,12 @@ export default {
   },
   watch: {
     initialValue () {
-      if (this.initialValue !== this.value) {
+      if (
+        (this.initialValue === 'null' && this.value !== '') ||
+        (this.initialValue !== 'null' && this.initialValue !== JSON.stringify(this.value))
+      ) {
         // Reset
-        this.value = this.initialValue
+        this.value = JSON.parse(this.initialValue)
         this.$v.$reset()
       }
     }
