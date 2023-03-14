@@ -4,7 +4,6 @@
       :id="id"
       :value="value"
       :state="validateState"
-      :type="inputType"
       @input="onInput"
     />
     <form-feedback
@@ -15,12 +14,14 @@
   </div>
 </template>
 <script>
+// TODO: edit other geometry types
+// Currently only point geometries are supported
 import frag from 'vue-frag'
 import { validationMixin } from 'vuelidate'
-import { helpers, required } from 'vuelidate/lib/validators'
+import { required } from 'vuelidate/lib/validators'
 
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { edtfYear } from '~/assets/js/validators/edtf'
+import { geometryPoint } from '~/assets/js/validators/geometry'
 
 export default {
   directives: {
@@ -49,7 +50,7 @@ export default {
   },
   data () {
     return {
-      value: JSON.parse(this.initialValue)
+      value: this.getValue(this.initialValue)
     }
   },
   validations () {
@@ -62,23 +63,14 @@ export default {
         if (validator.type === 'required') {
           validations.value.required = required
         }
-        if (validator.type === 'edtf_year') {
-          validations.value.edtfYear = edtfYear
-        }
-        if (validator.type === 'regex') {
-          validations.value.regex = helpers.regex('regex', new RegExp(validator.regex))
+        if (validator.type === 'geometry_point') {
+          validations.value.geometryPoint = geometryPoint
         }
       }
     }
     return validations
   },
   computed: {
-    inputType () {
-      if (this.field.type === 'number') {
-        return 'number'
-      }
-      return 'text'
-    },
     validatorsWithError () {
       if (this.field.validators == null) {
         return []
@@ -93,9 +85,10 @@ export default {
   },
   watch: {
     initialValue () {
+      const newValue = this.getValue(this.initialValue)
       if (
-        (this.initialValue === 'null' && this.value !== '') ||
-        (this.initialValue !== 'null' && this.initialValue !== JSON.stringify(this.value))
+        (this.value == null && newValue.key != null) ||
+        (this.value != null && newValue.key !== this.value.key)
       ) {
         // Reset
         this.value = JSON.parse(this.initialValue)
@@ -104,18 +97,25 @@ export default {
     }
   },
   methods: {
+    getValue (value) {
+      const formValue = JSON.parse(value)
+      return `${formValue.coordinates[1]},${formValue.coordinates[0]}`
+    },
     onInput (value) {
-      if (this.field.type === 'number') {
-        this.value = parseInt(value)
-      } else {
-        this.value = value
-      }
+      this.value = value
+      const coordinates = this.value.split(',')
       this.$v.value.$touch()
       this.$emit(
         'input',
         {
           systemName: this.id,
-          value: this.value
+          value: {
+            type: 'Point',
+            coordinates: [
+              parseFloat(coordinates[1]),
+              parseFloat(coordinates[0])
+            ]
+          }
         }
       )
     }

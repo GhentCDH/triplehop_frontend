@@ -18,5 +18,4 @@ const edtfYear = function (value) {
   }
   return true
 }
-
 export { edtfYear }

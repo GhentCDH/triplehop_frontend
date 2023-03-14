@@ -27,6 +27,7 @@ import { marked } from 'marked'
 import sanitizeHtml from 'sanitize-html'
 
 import FormDropdown from '~/components/Edit/FormDropdown.vue'
+import FormGeometry from '~/components/Edit/FormGeometry.vue'
 import FormInput from '~/components/Edit/FormInput.vue'
 import FormMultiInput from '~/components/Edit/FormMultiInput.vue'
 import FormNested from '~/components/Edit/FormNested.vue'
@@ -34,6 +35,7 @@ import FormNested from '~/components/Edit/FormNested.vue'
 export default {
   components: {
     FormDropdown,
+    FormGeometry,
     FormInput,
     FormMultiInput,
     FormNested
@@ -71,6 +73,9 @@ export default {
     component_type (field) {
       if (field.type === 'dropdown') {
         return 'form-dropdown'
+      }
+      if (field.type === 'geometry') {
+        return 'form-geometry'
       }
       if (field.type === 'nested') {
         return 'form-nested'

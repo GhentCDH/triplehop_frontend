@@ -61,7 +61,7 @@ import { validationMixin } from 'vuelidate'
 import { helpers, required } from 'vuelidate/lib/validators'
 
 import FormFeedback from '~/components/Edit/FormFeedback.vue'
-import { edtfYear } from '~/assets/js/validators'
+import { edtfYear } from '~/assets/js/validators/edtf'
 
 export default {
   components: {
