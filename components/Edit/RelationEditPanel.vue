@@ -38,15 +38,15 @@
       </b-button>
     </b-card>
     <b-button
-      v-for="range_name in relationTypeConfig.range_names"
-      :key="range_name"
+      v-for="side_name in relationTypeConfig[side === 'domain' ? 'range_names' : 'domain_names']"
+      :key="side_name"
       variant="primary"
       size="sm"
       class="mt-3"
-      @click="onAdd(range_name)"
+      @click="onAdd(side_name)"
     >
       <b-icon icon="plus" />
-      Add {{ panelTitle }} relation to a(n) {{ entityTypesConfig[range_name].display_name }}
+      Add {{ panelTitle }} relation to a(n) {{ entityTypesConfig[side_name].display_name }}
     </b-button>
   </b-card>
 </template>
