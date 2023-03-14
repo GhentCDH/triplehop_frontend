@@ -9,7 +9,7 @@ const edtfYear = function (value) {
 
   try {
     const parsed = parse(value)
-    // values should only exactly 1 (year) part
+    // values should be only exactly 1 (year) part
     if (parsed.values.length !== 1) {
       return false
     }
