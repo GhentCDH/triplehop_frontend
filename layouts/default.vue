@@ -207,7 +207,7 @@ export default {
     sortedAddableEntityTypeNames () {
       const sortedAddableEntityTypeNames = Object.keys(this.entityTypesConfig).filter(
         entityTypeName => hasEntityTypePermission(this.$auth.user, this.projectName, entityTypeName, 'data', 'post')
-      )
+      ).filter(entityTypeName => this.entityTypesConfig[entityTypeName].edit != null)
       sortedAddableEntityTypeNames.sort()
       return sortedAddableEntityTypeNames
     }
