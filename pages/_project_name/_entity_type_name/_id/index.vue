@@ -102,8 +102,10 @@ export default {
       throw new Error(`Entity type "${this.entityTypeName}" cannot be found.`)
     }
     if (
-      !('detail' in this.entityTypeConfig) ||
-      !this.entityTypeConfig.detail
+      (
+        !('detail' in this.entityTypeConfig) ||
+        !this.entityTypeConfig.detail
+      ) && !(hasEntityTypePermission(this.$auth.user, this.projectName, this.entityTypeName, 'data', 'put'))
     ) {
       throw new Error(`Entity type "${this.entityTypeName}" cannot be viewed in detail.`)
     }
