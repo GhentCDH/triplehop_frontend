@@ -529,7 +529,7 @@ export const actions = {
 
     for (const relationTypeName in data) {
       // TODO: don't do JSON.stringify, use detailed GraphQL schema
-      queryParts.push(`${relationTypeName}: "${JSON.stringify(data[relationTypeName]).replaceAll('"', '\\"')}"`)
+      queryParts.push(`${relationTypeName}: "${JSON.stringify(data[relationTypeName]).replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`)
     }
 
     queryParts.push(
