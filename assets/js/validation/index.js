@@ -1,6 +1,6 @@
 import { helpers, required } from 'vuelidate/lib/validators'
 
-import { edtfYear } from '~/assets/js/validation/edtf'
+import { edtf, edtfYear } from '~/assets/js/validation/edtf'
 import { geometryPoint } from '~/assets/js/validation/geometry'
 import { list } from '~/assets/js/validation/list'
 
@@ -13,6 +13,9 @@ export const generateValidations = function (validators, multi = false) {
       }
       if (validator.type === 'regex') {
         validation.regex = helpers.regex('regex', new RegExp(validator.regex))
+      }
+      if (validator.type === 'edtf') {
+        validation.edtf = edtf
       }
       if (validator.type === 'edtf_year') {
         validation.edtfYear = edtfYear
