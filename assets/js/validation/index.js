@@ -10,22 +10,31 @@ export const generateValidations = function (validators, multi = false) {
     for (const validator of validators) {
       if (validator.type === 'required') {
         validation.required = required
+        continue
       }
       if (validator.type === 'regex') {
         validation.regex = helpers.regex('regex', new RegExp(validator.regex))
+        continue
       }
       if (validator.type === 'edtf') {
         validation.edtf = edtf
+        continue
       }
       if (validator.type === 'edtf_year') {
         validation.edtfYear = edtfYear
+        continue
       }
       if (validator.type === 'geometry_point') {
         validation.geometryPoint = geometryPoint
+        continue
       }
       if (validator.type === 'list') {
         validation.list = list(validator.allowed_values)
+        continue
       }
+      // Don't allow submits with unimplemented validators
+      validation.notImplemented = () => false
+      console.error(`Validator of type ${validator.type} not yet implemented.`)
     }
   }
   if (multi) {
