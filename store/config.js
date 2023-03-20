@@ -78,6 +78,7 @@ export const actions = {
                   placeholder
                   help_message
                   multi
+                  options
                 }
               }
             }
