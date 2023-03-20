@@ -3,6 +3,7 @@
     <b-form-input
       :id="id"
       :value="value"
+      :disabled="disabled"
       :state="validateState"
       :type="inputType"
       @input="onInput"
@@ -34,6 +35,10 @@ export default {
   props: {
     id: {
       type: String,
+      required: true
+    },
+    disabled: {
+      type: Boolean,
       required: true
     },
     field: {

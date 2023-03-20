@@ -22,6 +22,7 @@
           </b-input-group-prepend>
           <b-form-input
             :value="keyedValues[fieldKey]"
+            :disabled="disabled"
             :state="keyedValidateState[fieldKey]"
             @input="onInput(fieldKey, $event)"
           />
@@ -73,6 +74,10 @@ export default {
   props: {
     id: {
       type: String,
+      required: true
+    },
+    disabled: {
+      type: Boolean,
       required: true
     },
     field: {
