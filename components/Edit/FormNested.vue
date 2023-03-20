@@ -1,6 +1,5 @@
 <template>
   <div v-frag>
-    <!-- TODO: validation -->
     <multiselect
       :id="id"
       :value="value"
