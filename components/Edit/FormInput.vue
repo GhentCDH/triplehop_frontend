@@ -57,7 +57,7 @@ export default {
     }
   },
   validations () {
-    return generateValidations(this.field.validators)
+    return generateValidations(this.field)
   },
   computed: {
     inputType () {

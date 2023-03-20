@@ -104,7 +104,7 @@ export default {
     return data
   },
   validations () {
-    return generateValidations(this.field.validators, true)
+    return generateValidations(this.field)
   },
   computed: {
     keyedValues () {

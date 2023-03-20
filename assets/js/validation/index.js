@@ -5,10 +5,10 @@ import { geometryPoint } from '~/assets/js/validation/geometry'
 import { list } from '~/assets/js/validation/list'
 import { table } from '~/assets/js/validation/table'
 
-export const generateValidations = function (validators, multi = false) {
+export const generateValidations = function (field) {
   const validation = {}
-  if (validators) {
-    for (const validator of validators) {
+  if (field.validators) {
+    for (const validator of field.validators) {
       if (validator.type === 'required') {
         validation.required = required
         continue
@@ -42,7 +42,7 @@ export const generateValidations = function (validators, multi = false) {
       console.error(`Validator of type ${validator.type} not yet implemented.`)
     }
   }
-  if (multi) {
+  if (field.multi && field.type !== 'dropdown') {
     return {
       values: {
         $each: validation
