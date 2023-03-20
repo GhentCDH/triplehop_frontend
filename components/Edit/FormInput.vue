@@ -48,7 +48,7 @@ export default {
     initialValue: {
       // JSON representation
       type: String,
-      required: true
+      default: () => null
     }
   },
   data () {
