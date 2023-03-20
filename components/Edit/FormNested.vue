@@ -2,6 +2,7 @@
   <div v-frag>
     <!-- TODO: validation -->
     <multiselect
+      :id="id"
       :value="value"
       :clear-on-select="false"
       label="value"
