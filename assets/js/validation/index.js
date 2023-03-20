@@ -30,7 +30,7 @@ export const generateValidations = function (field) {
         continue
       }
       if (validator.type === 'list') {
-        validation.list = list(validator.allowed_values)
+        validation.list = list(validator.allowed_values, field.multi)
         continue
       }
       if (validator.type === 'table') {

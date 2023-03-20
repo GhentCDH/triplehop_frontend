@@ -1,10 +1,14 @@
 <template>
   <div v-frag>
-    <b-form-select
+    <multiselect
       :id="id"
       :value="value"
-      :state="validateState"
+      :clear-on-select="false"
+      :disabled="disabled"
+      :multiple="field.multi"
       :options="field.options"
+      :show-labels="false"
+      :class="validateClass"
       @input="onInput"
     />
     <form-feedback
@@ -16,6 +20,7 @@
 </template>
 <script>
 import frag from 'vue-frag'
+import Multiselect from 'vue-multiselect'
 import { validationMixin } from 'vuelidate'
 
 import { generateValidations } from '~/assets/js/validation'
@@ -26,7 +31,8 @@ export default {
     frag
   },
   components: {
-    FormFeedback
+    FormFeedback,
+    Multiselect
   },
   mixins: [
     validationMixin
@@ -34,6 +40,10 @@ export default {
   props: {
     id: {
       type: String,
+      required: true
+    },
+    disabled: {
+      type: Boolean,
       required: true
     },
     field: {
@@ -64,6 +74,12 @@ export default {
       // Only markup touched fields as correct or incorrect
       const { $dirty, $invalid } = this.$v.value
       return $dirty ? !$invalid : null
+    },
+    validateClass () {
+      if (this.validateState == null) {
+        return ''
+      }
+      return this.validateState ? 'is-valid' : 'is-invalid'
     }
   },
   watch: {
