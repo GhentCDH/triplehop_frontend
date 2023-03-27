@@ -246,7 +246,7 @@ export default {
     return {
       style: [
         {
-          cssText: this.entityTypeConfig.style?.search.map(rule => `.novel_echoes__text__search ${rule}`).join('\n'),
+          cssText: this.entityTypeConfig.style.search.map(rule => `.${this.projectName}__${this.entityTypeName}__search ${rule}`).join('\n'),
           type: 'text/css'
         }
       ]
