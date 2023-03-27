@@ -31,6 +31,7 @@ import FormGeometry from '~/components/Edit/FormGeometry.vue'
 import FormInput from '~/components/Edit/FormInput.vue'
 import FormMultiInput from '~/components/Edit/FormMultiInput.vue'
 import FormNested from '~/components/Edit/FormNested.vue'
+import FormTextArea from '~/components/Edit/FormTextArea.vue'
 
 export default {
   components: {
@@ -38,7 +39,8 @@ export default {
     FormGeometry,
     FormInput,
     FormMultiInput,
-    FormNested
+    FormNested,
+    FormTextArea
   },
   props: {
     disabled: {
@@ -79,6 +81,9 @@ export default {
       }
       if (field.type === 'nested') {
         return 'form-nested'
+      }
+      if (field.type === 'textarea') {
+        return 'form-text-area'
       }
       if (field.multi) {
         return 'form-multi-input'
